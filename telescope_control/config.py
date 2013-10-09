@@ -1,6 +1,15 @@
 from collections import OrderedDict
 import re
 
+#I wrote this to make messing with
+#config files less painful. Then I
+#realized that python has a config
+#file parser built in. Maybe we
+#should switch to that at some point?
+
+#This is like the least import part of the gui
+#anyways, so nobody should even be wasting time here
+
 class Config(OrderedDict):
     """The Config class provides a dictionary-like object which simplifies
     the acts of using 'key pair' configuration files. An example of such a
@@ -129,7 +138,7 @@ class Config(OrderedDict):
 
     def __repr__(self):
         #Make the repr pretty. not functional
-        #(i.e. calling eval(config_object) won't work)
+        #(i.e. calling eval(repr(config_object)) won't work)
         string = OrderedDict.__repr__(self).strip('Config([])')
         string = string.replace("', ", ":").translate(None, '()')
         return "Config({"+string+"})"
