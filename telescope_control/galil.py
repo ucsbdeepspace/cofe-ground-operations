@@ -95,6 +95,11 @@ class Galil(object):
         If x_i is None, then all axes are turned off."""
         return self.__command("MO{}", x_i)
 
+    #THIS THING
+    #It needs to be changed, for the sake of consistency.
+    #I feel like it is something that should be moved,
+    #and that this library should be only the lowest level
+    #primatives for interacting with the galil.
     def scan(self, x_i, degrees, period, cycles):
         # max_accel = max_deccel = 1e6
         #initial_angle = 0
