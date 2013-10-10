@@ -1,6 +1,13 @@
 from telnetlib import Telnet
 import math
 import time
+#This is all going to run correctly
+#IF there is a galil controller on,
+#you are connected to the same network,
+#AND the correct IP adress is in the config file.
+
+#It needs to be changed back to Conners stuff
+#in order to work with his new ... stuff.
 
 class Galil(object):
     def __init__(self, ip, port, poll=False, queue=None):
