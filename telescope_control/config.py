@@ -1,14 +1,8 @@
+#There is a python module that is made to do
+#what I wrote here. Maybe we should look into
+#changing this to use that instead...
 from collections import OrderedDict
 import re
-
-#I wrote this to make messing with
-#config files less painful. Then I
-#realized that python has a config
-#file parser built in. Maybe we
-#should switch to that at some point?
-
-#This is like the least import part of the gui
-#anyways, so nobody should even be wasting time here
 
 class Config(OrderedDict):
     """The Config class provides a dictionary-like object which simplifies
@@ -43,7 +37,7 @@ class Config(OrderedDict):
     do "config['0']" to access the value. The value, on the other hand, would
     b the int 1234. If it is more convenient to denote a value in some other
     common base, either 2, 8, or 16, then you may write things like
-    "key b10100111" or "key xFF0088" or "key o70312" (the last one is octal.)
+    "key 0b10100111" or "key 0xFF0088" or "key 0o70312" (the last one is octal.)
     You may also write a floating point decimal like "key 1234.5678". This must
     be in base 10!
     """
@@ -57,7 +51,7 @@ class Config(OrderedDict):
         #the config file.
         current_state = [] #accumulator variable
         with open(self.fname) as f:
-            for index, line in enumerate(f):
+            for index, line in enumerate(f):#index is the line number, line is the content
                 #Each line is stripped of leading and trailing whitespace.
                 line = line.strip()
                 #If the resultant line is empty, skip it!
@@ -85,20 +79,24 @@ class Config(OrderedDict):
 
     def __type_check(self, val):
         #Type checks the val and converts to the correct value
-        checks = [(re.compile("[0-9]+"), int), #decimal
-                  (re.compile("x[0-9A-Fa-f]+"), lambda x: int(x[1:], 16)), #hex
-                  (re.compile("o[0-7]+"), lambda x: int(x[1:], 8)), #octal
-                  (re.compile("b[01]+"), lambda x: int(x[1:], 2)), #binary
-                  (re.compile("[0-9]+.[0-9]+"), float), #decimal float
+        #EDIT: All those evals used to be different lambdas
+        #that used int and float. I replaced them with evals
+        #to be simpler, but now it is kinda ugly to have a bunch
+        #of evals in those tuples, so idk...
+        checks = [(re.compile("[0-9]+"), eval), #decimal
+                  (re.compile("0x[0-9A-Fa-f]+"), eval), #hex
+                  (re.compile("0o[0-7]+"), eval), #octal
+                  (re.compile("0b[01]+"), eval), #binary
+                  (re.compile("[0-9]+.[0-9]+"), eval), #decimal float
                   (re.compile("True|False"), eval),  #python and scheme-style bool
-                  (re.compile("#t|#f"), lambda x: True if x=="#t" else False)]
+                  (re.compile("#t|#f"), lambda x: x=="#t")]
         for pattern, func in checks:
             match = re.search(pattern, val)
             #match will be None if re.search can't find a match.
             #Thankfully, 'and' returns imediately with the first non-True value
+            #(in other words, it short circuits)
             if match and match.group(0)==val:
-                val = func(val)
-                return val
+                return func(val)
         #if the val doesn't match any pattern, then leave it as a string
         return val
 
