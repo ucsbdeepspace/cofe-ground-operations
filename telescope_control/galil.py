@@ -10,11 +10,10 @@ import time
 #in order to work with his new ... stuff.
 
 class Galil(object):
-    def __init__(self, ip, port, poll=False, queue=None):
+    def __init__(self, ip, port):
         """A class which facilitates interaction with the galil controller"""
 
         self.con = Telnet(ip, port)
-        self.positions = [0, 0]
 
     def send_read(self, cmd):
         """Sends a galil command to the controller, then returns the result"""

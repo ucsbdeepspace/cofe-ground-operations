@@ -138,7 +138,7 @@ class MainWindow(MyFrame):
         inputs = map_(['min_'+flag,'max_'+flag, 'period', 'cycles'], funcs)
 
         encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
-        period, cycles, continuous = inputs[2:5]
+        period, cycles = inputs[2:5]
         axis = 0 if flag == 'az' else 1
 
         if step:

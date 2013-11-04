@@ -112,6 +112,8 @@ class Config(OrderedDict):
     def __setitem(self, key, val):
         return OrderedDict.__setitem__(self, key, val)
 
+    
+
     def __setitem__(self, key, val):
         #updates the contents of the file and the
         #dictionary at the same time.
