@@ -1,6 +1,5 @@
 	
 
-import PyGalil.galilInterface
 
 import startGui						#GUI Handling
 
@@ -26,8 +25,9 @@ def go():
 
 	#def __init__(self, ip, port = 23, fakeGalil = False, poll = False, resetGalil = False):
 
+	import PyGalil.galilInterface
 
-	globalConf.gInt = PyGalil.galilInterface.GalilInterface(ip=globalConf.galilIP, fakeGalil=globalConf.fakeGalil, poll=False, resetGalil=False)
+	globalConf.gInt = PyGalil.galilInterface.GalilInterface(ip=globalConf.galilIP, poll=False, resetGalil=False)
 
 	print "opened galil. Connection:", globalConf.gInt
 	#import time
