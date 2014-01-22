@@ -1,2 +1,3 @@
 telescope_control/.DS_Store
 *.pyc
+/telescope_control/targetip.pik
