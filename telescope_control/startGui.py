@@ -252,6 +252,12 @@ class MainWindow(gui.TelescopeControlFrame):
 		data = map(str, data)
 		for (widget, prefix), datum in zip(statuses, data):
 			widget.SetLabel(prefix + datum)
+
+		# you're being too clever above. Doing it procedurally wouldn't take any more lines, and would be MUCH more readable
+
+		if self.galil.udpPackets:
+			self.packet_num.SetLabel("Received Galil\nData-Records: %d" % self.galil.udpPackets)
+
 		event.Skip()
 		return
 
