@@ -16,9 +16,9 @@ import wx
 # end wxGlade
 
 
-class MyFrame(wx.Frame):
+class TelescopeControlFrame(wx.Frame):
 	def __init__(self, *args, **kwds):
-		# begin wxGlade: MyFrame.__init__
+		# begin wxGlade: TelescopeControlFrame.__init__
 		kwds["style"] = wx.DEFAULT_FRAME_STYLE
 		wx.Frame.__init__(self, *args, **kwds)
 
@@ -44,7 +44,7 @@ class MyFrame(wx.Frame):
 		# end wxGlade
 
 	def __set_properties(self):
-		# begin wxGlade: MyFrame.__set_properties
+		# begin wxGlade: TelescopeControlFrame.__set_properties
 		self.SetTitle("Telescope Control Code")
 		self.comboBoxScanOptions.SetSelection(0)
 		# end wxGlade
@@ -103,7 +103,8 @@ class MyFrame(wx.Frame):
 
 		return self.controlButtonPanel
 
-	def __create_ra_dec_pane(self):	# TODO: CLEANUP, name sizers sanely
+	def __create_ra_dec_pane(self):
+		# TODO: CLEANUP, name sizers sanely
 		self.notebookRaDecPane                    = wx.Panel(self.controlNotebook, wx.ID_ANY)
 		self.label_1                              = wx.StaticText(self.notebookRaDecPane, wx.ID_ANY, "Ra: ")
 		self.textCtrlGotoRightAscension           = wx.TextCtrl(self.notebookRaDecPane, wx.ID_ANY, "")
@@ -187,7 +188,8 @@ class MyFrame(wx.Frame):
 		self.notebookRaDecPane.SetSizer(sizer_1)
 		return self.notebookRaDecPane
 
-	def __create_joystick_pane(self):	# TODO: CLEANUP, name sizers sanely
+	def __create_joystick_pane(self):	
+		# TODO: CLEANUP, name sizers sanely
 		self.notebookJoystickPane                 = wx.Panel(self.controlNotebook, wx.ID_ANY)
 		self.step_size_input                      = wx.TextCtrl(self.notebookJoystickPane, wx.ID_ANY, "", style=wx.TE_PROCESS_ENTER)
 		self.label_6                              = wx.StaticText(self.notebookJoystickPane, wx.ID_ANY, "Degrees")
@@ -273,7 +275,8 @@ class MyFrame(wx.Frame):
 
 		return self.notebookJoystickPane
 
-	def __create_scanning_pane(self):	# TODO: CLEANUP, name sizers sanely
+	def __create_scanning_pane(self):	
+		# TODO: CLEANUP, name sizers sanely
 		self.notebookScanningPane                 = wx.Panel(self.controlNotebook, wx.ID_ANY)
 		self.label_1_copy_2                       = wx.StaticText(self.notebookScanningPane, wx.ID_ANY, "Min: ")
 		self.textCtrlScanMinAz                    = wx.TextCtrl(self.notebookScanningPane, wx.ID_ANY, "")
@@ -362,7 +365,8 @@ class MyFrame(wx.Frame):
 		
 		return self.notebookScanningPane
 
-	def __create_options_pane(self):	# TODO: CLEANUP, name sizers sanely
+	def __create_options_pane(self):	
+		# TODO: CLEANUP, name sizers sanely
 
 		self.notebookOptionsPane                  = wx.Panel(self.controlNotebook, wx.ID_ANY)
 		self.label_1_copy_5                       = wx.StaticText(self.notebookOptionsPane, wx.ID_ANY, "Velocity:       ")  # TODO: Fix this padding issue by using proper sizer structures
@@ -420,7 +424,7 @@ class MyFrame(wx.Frame):
 		return self.graphDisplayPanel
 
 	def __create_layout(self):
-		# begin wxGlade: MyFrame.__create_layout
+		# begin wxGlade: TelescopeControlFrame.__create_layout
 		
 		headerSizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -444,47 +448,30 @@ class MyFrame(wx.Frame):
 		self.Layout()
 		# end wxGlade
 
-	def stop(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'stop' not implemented!"
-		#event.Skip()
 
-	def toggle_motor_state(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'toggle_motor_state' not implemented!"
-		#event.Skip()
+	def stop(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def set_step_size(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'set_step_size' not implemented!"
-		#event.Skip()
+	def toggle_motor_state(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def move_rel(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'move_rel' not implemented!"
-		#event.Skip()
+	def set_step_size(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def move_abs(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'move_abs' not implemented!"
-		#event.Skip()
+	def move_rel(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def goto(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'goto' not implemented!"
-		#event.Skip()
+	def move_abs(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def calibrate(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'calibrate' not implemented!"
-		#event.Skip()
+	def goto(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def track_radec(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'track_radec' not implemented!"
-		#event.Skip()
+	def calibrate(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-	def scan(self, event):  # wxGlade: MyFrame.<event_handler>
-		print "Event handler 'scan' not implemented!"
-		#event.Skip()
+	def track_radec(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass
 
-# end of class MyFrame
-if __name__ == "__main__":
-	app = wx.PySimpleApp(0)
-	wx.InitAllImageHandlers()
-	MyFrame = MyFrame(None, wx.ID_ANY, "")
-	app.SetTopWindow(MyFrame)
-	MyFrame.Show()
-	app.MainLoop()
+	def scan(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
+		pass

@@ -1,9 +1,13 @@
-from gui import MyFrame
-from galil import Galil
-from config import Config
-from units import Units
-import time, wx
+
+import gui
+import PyGalil.galilInterface
+import config
+import units
+import time
+import wx
 import math
+
+import traceback
 
 #This is just to aid in some nonsensical
 #programming I have in here. I Lol'd!
@@ -12,18 +16,20 @@ def map_(array, func_list):
 	functions long! :p"""
 	if len(func_list) == 0:
 		return array
-	f = func_list[0]
-	return map_([f(x) for x in array], func_list[1:])
+	fList = func_list[0]
+	return map_([fList(x) for x in array], func_list[1:])
 
-class MainWindow(MyFrame):
-	def __init__(self, galil, converter, config, *args, **kwargs):
-		MyFrame.__init__(self, *args, **kwargs)
+
+class MainWindow(gui.TelescopeControlFrame):
+	def __init__(self, galilInterface, converter, conf, *args, **kwargs):
+		gui.TelescopeControlFrame.__init__(self, *args, **kwargs)
 		self.poll_update = wx.Timer(self)
-		self.galil = galil
+		self.galil = galilInterface
 		self.converter = converter
-		self.config = config
+		self.config = conf
 		self.scan_thread = None
 		self.scan_thread_stop = None
+		self.step_size = 0
 
 		#wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
 		self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
@@ -90,13 +96,14 @@ class MainWindow(MyFrame):
 	def move_rel(self, event):
 		self.set_step_size(None)  # Force the GUI to read the input, so the user doesn't have to hit enter.
 
-		"""This is caled when you click one of the arrow buttons"""
+		# This is caled when you click one of the arrow buttons
+
 		b_s_a = [(self.button_up, 1, 1),
 				 (self.button_down, -1, 1),
 				 (self.button_right, 1, 0),
 				 (self.button_left, -1, 0)]
 		for button, sign, axis in b_s_a:
-			if event.GetId()==button.GetId():
+			if event.GetId() == button.GetId():
 				try:
 					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], chr(65+axis))
 					print self.galil.move_steps(axis, sign*self.step_size[axis])
@@ -104,8 +111,8 @@ class MainWindow(MyFrame):
 					print "Can't move! No step size entered!"
 					print "To enter a step size, type a number of degrees in"
 					print "the box near the arrows, and press enter."
-				except Exception, e:
-					print e
+				except Exception, error:
+					print error
 				else:
 					print self.galil.begin_motion(axis)
 				break
@@ -146,7 +153,7 @@ class MainWindow(MyFrame):
 		funcs = [lambda x: 'scan_'+x+'_input',
 				 lambda x: getattr(self, x).GetValue(),
 				 int]
-		inputs = map_(['min_'+flag,'max_'+flag, 'period', 'cycles'], funcs)
+		inputs = map_(['min_'+flag, 'max_'+flag, 'period', 'cycles'], funcs)
 
 		encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
 		period, cycles = inputs[2:5]
@@ -182,6 +189,7 @@ class MainWindow(MyFrame):
 		steps = self.config["SCAN_STEPS"]
 		axis = not step_el
 
+		# scan_func_stop does not exist!
 		while not self.scan_func_stop.is_set():
 			if not self.galil.in_motion(axis):
 				if axis != step_el:
@@ -198,6 +206,7 @@ class MainWindow(MyFrame):
 		#This is the function that gets called when
 		#you press the scan button.
 		from threading import Thread, Event
+
 		def not_implemented(name):
 			print name, "Scan Not Implemented!"
 
@@ -208,7 +217,7 @@ class MainWindow(MyFrame):
 			junk = ''
 		func = getattr(self, 
 					   ('{}_scan_func'+junk).format(scan_type.lower()),
-					   lambda : not_implemented(scan_type))
+					   lambda: not_implemented(scan_type))
 		self.scan_thread_stop = Event()
 		self.scan_thread = Thread(target=func)
 		self.scan_thread.start()
@@ -219,14 +228,16 @@ class MainWindow(MyFrame):
 		statuses = [(self.az_status, "Az: "),
 					(self.el_status, "El: "),
 					(self.ra_status, "Ra: "),
-					(self.dec_status,"Dec: "),
+					(self.dec_status, "Dec: "),
 					(self.local_status, "Local: "),
 					(self.lst_status, "Lst: "),
 					(self.utc_status, "Utc: ")]
 		while True: #Sometimes the galil responds with 
 			try:    #an empty string. When it does...
-				data = list(self.galil.get_position())
+				data = list(self.galil.pos)
 			except: #...try again.
+				traceback.print_exc()
+				print "ERROR?"
 				continue
 			else: #Otherwise, get outta here.
 				break
@@ -244,14 +255,20 @@ class MainWindow(MyFrame):
 		event.Skip()
 		return
 
-if __name__ == "__main__":
-	config = Config("config.txt") #make the config object...
-	galil = Galil(config["IP"], config["PORT"]) #...and the galil...
-	converter = Units(config) #...and the converter...
+def main():		# Shut up pylinter
+	conf = config.Config("config.txt") #make the config object...
+	galilInterface = PyGalil.galilInterface.GalilInterface(ip = conf["IP"], port = conf["PORT"]) #...and the galil...
+	converter = units.Units(conf) #...and the converter...
 	app = wx.PySimpleApp(0)
 	wx.InitAllImageHandlers()
 	#...and pass them to your MainWindow class!!!
-	frame_1 = MainWindow(galil, converter, config, None, -1, "")
-	app.SetTopWindow(frame_1)
-	frame_1.Show()
+	mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
+	app.SetTopWindow(mainFrame)
+	mainFrame.Show()
 	app.MainLoop()
+
+	# close galil interface on exit
+	galilInterface.close()
+
+if __name__ == "__main__":
+	main()
