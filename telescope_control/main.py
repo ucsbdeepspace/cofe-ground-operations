@@ -190,7 +190,7 @@ class MainWindow(MyFrame):
 		def not_implemented(name):
 			print name, "Scan Not Implemented!"
 
-		scan_type = self.scan_options.GetValue()
+		scan_type = self.comboBoxScanOptions.GetValue()
 		if self.scan_continuous_input.GetValue():
 			junk = '_continuous'
 		else:
