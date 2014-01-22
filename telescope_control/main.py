@@ -3,6 +3,7 @@ from galil import Galil
 from config import Config
 from units import Units
 import time, wx
+import math
 
 #This is just to aid in some nonsensical
 #programming I have in here. I Lol'd!
@@ -69,22 +70,32 @@ class MainWindow(MyFrame):
 	def set_step_size(self, event):
 		"""This is called after you type a number nad press enter
 		on the step size box next to the arrow buttons."""
-		degrees = float(self.step_size_input.GetValue())
+		value = self.step_size_input.GetValue()
+		try:
+			value = float(value)
+		except:
+			raise ValueError("You need to enter a step-size first!")
+		if math.isnan(value):
+			raise ValueError("NaN is not a valid step size. Nice try, though.")
+
+		degrees = value
 		print "Setting joystick step size to {} degrees.".format(degrees)
 		self.step_size = [self.converter.az_to_encoder(degrees),
 						  self.converter.el_to_encoder(degrees)]
 		print "\t{} encoder counts in the AZ direction".format(self.step_size[0])
 		print "\t{} encoder counts in the EL direction".format(self.step_size[1])
 		print ''
-		event.Skip()
+		
 
 	def move_rel(self, event):
+		self.set_step_size(None)  # Force the GUI to read the input, so the user doesn't have to hit enter.
+
 		"""This is caled when you click one of the arrow buttons"""
 		b_s_a = [(self.button_up, 1, 1),
 				 (self.button_down, -1, 1),
 				 (self.button_right, 1, 0),
 				 (self.button_left, -1, 0)]
-		for button, sign, axis in b_c_a:
+		for button, sign, axis in b_s_a:
 			if event.GetId()==button.GetId():
 				try:
 					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], chr(65+axis))
