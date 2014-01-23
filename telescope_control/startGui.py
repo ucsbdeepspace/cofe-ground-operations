@@ -9,6 +9,7 @@ import math
 
 import traceback
 
+# WHRYYYYYYYYYYYYYYYYYY (Connor)
 #This is just to aid in some nonsensical
 #programming I have in here. I Lol'd!
 def map_(array, func_list):
@@ -102,6 +103,7 @@ class MainWindow(gui.TelescopeControlFrame):
 				 (self.button_down, -1, 1),
 				 (self.button_right, 1, 0),
 				 (self.button_left, -1, 0)]
+
 		for button, sign, axis in b_s_a:
 			if event.GetId() == button.GetId():
 				try:
@@ -210,6 +212,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		def not_implemented(name):
 			print name, "Scan Not Implemented!"
 
+
 		scan_type = self.comboBoxScanOptions.GetValue()
 		if self.scan_continuous_input.GetValue():
 			junk = '_continuous'
@@ -218,45 +221,35 @@ class MainWindow(gui.TelescopeControlFrame):
 		func = getattr(self, 
 					   ('{}_scan_func'+junk).format(scan_type.lower()),
 					   lambda: not_implemented(scan_type))
+		
 		self.scan_thread_stop = Event()
 		self.scan_thread = Thread(target=func)
 		self.scan_thread.start()
 		event.Skip()
 
 	def update_display(self, event):
-		#print "updating"
-		statuses = [(self.az_status, "Az: "),
-					(self.el_status, "El: "),
-					(self.ra_status, "Ra: "),
-					(self.dec_status, "Dec: "),
-					(self.local_status, "Local: "),
-					(self.lst_status, "Lst: "),
-					(self.utc_status, "Utc: ")]
-		while True: 
-			if not self.galil:  # Short circuit in test-mode
-				return
+		if not self.galil:  # Short circuit in test-mode
+			return
 
-			try:    
-				data = list(self.galil.pos)
-			except: #...try again.
-				traceback.print_exc()
-				print "ERROR?"
-				continue
-			else: #Otherwise, get outta here.
-				break
-		#data is ordered this way to match the order
-		#of the statuses pairs.
-		data = [self.converter.encoder_to_az(data[0]),
-				self.converter.encoder_to_el(data[1])]
-		data += list(self.converter.azel_to_radec(*data))
-		data += [self.converter.lct(),
-				 self.converter.lst(), 
-				 self.converter.utc()]
-		data = map(str, data)
-		for (widget, prefix), datum in zip(statuses, data):
-			widget.SetLabel(prefix + datum)
+		data = list(self.galil.pos)
+		
+		az = self.converter.encoder_to_az(data[0])
+		el = self.converter.encoder_to_el(data[1])
 
-		# you're being too clever above. Doing it procedurally wouldn't take any more lines, and would be MUCH more readable
+		ra, dec = self.converter.azel_to_radec(az, el)
+
+		data = [(self.az_status,     "Az: ",     az                   ),
+				(self.el_status,     "El: ",     el                   ),
+				(self.ra_status,     "Ra: ",     ra                   ),
+				(self.dec_status,    "Dec: ",    dec                  ),
+				(self.local_status,  "Local: ",  self.converter.lct() ),
+				(self.lst_status,    "Lst: ",    self.converter.lst() ),
+				(self.utc_status,    "Utc: ",    self.converter.utc() )]
+
+
+		for widget, prefix, datum in data:
+			widget.SetLabel(prefix + str(datum))
+
 
 		if self.galil.udpPackets:
 			self.packet_num.SetLabel("Received Galil\nData-Records: %d" % self.galil.udpPackets)
