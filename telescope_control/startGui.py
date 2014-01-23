@@ -232,8 +232,11 @@ class MainWindow(gui.TelescopeControlFrame):
 					(self.local_status, "Local: "),
 					(self.lst_status, "Lst: "),
 					(self.utc_status, "Utc: ")]
-		while True: #Sometimes the galil responds with 
-			try:    #an empty string. When it does...
+		while True: 
+			if not self.galil:  # Short circuit in test-mode
+				return
+
+			try:    
 				data = list(self.galil.pos)
 			except: #...try again.
 				traceback.print_exc()
