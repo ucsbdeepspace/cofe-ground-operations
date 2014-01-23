@@ -106,6 +106,7 @@ class TelescopeControlFrame(wx.Frame):
 
 		self.textCtrlGotoRightAscension  = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
 		self.textCtrlGotoDeclination     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+		self.buttonGotoPosition          = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
 
 		gridSizer = wx.FlexGridSizer(3, 2)
 		gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
@@ -180,7 +181,6 @@ class TelescopeControlFrame(wx.Frame):
 
 	def __create_ra_dec_pane(self):
 		notebookRaDecPane                         = wx.Panel(self.controlNotebook, wx.ID_ANY)
-		self.buttonGotoPosition                   = wx.Button(notebookRaDecPane, wx.ID_ANY, "Goto Position")
 		self.buttonDoRaDecCalibrate               = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
 		self.buttonTrackPosition                  = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
 		self.buttonTrackingToggle                 = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
@@ -214,15 +214,15 @@ class TelescopeControlFrame(wx.Frame):
 
 		joystickSizer = wx.GridSizer(3, 3)
 		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_up)
+		joystickSizer.Add(self.button_up, flag=wx.EXPAND)
 		joystickSizer.Add([1,1])
 
-		joystickSizer.Add(self.button_left)
+		joystickSizer.Add(self.button_left, flag=wx.EXPAND)
 		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_right)
+		joystickSizer.Add(self.button_right, flag=wx.EXPAND)
 		
 		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_down)
+		joystickSizer.Add(self.button_down, flag=wx.EXPAND)
 		joystickSizer.Add([1,1])
 
 		joystickPaneSizer = wx.StaticBoxSizer(staticBoxRelativeMoveCtrl, wx.VERTICAL)
