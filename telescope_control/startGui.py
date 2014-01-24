@@ -18,7 +18,9 @@ def map_(array, func_list):
 	if len(func_list) == 0:
 		return array
 	fList = func_list[0]
-	return map_([fList(x) for x in array], func_list[1:])
+	ret = map_([fList(x) for x in array], func_list[1:])
+	print ret
+	return ret
 
 
 class MainWindow(gui.TelescopeControlFrame):
@@ -33,6 +35,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		self.step_size = 0
 
 		#wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
+		self.bind_events()
 		self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
 		print "Starting Display Update Poll"
 		self.poll_update.Start(35)
@@ -41,6 +44,38 @@ class MainWindow(gui.TelescopeControlFrame):
 		print "Make sure to turn on the motors you will use!"
 		print "Motors are automatically turned off when you exit."
 		print ''
+
+	def bind_events(self):
+		# By putting the event bindings here, it means I can clear out the event handlers from the parent class (gui.py)
+		# without breaking it
+		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_all)
+		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_az)
+		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.buttton_az_motor)
+		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
+		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.button_el_motor)
+		self.Bind(wx.EVT_TEXT_ENTER, self.set_step_size, self.step_size_input)
+		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
+		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
+		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_right)
+		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_down)
+		self.Bind(wx.EVT_BUTTON, self.move_abs, self.button_start_move)
+		self.Bind(wx.EVT_BUTTON, self.goto, self.buttonGotoPosition)
+		self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
+		self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
+		self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
+
+	def move_abs(self, event):
+		print "Event move_abs not implemented!"
+
+	def goto(self, event):
+		print "Event goto not implemented!"
+
+	def calibrate(self, event):
+		print "Event calibrate not implemented!"
+
+	def track_radec(self, event):
+		print "Event track_radec not implemented!"
+
 
 	def stop(self, event):
 		"""This function is called whenever one of the stop
@@ -52,8 +87,8 @@ class MainWindow(gui.TelescopeControlFrame):
 				 (self.button_stop_el, 1)]
 		for stop, axis in stops:
 			if event.GetId() == stop.GetId():
-				print "Stopping motor for axis {}".format("ALL" if axis is None else chr(65+axis))
-				self.galil.end_motion(axis)
+				print "Stopping motor for axis {}".format("ALL" if axis is None else axis)
+				self.galil.endMotion(axis)
 				break
 		event.Skip()
 
@@ -65,12 +100,12 @@ class MainWindow(gui.TelescopeControlFrame):
 		axis = 0
 		if event.GetId() == self.button_el_motor.GetId():
 			axis = 1
-		if self.galil.is_motor_on(axis):
-			print "Turning off motor for axis {}.".format(chr(65+axis))
-			self.galil.motor_off(axis)
+		if self.galil.checkMotorPower(axis):
+			print "Turning off motor for axis {}.".format(axis)
+			self.galil.motorOff(axis)
 		else:
-			print "Turning on motor for axis {}.".format(chr(65+axis))
-			self.galil.motor_on(axis)
+			print "Turning on motor for axis {}.".format(axis)
+			self.galil.motorOn(axis)
 		print ''
 		event.Skip()
 
@@ -107,7 +142,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		for button, sign, axis in b_s_a:
 			if event.GetId() == button.GetId():
 				try:
-					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], chr(65+axis))
+					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis)
 					print self.galil.move_steps(axis, sign*self.step_size[axis])
 				except AttributeError:
 					print "Can't move! No step size entered!"
@@ -132,6 +167,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		funcs = [lambda x: 'scan_'+x+'_input',
 				 lambda x: getattr(self, x).GetValue(),
 				 eval]
+
 		inputs = map_(['min_'+flag, 'max_'+flag, 'period'], funcs)
 
 		encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
@@ -155,6 +191,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		funcs = [lambda x: 'scan_'+x+'_input',
 				 lambda x: getattr(self, x).GetValue(),
 				 int]
+
 		inputs = map_(['min_'+flag, 'max_'+flag, 'period', 'cycles'], funcs)
 
 		encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
@@ -261,7 +298,7 @@ def main():		# Shut up pylinter
 	conf = config.Config("config.txt") #make the config object...
 	galilInterface = globalConf.gInt
 	converter = units.Units(conf) #...and the converter...
-	app = wx.PyApp()
+	app = wx.App()
 	#...and pass them to your MainWindow class!!!
 	mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
 	app.SetTopWindow(mainFrame)

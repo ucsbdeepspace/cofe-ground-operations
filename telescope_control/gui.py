@@ -14,21 +14,6 @@ class TelescopeControlFrame(wx.Frame):
 		self.__create_layout()
 		self.__set_properties()
 
-		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_all)
-		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_az)
-		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.buttton_az_motor)
-		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
-		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.button_el_motor)
-		self.Bind(wx.EVT_TEXT_ENTER, self.set_step_size, self.step_size_input)
-		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
-		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
-		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_right)
-		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_down)
-		self.Bind(wx.EVT_BUTTON, self.move_abs, self.button_start_move)
-		self.Bind(wx.EVT_BUTTON, self.goto, self.buttonGotoPosition)
-		self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
-		self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
-		self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
 		
 	def __set_properties(self):
 		self.SetTitle("Telescope Control Code")
@@ -36,7 +21,7 @@ class TelescopeControlFrame(wx.Frame):
 		
 	def __create_readoutPanel(self):
 
-		self.statusReadoutPanel                   = wx.Panel(self, wx.ID_ANY)
+		self.statusReadoutPanel                   = wx.Panel(self)
 		
 		self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
@@ -49,13 +34,13 @@ class TelescopeControlFrame(wx.Frame):
 		self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local: 0.00")
 		self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
 
-		textItems = [self.az_status, 
-					self.el_status, 
-					self.ra_status, 
-					self.dec_status, 
-					self.utc_status, 
-					self.lst_status, 
-					self.local_status, 
+		textItems = [self.az_status,
+					self.el_status,
+					self.ra_status,
+					self.dec_status,
+					self.utc_status,
+					self.lst_status,
+					self.local_status,
 					self.packet_num]
 
 
@@ -71,32 +56,74 @@ class TelescopeControlFrame(wx.Frame):
 
 		return self.statusReadoutPanel
 
+	def __create_motion_control_StaticBox(self, parent):
+
+
+		gridSizer = wx.GridSizer(rows=2, cols=2)
+
+		self.button_stop_all          = wx.Button(parent, wx.ID_ANY, "Stop All")
+		self.button_stop_az           = wx.Button(parent, wx.ID_ANY, "Stop AZ")
+		self.button_stop_el           = wx.Button(parent, wx.ID_ANY, "Stop EL")
+
+
+		gridSizer.AddF(self.button_stop_all, self.sizerFlags)
+		gridSizer.Add([1,1])
+		gridSizer.AddF(self.button_stop_az, self.sizerFlags)
+		gridSizer.AddF(self.button_stop_el, self.sizerFlags)
+
+
+		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
+		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+		sizer.Add(gridSizer)
+
+		return sizer
+
+	def __create_motor_power_ctrl_StaticBox(self, parent):
+
+		gridSizer = wx.GridSizer(rows=1, cols=2)
+
+		self.buttton_az_motor         = wx.ToggleButton(parent, wx.ID_ANY, "AZ Motor On")
+		self.button_el_motor          = wx.ToggleButton(parent, wx.ID_ANY, "EL Motor On")
+
+		gridSizer.AddF(self.buttton_az_motor, self.sizerFlags)
+		gridSizer.AddF(self.button_el_motor, self.sizerFlags)
+
+		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motor Power")
+		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+		sizer.Add(gridSizer)
+
+		return sizer
+
+	def __create_pointing_ctrl_StaticBox(self, parent):
+
+		gridSizer = wx.GridSizer(rows=1, cols=2)
+
+		self.button_goto_balloon      = wx.Button(parent, wx.ID_ANY, "Goto Balloon")
+
+		gridSizer.AddF(self.button_goto_balloon, self.sizerFlags)
+		gridSizer.Add([1,1])
+
+		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Pointing Control")
+		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+		sizer.Add(gridSizer)
+
+		return sizer
+
 	def __create_controls_sizer(self):
 
-		self.controlButtonPanel                   = wx.Panel(self, wx.ID_ANY)
-
-		self.button_stop_all          = wx.Button(self.controlButtonPanel, wx.ID_ANY, "Stop All")
-		self.button_stop_az           = wx.Button(self.controlButtonPanel, wx.ID_ANY, "Stop AZ")
-		self.buttton_az_motor         = wx.ToggleButton(self.controlButtonPanel, wx.ID_ANY, "AZ Motor On")
-		self.button_goto_balloon      = wx.Button(self.controlButtonPanel, wx.ID_ANY, "Goto Balloon")
-		self.button_stop_el           = wx.Button(self.controlButtonPanel, wx.ID_ANY, "Stop EL")
-		self.button_el_motor          = wx.ToggleButton(self.controlButtonPanel, wx.ID_ANY, "EL Motor On")
-
-		gridSizer = wx.GridSizer(rows=3, cols=2)
-
-		items = [self.button_stop_all, self.button_stop_az, self.buttton_az_motor, self.button_goto_balloon, self.button_stop_el, self.button_el_motor]
-		for item in items:
-			gridSizer.Add(item, proportion=0, flag=wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
+		controlButtonPanel                   = wx.Panel(self)
 		
-		
-		self.controlButtonsStaticBox        = wx.StaticBox(self.controlButtonPanel, wx.ID_ANY, "Universal Controls")
-		sizer = wx.StaticBoxSizer(self.controlButtonsStaticBox, wx.HORIZONTAL)
-		sizer.Add(gridSizer, 1, 0)
+		controlButtonsStaticBox        = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
+		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+
+		sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel))
+		sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel))
+		sizer.Add(self.__create_pointing_ctrl_StaticBox(controlButtonPanel))
 
 
-		self.controlButtonPanel.SetSizer(sizer)
+		controlButtonPanel.SetSizer(sizer)
 
-		return self.controlButtonPanel
+		return controlButtonPanel
 
 
 	def __create_goto_ra_dec_staticbox(self, parentNotebook):
@@ -180,7 +207,7 @@ class TelescopeControlFrame(wx.Frame):
 		return baseSizer
 
 	def __create_ra_dec_pane(self):
-		notebookRaDecPane                         = wx.Panel(self.controlNotebook, wx.ID_ANY)
+		notebookRaDecPane                         = wx.Panel(self.controlNotebook)
 		self.buttonDoRaDecCalibrate               = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
 		self.buttonTrackPosition                  = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
 		self.buttonTrackingToggle                 = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
@@ -252,6 +279,7 @@ class TelescopeControlFrame(wx.Frame):
 		baseSizer.Add(gridSizer, 1, wx.EXPAND)
 
 		return baseSizer
+
 	def __create_absolute_move_pane(self, parent):
 
 		absoluteMoveStaticBox       = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
@@ -288,7 +316,7 @@ class TelescopeControlFrame(wx.Frame):
 
 
 	def __create_joystick_pane(self):
-		notebookJoystickPane                 = wx.Panel(self.controlNotebook, wx.ID_ANY)
+		notebookJoystickPane                 = wx.Panel(self.controlNotebook)
 
 		# The FlexGridSizer seems to have better rezise behavour when compressed then the 
 		# plain GridSizer. Not sure why. 
@@ -312,7 +340,7 @@ class TelescopeControlFrame(wx.Frame):
 
 	def __create_scanning_pane(self):	
 		# TODO: CLEANUP, name sizers sanely
-		notebookScanningPane                 = wx.Panel(self.controlNotebook, wx.ID_ANY)
+		notebookScanningPane                 = wx.Panel(self.controlNotebook)
 		self.label_1_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
 		self.textCtrlScanMinAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
 		self.label_2_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
@@ -400,7 +428,7 @@ class TelescopeControlFrame(wx.Frame):
 		return notebookScanningPane
 
 	def __create_options_pane(self):
-		notebookOptionsPane                     = wx.Panel(self.controlNotebook, wx.ID_ANY)
+		notebookOptionsPane                     = wx.Panel(self.controlNotebook)
 		
 		staticTextVelocityLabel                 = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Velocity:")
 		staticTextAccelerationLabel             = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Acceleration:")
@@ -443,7 +471,7 @@ class TelescopeControlFrame(wx.Frame):
 		return notebookOptionsPane
 
 	def __create_graphPanel(self):
-		self.graphDisplayPanel                    = wx.Panel(self, wx.ID_ANY)
+		self.graphDisplayPanel                    = wx.Panel(self)
 		self.graphPanelStaticbox                  = wx.StaticBox(self.graphDisplayPanel, wx.ID_ANY, "Graph")
 
 		graphPanelSizer = wx.StaticBoxSizer(self.graphPanelStaticbox, wx.HORIZONTAL)
@@ -474,29 +502,14 @@ class TelescopeControlFrame(wx.Frame):
 		self.Layout()
 		
 
-	def stop(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
+def main():		# Shut up pylinter
+	app = wx.App()
+	mainFrame = TelescopeControlFrame(None, -1, "")
+	app.SetTopWindow(mainFrame)
+	mainFrame.Show()
+	app.MainLoop()
 
-	def toggle_motor_state(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
 
-	def set_step_size(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
+if __name__ == "__main__":
+	main()
 
-	def move_rel(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
-
-	def move_abs(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
-
-	def goto(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
-
-	def calibrate(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
-
-	def track_radec(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
-
-	def scan(self, event):  # wxGlade: TelescopeControlFrame.<event_handler>
-		pass
