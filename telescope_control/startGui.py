@@ -261,8 +261,7 @@ def main():		# Shut up pylinter
 	conf = config.Config("config.txt") #make the config object...
 	galilInterface = globalConf.gInt
 	converter = units.Units(conf) #...and the converter...
-	app = wx.PySimpleApp(0)
-	wx.InitAllImageHandlers()
+	app = wx.PyApp()
 	#...and pass them to your MainWindow class!!!
 	mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
 	app.SetTopWindow(mainFrame)

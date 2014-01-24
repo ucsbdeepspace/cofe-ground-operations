@@ -10,6 +10,7 @@ Requires:
  - python 2.7
  - pyephem
  - wxpython version > 2.8
+ - BitString Library (https://code.google.com/p/python-bitstring/)
 
 
 Galil comms are handled by the PyGalil submodule, main repository at: https://github.com/fake-name/PyGalil
