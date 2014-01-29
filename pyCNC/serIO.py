@@ -25,6 +25,9 @@ def mainLoop():
 
 			if "Shutdown" in temp:
 				print "Serial Thread Exiting"
+				
+				queVars.gInt.close()
+				print "Galil closed"
 				sys.exit(0)
 
 			
@@ -82,7 +85,7 @@ def mainLoop():
 
 
 			if "pollGalil" in temp:
-				queVars.gInt.startPolling()
+				queVars.gInt.initUDPMessageSocket()
 
 
 			if "homeAxis" in temp:

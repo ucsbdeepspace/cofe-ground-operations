@@ -57,6 +57,7 @@ class MyFrame(wx.Frame):
 		queVars.Qout.put({"reboot":0})					# Finally, now that we can print to the GUI, reset the galil
 		queVars.Qout.put({"pollGalil":0})					# Finally, now that we can print to the GUI, reset the galil
 
+		self.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
 		self.Bind(wx.EVT_TIMER, self.updateGUI, self.pollUpdate)
 		self.Bind(wx.EVT_CLOSE, self.quitApp)

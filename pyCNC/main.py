@@ -21,7 +21,7 @@ import threading
 #def __init__(self, ip, port = 23, fakeGalil = False, poll = False, resetGalil = False):
 
 
-queVars.gInt = galilInterface.GalilInterface(ip=queVars.galilIP, fakeGalil=queVars.fakeGalil, poll=False, resetGalil=False)
+queVars.gInt = galilInterface.GalilInterface(ip=queVars.galilIP, fakeGalil=queVars.fakeGalil, poll=True, resetGalil=True)
 
 queVars.serThread = threading.Thread(target = serIO.mainLoop, name = "serThread")
 queVars.serThread.start()
