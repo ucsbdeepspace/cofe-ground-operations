@@ -50,9 +50,9 @@ class MainWindow(gui.TelescopeControlFrame):
 		# without breaking it
 		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_all)
 		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_az)
-		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.buttton_az_motor)
+		self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.buttton_az_motor)
 		self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
-		self.Bind(wx.EVT_TOGGLEBUTTON, self.toggle_motor_state, self.button_el_motor)
+		self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.button_el_motor)
 		self.Bind(wx.EVT_TEXT_ENTER, self.set_step_size, self.step_size_input)
 		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
 		self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
@@ -65,7 +65,15 @@ class MainWindow(gui.TelescopeControlFrame):
 		self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
 
 	def move_abs(self, event):
-		print "Event move_abs not implemented!"
+		azPos = float(self.absolute_move_ctrl_az.GetValue())
+		elPos = float(self.absolute_move_ctrl_el.GetValue())
+		azVal = self.converter.az_to_encoder(azPos)
+		elVal = self.converter.el_to_encoder(elPos)
+
+		self.galil.moveAbsolute(0, azVal)
+		self.galil.moveAbsolute(1, elVal)
+
+		self.galil.beginMotion()
 
 	def goto(self, event):
 		print "Event goto not implemented!"
@@ -143,18 +151,18 @@ class MainWindow(gui.TelescopeControlFrame):
 			if event.GetId() == button.GetId():
 				try:
 					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis)
-					print self.galil.move_steps(axis, sign*self.step_size[axis])
+					print self.galil.moveRelative(axis, sign*self.step_size[axis])
 				except AttributeError:
 					print "Can't move! No step size entered!"
 					print "To enter a step size, type a number of degrees in"
 					print "the box near the arrows, and press enter."
+					traceback.print_exc()
 				except Exception, error:
 					print error
 				else:
-					print self.galil.begin_motion(axis)
+					print self.galil.beginMotion(axis)
 				break
 		print ''
-		event.Skip()
 		return
 
 	#The next two functions really feel like they can be 
@@ -175,7 +183,7 @@ class MainWindow(gui.TelescopeControlFrame):
 		axis = 0 if flag == 'az' else 1
 
 		while not self.scan_thread_stop.is_set():
-			check = self.galil.in_motion(axis)
+			check = self.galil.inMotion(axis)
 			if not check:
 				print 'THE GALIL CONTROLLER IS TELlING ME IT IS NOT MOVING!!!'
 				print 'Starting {} Scan'.format(flag.upper())
@@ -188,25 +196,36 @@ class MainWindow(gui.TelescopeControlFrame):
 
 	def __single_axis_scan_func(self, flag, step=False):
 		#A private helper function to control single axis scans.
-		funcs = [lambda x: 'scan_'+x+'_input',
-				 lambda x: getattr(self, x).GetValue(),
-				 int]
+		# funcs = [lambda x: 'scan_'+x+'_input',
+		# 		 lambda x: getattr(self, x).GetValue(),
+		# 		 int]
 
-		inputs = map_(['min_'+flag, 'max_'+flag, 'period', 'cycles'], funcs)
+		#inputs = map_(['min_'+flag, 'max_'+flag, 'period', 'cycles'], funcs)
 
-		encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
-		period, cycles = inputs[2:5]
+		if flag == "az":
+			scanMin = int(self.textCtrlScanMinAz.GetValue())
+			scanMax = int(self.textCtrlScanMaxAz.GetValue())
+		elif flag == "el":
+			scanMin = int(self.textCtrlScanMinEl.GetValue())
+			scanMax = int(self.textCtrlScanMaxEl.GetValue())
+		else:
+			raise ValueError("Invalid scan func!", flag)
+
+		scanPeriod = int(self.scan_period_input.GetValue())
+		scanCycles = int(self.scan_cycles_input.GetValue())
+
+		encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(scanMax-scanMin)
 		axis = 0 if flag == 'az' else 1
 
 		if step:
 			encoders = encoders / self.config["SCAN_STEPS"]
-			period = self.config["SCAN_STEP_PERIOD"]
-			cycles = .5
+			scanPeriod = self.config["SCAN_STEP_PERIOD"]
+			scanCycles = .5
 		
 		print self.galil.scan(axis,
 							  abs(encoders),
-							  period,
-							  cycles)
+							  scanPeriod,
+							  scanCycles)
 		print ''
 
 	def azimuth_scan_func_continuous(self):
@@ -230,7 +249,7 @@ class MainWindow(gui.TelescopeControlFrame):
 
 		# scan_func_stop does not exist!
 		while not self.scan_func_stop.is_set():
-			if not self.galil.in_motion(axis):
+			if not self.galil.inMotion(axis):
 				if axis != step_el:
 					scans[axis]()
 				else:
@@ -277,6 +296,10 @@ class MainWindow(gui.TelescopeControlFrame):
 
 		data = [(self.az_status,     "Az: ",     az                   ),
 				(self.el_status,     "El: ",     el                   ),
+
+				(self.az_raw_status, "Az Raw: ", data[0]              ),
+				(self.el_raw_status, "El Raw: ", data[1]              ),
+				
 				(self.ra_status,     "Ra: ",     ra                   ),
 				(self.dec_status,    "Dec: ",    dec                  ),
 				(self.local_status,  "Local: ",  self.converter.lct() ),
@@ -290,6 +313,16 @@ class MainWindow(gui.TelescopeControlFrame):
 
 		if self.galil.udpPackets:
 			self.packet_num.SetLabel("Received Galil\nData-Records: %d" % self.galil.udpPackets)
+
+		motStateLabels = [self.azMotorPowerStateLabel, self.elMotorPowerStateLabel]
+		for x in range(2):
+			if self.galil.motOn[x]:
+				motStateLabels[x].SetLabel("Motor On")
+			else:
+				motStateLabels[x].SetLabel("Motor Off")
+
+		# print "motOn", self.galil.motOn
+		# print "inMot", self.galil.inMot
 
 		event.Skip()
 		return

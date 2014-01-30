@@ -10,5 +10,5 @@ LON 0
 AzOffset 0
 ElOffset 0
 
-AzEncPerRev 1000
-ElEncPerRev 1000
+AzEncPerRev 4000
+ElEncPerRev 4000

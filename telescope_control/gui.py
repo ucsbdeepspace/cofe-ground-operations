@@ -7,6 +7,7 @@ class TelescopeControlFrame(wx.Frame):
 		kwds["style"] = wx.DEFAULT_FRAME_STYLE
 		wx.Frame.__init__(self, *args, **kwds)
 
+		print "Building UI"
 		# Common flags for adding things to sizers
 		# Huzzah for {sizer}.AddF(item, SizerFlags)
 		self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
@@ -27,6 +28,8 @@ class TelescopeControlFrame(wx.Frame):
 
 		self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az: 0.00 Degrees")
 		self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El: 0.00 Degrees")
+		self.az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw: 0 Counts")
+		self.el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw: 0 Counts")
 		self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra: 0.00 Degrees")
 		self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec: 0.00 Degrees")
 		self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc: 0.00")
@@ -36,6 +39,8 @@ class TelescopeControlFrame(wx.Frame):
 
 		textItems = [self.az_status,
 					self.el_status,
+					self.az_raw_status,
+					self.el_raw_status,
 					self.ra_status,
 					self.dec_status,
 					self.utc_status,
@@ -59,34 +64,40 @@ class TelescopeControlFrame(wx.Frame):
 	def __create_motion_control_StaticBox(self, parent):
 
 
-		gridSizer = wx.GridSizer(rows=2, cols=2)
+		verticalSizer = wx.BoxSizer(wx.VERTICAL)
+		horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
 
 		self.button_stop_all          = wx.Button(parent, wx.ID_ANY, "Stop All")
 		self.button_stop_az           = wx.Button(parent, wx.ID_ANY, "Stop AZ")
 		self.button_stop_el           = wx.Button(parent, wx.ID_ANY, "Stop EL")
 
 
-		gridSizer.AddF(self.button_stop_all, self.sizerFlags)
-		gridSizer.Add([1,1])
-		gridSizer.AddF(self.button_stop_az, self.sizerFlags)
-		gridSizer.AddF(self.button_stop_el, self.sizerFlags)
-
+		verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
+		
+		horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
+		horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
+		verticalSizer.Add(horizontalSizer)
 
 		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(gridSizer)
+		sizer.Add(verticalSizer)
 
 		return sizer
 
 	def __create_motor_power_ctrl_StaticBox(self, parent):
 
-		gridSizer = wx.GridSizer(rows=1, cols=2)
+		gridSizer = wx.FlexGridSizer(rows=2, cols=2)
 
-		self.buttton_az_motor         = wx.ToggleButton(parent, wx.ID_ANY, "AZ Motor On")
-		self.button_el_motor          = wx.ToggleButton(parent, wx.ID_ANY, "EL Motor On")
+		self.buttton_az_motor         = wx.Button(parent, wx.ID_ANY, "AZ Motor Power")
+		self.button_el_motor          = wx.Button(parent, wx.ID_ANY, "EL Motor Power")
+
+		self.azMotorPowerStateLabel   = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
+		self.elMotorPowerStateLabel   = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
 
 		gridSizer.AddF(self.buttton_az_motor, self.sizerFlags)
+		gridSizer.AddF(self.azMotorPowerStateLabel, self.sizerFlags)
 		gridSizer.AddF(self.button_el_motor, self.sizerFlags)
+		gridSizer.AddF(self.elMotorPowerStateLabel, self.sizerFlags)
 
 		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motor Power")
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
@@ -96,7 +107,7 @@ class TelescopeControlFrame(wx.Frame):
 
 	def __create_pointing_ctrl_StaticBox(self, parent):
 
-		gridSizer = wx.GridSizer(rows=1, cols=2)
+		gridSizer = wx.FlexGridSizer(rows=1, cols=2)
 
 		self.button_goto_balloon      = wx.Button(parent, wx.ID_ANY, "Goto Balloon")
 
@@ -113,6 +124,8 @@ class TelescopeControlFrame(wx.Frame):
 
 		controlButtonPanel                   = wx.Panel(self)
 		
+		controlButtonPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
+
 		controlButtonsStaticBox        = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
 
@@ -282,18 +295,18 @@ class TelescopeControlFrame(wx.Frame):
 
 	def __create_absolute_move_pane(self, parent):
 
-		absoluteMoveStaticBox       = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
-		azLabel                     = wx.StaticText(parent, wx.ID_ANY, "Az:")
-		elLabel                     = wx.StaticText(parent, wx.ID_ANY, "El:")
-		self.ctrl_az                = wx.TextCtrl(parent, wx.ID_ANY, "")
-		self.ctrl_el                = wx.TextCtrl(parent, wx.ID_ANY, "")
-		self.button_start_move      = wx.Button(parent, wx.ID_ANY, "Start Move")
+		absoluteMoveStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
+		azLabel                      = wx.StaticText(parent, wx.ID_ANY, "Az:")
+		elLabel                      = wx.StaticText(parent, wx.ID_ANY, "El:")
+		self.absolute_move_ctrl_az   = wx.TextCtrl(parent, wx.ID_ANY, "0")
+		self.absolute_move_ctrl_el   = wx.TextCtrl(parent, wx.ID_ANY, "0")
+		self.button_start_move       = wx.Button(parent, wx.ID_ANY, "Start Move")
 
 		gridSizer = wx.FlexGridSizer(3,2)
 		gridSizer.AddF(azLabel, self.sizerFlags)
-		gridSizer.AddF(self.ctrl_az, self.sizerFlags)
+		gridSizer.AddF(self.absolute_move_ctrl_az, self.sizerFlags)
 		gridSizer.AddF(elLabel, self.sizerFlags)
-		gridSizer.AddF(self.ctrl_el, self.sizerFlags)
+		gridSizer.AddF(self.absolute_move_ctrl_el, self.sizerFlags)
 		gridSizer.Add([1,1])
 		gridSizer.AddF(self.button_start_move, self.sizerFlags)
 
@@ -342,19 +355,19 @@ class TelescopeControlFrame(wx.Frame):
 		# TODO: CLEANUP, name sizers sanely
 		notebookScanningPane                 = wx.Panel(self.controlNotebook)
 		self.label_1_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-		self.textCtrlScanMinAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.textCtrlScanMinAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
 		self.label_2_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-		self.textCtrlScanMaxAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.textCtrlScanMaxAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "190")
 		self.sizer_44_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Az")
 		self.label_1_copy_3                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-		self.textCtrlScanMinEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.textCtrlScanMinEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
 		self.label_2_copy_3                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-		self.textCtrlScanMaxEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.textCtrlScanMaxEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
 		self.sizer_45_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "El")
 		self.label_scan_period                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Period:")
-		self.scan_period_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.scan_period_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "3")
 		self.label_scan_cycles                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles:")
-		self.scan_cycles_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "")
+		self.scan_cycles_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
 		self.scan_continuous_input                = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Continuous")
 		self.checkbox_radec                       = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Ra/Dec")
 		self.buttonScanStart                      = wx.Button(notebookScanningPane, wx.ID_ANY, "Scan")
