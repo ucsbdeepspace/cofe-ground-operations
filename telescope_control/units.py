@@ -16,7 +16,7 @@ class Units:
 
 	def __to_encoder(self, flag, counts, ab):
 		offset = self.c["AzOffset"] if "Az" in flag else self.c["ElOffset"]
-		return self.c[flag]/360*(counts + (offset if ab else 0))
+		return int(self.c[flag]/360.0*(counts + (offset if ab else 0)))
 	
 	def encoder_to_az(self, counts, ab=True):
 		return self.__from_encoder("AzEncPerRev", counts, ab)
@@ -78,5 +78,5 @@ if __name__=="__main__":
 	from config import Config
 	config = Config("config.txt")
 	un = Units(config)
-	
+	print "360 deg in encoder:", un.az_to_encoder(360)
 	
