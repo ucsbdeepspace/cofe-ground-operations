@@ -129,12 +129,12 @@ class MainWindow(gui.TelescopeControlFrame):
 			raise ValueError("NaN is not a valid step size. Nice try, though.")
 
 		degrees = value
-		print "Setting joystick step size to {} degrees.".format(degrees)
 		self.step_size = [self.converter.az_to_encoder(degrees),
 						  self.converter.el_to_encoder(degrees)]
-		print "\t{} encoder counts in the AZ direction".format(self.step_size[0])
-		print "\t{} encoder counts in the EL direction".format(self.step_size[1])
-		print ''
+		print "Setting joystick step size to {} degrees, {} encoder counts.".format(degrees, self.step_size[0])
+		# print "\t{} encoder counts in the AZ direction".format(self.step_size[0])
+		# print "\t{} encoder counts in the EL direction".format(self.step_size[1])
+		# print ''
 		
 
 	def move_rel(self, event):
@@ -151,7 +151,7 @@ class MainWindow(gui.TelescopeControlFrame):
 			if event.GetId() == button.GetId():
 				try:
 					print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis)
-					print self.galil.moveRelative(axis, sign*self.step_size[axis])
+					self.galil.moveRelative(axis, sign*self.step_size[axis])
 				except AttributeError:
 					print "Can't move! No step size entered!"
 					print "To enter a step size, type a number of degrees in"
@@ -160,9 +160,9 @@ class MainWindow(gui.TelescopeControlFrame):
 				except Exception, error:
 					print error
 				else:
-					print self.galil.beginMotion(axis)
+					self.galil.beginMotion(axis)
 				break
-		print ''
+		#print ''
 		return
 
 	#The next two functions really feel like they can be 
@@ -226,7 +226,7 @@ class MainWindow(gui.TelescopeControlFrame):
 							  abs(encoders),
 							  scanPeriod,
 							  scanCycles)
-		print ''
+		# print ''
 
 	def azimuth_scan_func_continuous(self):
 		return self.__single_axis_scan_func_continuous('az')
@@ -294,17 +294,17 @@ class MainWindow(gui.TelescopeControlFrame):
 
 		ra, dec = self.converter.azel_to_radec(az, el)
 
-		data = [(self.az_status,     "Az: ",     az                   ),
-				(self.el_status,     "El: ",     el                   ),
+		data = [(self.az_status,     "",     az                   ),
+				(self.el_status,     "",     el                   ),
 
-				(self.az_raw_status, "Az Raw: ", data[0]              ),
-				(self.el_raw_status, "El Raw: ", data[1]              ),
+				(self.az_raw_status, "", data[0]              ),
+				(self.el_raw_status, "", data[1]              ),
 				
-				(self.ra_status,     "Ra: ",     ra                   ),
-				(self.dec_status,    "Dec: ",    dec                  ),
-				(self.local_status,  "Local: ",  self.converter.lct() ),
-				(self.lst_status,    "Lst: ",    self.converter.lst() ),
-				(self.utc_status,    "Utc: ",    self.converter.utc() )]
+				(self.ra_status,     "",     ra                   ),
+				(self.dec_status,    "",    dec                  ),
+				(self.local_status,  "",  self.converter.lct() ),
+				(self.lst_status,    "",    self.converter.lst() ),
+				(self.utc_status,    "",    self.converter.utc() )]
 
 
 		for widget, prefix, datum in data:

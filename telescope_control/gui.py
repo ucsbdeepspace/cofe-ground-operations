@@ -10,7 +10,7 @@ class TelescopeControlFrame(wx.Frame):
 		print "Building UI"
 		# Common flags for adding things to sizers
 		# Huzzah for {sizer}.AddF(item, SizerFlags)
-		self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL)
+		self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)
 
 		self.__create_layout()
 		self.__set_properties()
@@ -26,63 +26,59 @@ class TelescopeControlFrame(wx.Frame):
 		
 		self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
-		self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az: 0.00 Degrees")
-		self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El: 0.00 Degrees")
-		self.az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw: 0 Counts")
-		self.el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw: 0 Counts")
-		self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra: 0.00 Degrees")
-		self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec: 0.00 Degrees")
-		self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc: 0.00")
-		self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst: 0.00")
-		self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local: 0.00")
+		self.label_az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
+		self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
+		self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
+		self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
+		self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra:")
+		self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec:")
+		self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc:")
+		self.label_lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst:")
+		self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+
+		self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+		self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+		self.az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
+		self.el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
+		self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+		self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+		self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+		self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+		self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+
 		self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
 
-		textItems = [self.az_status,
-					self.el_status,
-					self.az_raw_status,
-					self.el_raw_status,
-					self.ra_status,
-					self.dec_status,
-					self.utc_status,
-					self.lst_status,
-					self.local_status,
-					self.packet_num]
+		textItems = [self.label_az_status,     self.az_status,
+					self.label_el_status,      self.el_status,
+					self.label_az_raw_status,  self.az_raw_status,
+					self.label_el_raw_status,  self.el_raw_status,
+					self.label_ra_status,      self.ra_status,
+					self.label_dec_status,     self.dec_status,
+					self.label_utc_status,     self.utc_status,
+					self.label_lst_status,     self.lst_status,
+					self.label_local_status,   self.local_status]
 
 
 		for item in textItems:
-			item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
+			if isinstance(item, wx.StaticText):
+				item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
+
+		
+		itemSizer = wx.FlexGridSizer(rows=9, cols=2)
+		itemSizer.AddMany(textItems)
+		itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
+		itemSizer.AddGrowableCol(1, proportion=1)		# available space
 
 		self.statusSizerStaticbox = wx.StaticBox(self.statusReadoutPanel, wx.ID_ANY, "Status")
 		sizer = wx.StaticBoxSizer(self.statusSizerStaticbox, wx.VERTICAL)
-		sizer.AddMany(textItems)
+		sizer.AddF(itemSizer, self.sizerFlags)
+		sizer.AddF([1,1], self.sizerFlags)
+		sizer.AddF([1,1], self.sizerFlags)
+		sizer.AddF(self.packet_num, self.sizerFlags)
 
-		sizer.Insert(len(textItems)-1, [10, 10], proportion=1, flag=wx.EXPAND)
 		self.statusReadoutPanel.SetSizer(sizer)
 
 		return self.statusReadoutPanel
-
-	def __create_motion_control_StaticBox(self, parent):
-
-
-		verticalSizer = wx.BoxSizer(wx.VERTICAL)
-		horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-		self.button_stop_all          = wx.Button(parent, wx.ID_ANY, "Stop All")
-		self.button_stop_az           = wx.Button(parent, wx.ID_ANY, "Stop AZ")
-		self.button_stop_el           = wx.Button(parent, wx.ID_ANY, "Stop EL")
-
-
-		verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
-		
-		horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
-		horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
-		verticalSizer.Add(horizontalSizer)
-
-		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
-		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(verticalSizer)
-
-		return sizer
 
 	def __create_motor_power_ctrl_StaticBox(self, parent):
 
@@ -100,8 +96,9 @@ class TelescopeControlFrame(wx.Frame):
 		gridSizer.AddF(self.elMotorPowerStateLabel, self.sizerFlags)
 
 		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motor Power")
+		controlButtonsStaticBox.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(gridSizer)
+		sizer.Add(gridSizer, flag=wx.EXPAND)
 
 		return sizer
 
@@ -116,22 +113,46 @@ class TelescopeControlFrame(wx.Frame):
 
 		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Pointing Control")
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(gridSizer)
+		sizer.Add(gridSizer, flag=wx.EXPAND)
 
 		return sizer
+
+	def __create_motion_control_StaticBox(self, parent):
+
+
+		verticalSizer = wx.BoxSizer(wx.VERTICAL)
+		horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+		self.button_stop_all          = wx.Button(parent, wx.ID_ANY, "Stop All")
+		self.button_stop_az           = wx.Button(parent, wx.ID_ANY, "Stop AZ")
+		self.button_stop_el           = wx.Button(parent, wx.ID_ANY, "Stop EL")
+
+
+		verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
+		
+		horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
+		horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
+		verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
+
+		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
+		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+		sizer.Add(verticalSizer)
+
+		return sizer
+
 
 	def __create_controls_sizer(self):
 
 		controlButtonPanel                   = wx.Panel(self)
 		
-		controlButtonPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
 		controlButtonsStaticBox        = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
 		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
 
-		sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel))
-		sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel))
-		sizer.Add(self.__create_pointing_ctrl_StaticBox(controlButtonPanel))
+		sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+		sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+		sizer.Add(self.__create_pointing_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+		sizer.Add([1,1], proportion=1, flag=wx.EXPAND)
 
 
 		controlButtonPanel.SetSizer(sizer)
@@ -245,7 +266,7 @@ class TelescopeControlFrame(wx.Frame):
 		self.button_right                         = wx.Button(parent, wx.ID_ANY, ">")
 		self.button_down                          = wx.Button(parent, wx.ID_ANY, "v")
 
-		self.step_size_input                      = wx.TextCtrl(parent, wx.ID_ANY, "", style=wx.TE_PROCESS_ENTER)
+		self.step_size_input                      = wx.TextCtrl(parent, wx.ID_ANY, "10", style=wx.TE_PROCESS_ENTER)
 		self.staticTextStepSize                   = wx.StaticText(parent, wx.ID_ANY, "Degrees")
 		
 		stepSizeSizer = wx.BoxSizer(wx.HORIZONTAL)

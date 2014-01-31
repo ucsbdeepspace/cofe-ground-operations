@@ -15,7 +15,10 @@ class Units:
 		return self.__to_encoder("ElEncPerRev", counts, ab)
 
 	def __to_encoder(self, flag, counts, ab):
-		offset = self.c["AzOffset"] if "Az" in flag else self.c["ElOffset"]
+		if "Az" in flag :
+			offset = self.c["AzOffset"] 
+		else: 
+			offset = self.c["ElOffset"]
 		return int(self.c[flag]/360.0*(counts + (offset if ab else 0)))
 	
 	def encoder_to_az(self, counts, ab=True):
