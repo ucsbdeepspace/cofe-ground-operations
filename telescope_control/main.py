@@ -8,6 +8,8 @@ try:
 	pycallgraph.start_trace()
 except ImportError:
 	print "Do not have pycallgraph installed. Not tracing calls"
+except AttributeError:
+	print "Wat?"
 
 
 def go():
