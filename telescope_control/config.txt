@@ -1,7 +1,7 @@
 # This is a test config
 # THESE VALUES ARE NOT VALID FOR THE ACTUAL HARDWARE
 
-IP 192.168.1.250
+IP 192.168.1.201
 PORT 21
 
 LAT 0
@@ -10,5 +10,5 @@ LON 0
 AzOffset 0
 ElOffset 0
 
-AzEncPerRev 1000
-ElEncPerRev 1000
+AzEncPerRev 4000
+ElEncPerRev 4000
