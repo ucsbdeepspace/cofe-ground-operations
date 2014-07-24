@@ -1,5 +1,5 @@
 import ephem
-from time import gmtime, strftime
+from time import gmtime, strftime, time
 
 class Units:
 	def __init__(self, config):
@@ -47,13 +47,13 @@ class Units:
 		o.pressure = 0
 		return  o.radec_of(az, el)
 
-	def radec_to_azel(self, ra, dec):
+	def radec_to_azel(self, ra, dec, dt=0):
 		telescope = ephem.Observer()
 		telescope.lat = self.lat
 		telescope.lon = self.lon
 		d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
 		h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-		telescope.date = (d+h).format(t=gmtime())
+		telescope.date = (d+h).format(t = gmtime(time() + dt))
 
 		star = ephem.FixedBody()
 		star._ra = ephem.hours(ra)
