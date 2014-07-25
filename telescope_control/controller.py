@@ -11,21 +11,83 @@ class Controller:
         self.galil = galil
         self.converter = converter
         self.config = config
+        
+        self.scan_queue = 0 # number of scans left to do
     
     
-    # queue_equ: queue and process a list of equatorial coordinates to slew to
+    # scan: generic scan function
+    #   (note: should be executed in a maximum of one thread at any time)
+    #
+    #   crd_list -> list([crd_a, crd_b])
+    #     crd_a = coordinate that goes from 0 to 360 degrees
+    #     crd_b = coordinate that goes from -90 to 90 degrees
+    #   process_func: function to process list of points
+    #     (see "queue_hor" and "queue_equ" below)
+    #   speed: rate (degrees/sec) to slew at
+    #      note: use max speed if speed <= 0 or speed >= max speed
+    #   repeat: number of times to repeat (use "True" for indefinite repetition)
+    #   
+    # -> error_code (0 = no error), error_msg (None, if error_code == 0)
+    #      (returns once scan is complete)
+    def scan (self, crd_list, process_func, speed, repeat = 1):
+        
+        # repeat indefinitely
+        if repeat == True:
+            self.scan_queue = 1
+        else: # repeat for <repeat> times
+            self.scan_queue = repeat
+        
+        # queue and process scan
+        while self.scan_queue > 0:
+            
+            # process forward scan and wait until scan is complete
+            process_func(crd_list, speed)
+            
+            # reverse direction and repeat, waiting until scan is complete
+            crd_list.reverse()
+            process_func(crd_list, speed)
+            
+            # reset direction and prepare for next time
+            crd_list.reverse()
+            if repeat != True:
+                self.scan_queue = self.scan_queue - 1
+        
+        return 0
+        
+    # process_hor: process a list of horizontal coordinates to slew to
+    #
+    #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
+    #   speed: rate (degrees/sec) to slew at
+    #
+    # -> error_code, error_msg
+    #      (returns once scan is complete)
+    def process_hor (self, crd_list, speed):
+        
+        i = 0
+        def next_item ():
+            if len(crd_list) > i:
+                self.goto(crd_list[i], speed, next_item)
+                
+        # start processing first item
+        next_item()
+        
+        # TODO: stall until scan is complete
+        
+        return 0
+    
+    
+    # process_equ: process a list of equatorial coordinates to slew to
     #
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
     #   speed: rate (degrees/sec) to slew at
-    #      note: use max speed if speed <= 0 or speed >= max speed
-    #   on_done: argument-less function to call when complete
     #
     # -> error_code (0 = no error), error_msg (None, if error_code == 0)
-    def queue_equ (self, crd_list, speed, on_done):
+    #      (returns once scan is complete)
+    def process_equ (self, crd_list, speed):
         
         i = 0
         
-        # start queue with current motor position
+        # start with current motor position
         azi, alt = self.current_pos()
         prev_azi, prev_alt = np.degrees(azi), np.degrees(alt)
         
@@ -80,13 +142,11 @@ class Controller:
                 # move to computed horizontal coordinates, returning to the
                 #  beginning of this current function when complete
                 self.goto(new_crd_h, speed, next_item)
-                
-            # we've now completed processing the queue
-            else:
-                on_done() # signal completion of processing
             
         # move to first item (will recursively continue until all items complete)
         next_item()
+        
+        # TODO: stall until scan is complete
         
         return 0
     
