@@ -4,6 +4,7 @@
 import ephem
 import math
 import numpy as np
+import time
 
 class Controller:
     
@@ -64,14 +65,20 @@ class Controller:
     def process_hor (self, crd_list, speed):
         
         i = 0
+        Done = False
+        
         def next_item ():
             if len(crd_list) > i:
                 self.goto(crd_list[i], speed, next_item)
+            else:
+                Done = True
                 
         # start processing first item
         next_item()
         
-        # TODO: stall until scan is complete
+        # stall until scan is complete
+        while not Done:
+            time.sleep(0.1)
         
         return 0
     
@@ -86,6 +93,7 @@ class Controller:
     def process_equ (self, crd_list, speed):
         
         i = 0
+        Done = False
         
         # start with current motor position
         azi, alt = self.current_pos()
@@ -142,11 +150,16 @@ class Controller:
                 # move to computed horizontal coordinates, returning to the
                 #  beginning of this current function when complete
                 self.goto(new_crd_h, speed, next_item)
+                
+            else:
+                Done = True
             
         # move to first item (will recursively continue until all items complete)
         next_item()
         
-        # TODO: stall until scan is complete
+        # stall until scan is complete
+        while not Done:
+            time.sleep(0.1)
         
         return 0
     
