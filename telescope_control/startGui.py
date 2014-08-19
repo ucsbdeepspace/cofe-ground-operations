@@ -268,27 +268,48 @@ class MainWindow(gui.TelescopeControlFrame):
         
     
     def scan(self, event):
+        
         #This is the function that gets called when
         #you press the scan button.
         from threading import Thread, Event
-
-        def not_implemented(name):
-            print name, "Scan Not Implemented!"
-
-
-        scan_type = self.comboBoxScanOptions.GetValue()
-        if self.scan_continuous_input.GetValue():
-            junk = '_continuous'
-        else:
-            junk = ''
-        func = getattr(self, 
-                    ('{}_scan_func'+junk).format(scan_type.lower()),
-                    lambda: not_implemented(scan_type))
         
+        # load some settings
+        speed = 4 # angular speed in deg/s
+        crd1a = self.textCtrlScanMinAz.GetValue()
+        crd1b = self.textCtrlScanMinEl.GetValue()
+        crd2a = self.textCtrlScanMaxAz.GetValue()
+        crd2b = self.textCtrlScanMaxEl.GetValue()
+        num_turns = 10
+        
+        scan_id = self.comboBoxScanOptions.GetSelection()
         self.scan_thread_stop = Event()
-        self.scan_thread = Thread(target=func)
+        
+        self.scan_thread = Thread(target=lambda:
+            self.controller.scan(scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns),
+                self.coordsys_selector.GetSelection() == 0 and
+                self.controller.process_hor or self.controller.process_equ,
+                speed))
+                    
         self.scan_thread.start()
         event.Skip()
+
+#        def not_implemented(name):
+#            print name, "Scan Not Implemented!"
+
+
+#        scan_type = self.comboBoxScanOptions.GetValue()
+#        if self.scan_continuous_input.GetValue():
+#            junk = '_continuous'
+#        else:
+#            junk = ''
+#        func = getattr(self, 
+#                    ('{}_scan_func'+junk).format(scan_type.lower()),
+#                    lambda: not_implemented(scan_type))
+        
+#        self.scan_thread_stop = Event()
+#        self.scan_thread = Thread(target=func)
+#        self.scan_thread.start()
+#        event.Skip()
 
     def update_display(self, event):
         if not self.galil:  # Short circuit in test-mode

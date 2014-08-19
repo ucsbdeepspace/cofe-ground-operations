@@ -16,20 +16,20 @@ def serpentine (crd1a, crd1b, crd2a, crd2b, num_turns):
     crd_list = [] # final list of coordinates
     
     b_list = [] # list of b-coordinates
-    b_step = float(crd2b - crd1b) / num_turns # spacing between two steps
+    b_step = (float(crd2b) - float(crd1b)) / num_turns # spacing between two steps
     
     # fill in list of b coordinates
     for i in range(0, num_turns + 1):
-        b_list.append(crd1b + i * b_step)
+        b_list.append(float(crd1b) + i * b_step)
     
     # fill in actual list of coordinates
     for b in b_list:
         # left to right
-        crd_list.append([crd1a, b])
-        crd_list.append([crd2a, b])
+        crd_list.append([float(crd1a), b])
+        crd_list.append([float(crd2a), b])
         # go back from the right to the left
-        crd_list.append([crd2a, b + 0.5 * b_step])
-        crd_list.append([crd1a, b + 0.5 * b_step])
+        crd_list.append([float(crd2a), b + 0.5 * b_step])
+        crd_list.append([float(crd1a), b + 0.5 * b_step])
     
     return crd_list
 
@@ -46,17 +46,17 @@ def zigzag (crd1a, crd1b, crd2a, crd2b, num_turns):
     crd_list = [] # final list of coordinates
     
     b_list = [] # list of b-coordinates
-    b_step = float(crd2b - crd1b) / num_turns # spacing between two zigzags
+    b_step = (float(crd2b) - float(crd1b)) / num_turns # spacing between two zigzags
     
     # fill in list of b coordinates
     for i in range(0, num_turns + 1):
-        b_list.append(crd1b + i * b_step)
+        b_list.append(float(crd1b) + i * b_step)
     
     # fill in actual list of coordinates
     for b in b_list:
         # zigzag back and forth between left and right side
-        crd_list.append([crd1a, b])
-        crd_list.append([crd2a, b])
+        crd_list.append([float(crd1a), b])
+        crd_list.append([float(crd2a), b])
     
     return crd_list
 

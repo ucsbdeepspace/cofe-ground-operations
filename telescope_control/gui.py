@@ -342,7 +342,7 @@ class TelescopeControlFrame(wx.Frame):
     def __create_index_button_pane(self, parent):
         axesIndexButtonsStaticBox                   = wx.StaticBox(parent, wx.ID_ANY, "Index")
         self.button_index_az                      = wx.Button(parent, wx.ID_ANY, "Azimuth Axis")
-        self.button_index_el                      = wx.Button(parent, wx.ID_ANY, "Elivation Axis")
+        self.button_index_el                      = wx.Button(parent, wx.ID_ANY, "Elevation Axis")
 
         baseSizer = wx.StaticBoxSizer(axesIndexButtonsStaticBox, wx.VERTICAL)
         baseSizer.Add(self.button_index_az, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
