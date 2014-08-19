@@ -91,8 +91,7 @@ class Controller:
         i = 0
         
         # start with current motor position
-        azi, alt = self.current_pos()
-        prev_azi, prev_alt = np.degrees(azi), np.degrees(alt)
+        prev_azi, prev_alt = self.current_pos()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
@@ -123,7 +122,7 @@ class Controller:
                 
                 # estimate of time needed to get to next point
                 dt = delta / speed
-                if math.abs(dt - dt0) < 0.01:
+                if math.fabs(dt - dt0) < 0.01:
                     break # accurate enough, stop loop
                 
                 # not accurate enough, continue looping
@@ -136,7 +135,7 @@ class Controller:
             new_crd_h = [np.degrees(azi), np.degrees(alt)]
             
             # move to new position and reset for the next iteration
-            self.goto(new_crd_h, speed, next_item)
+            self.goto(new_crd_h, speed)
             prev_azi, prev_alt = azi, alt
             i = i + 1
         
@@ -172,7 +171,7 @@ class Controller:
     # -> azimuth, altitude
     def current_pos (self):
         pos_enc = list(self.galil.pos)
-        azimuth = self.converter.encoder_to_az(pos_enc[0])
-        altitude = self.converter.encoder_to_el(pos_enc[1])
+        azimuth = ephem.degrees(self.converter.encoder_to_az(pos_enc[0]))
+        altitude = ephem.degrees(self.converter.encoder_to_el(pos_enc[1]))
         
         return azimuth, altitude
