@@ -59,3 +59,7 @@ def zigzag (crd1a, crd1b, crd2a, crd2b, num_turns):
         crd_list.append([crd2a, b])
     
     return crd_list
+
+# list: scans implemented
+# => list(functions)
+scan_list = [serpentine, zigzag]
