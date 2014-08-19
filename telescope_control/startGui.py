@@ -202,7 +202,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
                 float(self.scan_speed_input.GetValue()),
-                self.scan_continuous_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
+                self.scan_repeat_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
         event.Skip()
