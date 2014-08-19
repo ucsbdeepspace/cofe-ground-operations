@@ -10,9 +10,9 @@ from wx import glcanvas
 class Chart (glcanvas.GLCanvas):
     
     def __init__ (self, parent):
-        super(Chart, self).__init__(self, parent, -1)
+        glcanvas.GLCanvas.__init__(self, parent, -1)
         self.context = glcanvas.GLContext(self)
-        self.setCurrent(self.context)
+        self.SetCurrent(self.context)
         self.Bind(wx.EVT_SIZE, self.on_resize)
         
         # initialize OpenGL

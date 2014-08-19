@@ -514,6 +514,16 @@ class TelescopeControlFrame(wx.Frame):
         self.graphDisplayPanel.SetSizer(graphPanelSizer)
         
         return self.graphDisplayPanel
+        
+    def __create_chart(self):
+        self.sky_panel = wx.Panel(self)
+        self.sky_staticbox = wx.StaticBox(self.sky_panel, wx.ID_ANY, "Sky Chart")
+        
+        sky_sizer = wx.StaticBoxSizer(self.sky_staticbox, wx.HORIZONTAL)
+        self.sky_panel.SetSizer(sky_sizer)
+        
+        self.sky_chart = Chart(self.sky_panel)
+        return self.sky_panel
 
     def __create_layout(self):
                 
@@ -521,6 +531,7 @@ class TelescopeControlFrame(wx.Frame):
 
         headerSizer.Add(self.__create_readoutPanel(), proportion=1, flag=wx.EXPAND)
         headerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
+        headerSizer.Add(self.__create_chart(), proportion=1, flag=wx.EXPAND)
         headerSizer.Add(self.__create_controls_sizer(), proportion=1, flag=wx.EXPAND)
     
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
