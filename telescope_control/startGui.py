@@ -94,8 +94,8 @@ class MainWindow(gui.TelescopeControlFrame):
     def stop(self, event):
         """This function is called whenever one of the stop
         buttons is pressed."""
-        if self.scan_thread_stop:
-            self.scan_thread_stop.set()
+        if self.controller.stop:
+            self.controller.stop.set()
         stops = [(self.button_stop_all, None),
                 (self.button_stop_az, 0),
                 (self.button_stop_el, 1)]
@@ -282,34 +282,15 @@ class MainWindow(gui.TelescopeControlFrame):
         num_turns = 10
         
         scan_id = self.comboBoxScanOptions.GetSelection()
-        self.scan_thread_stop = Event()
         
         self.scan_thread = Thread(target=lambda:
             self.controller.scan(scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns),
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
-                speed))
+                speed, self.scan_continuous_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
         event.Skip()
-
-#        def not_implemented(name):
-#            print name, "Scan Not Implemented!"
-
-
-#        scan_type = self.comboBoxScanOptions.GetValue()
-#        if self.scan_continuous_input.GetValue():
-#            junk = '_continuous'
-#        else:
-#            junk = ''
-#        func = getattr(self, 
-#                    ('{}_scan_func'+junk).format(scan_type.lower()),
-#                    lambda: not_implemented(scan_type))
-        
-#        self.scan_thread_stop = Event()
-#        self.scan_thread = Thread(target=func)
-#        self.scan_thread.start()
-#        event.Skip()
 
     def update_display(self, event):
         if not self.galil:  # Short circuit in test-mode

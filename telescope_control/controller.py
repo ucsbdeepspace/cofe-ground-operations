@@ -5,6 +5,7 @@ import ephem
 import math
 import numpy as np
 import time
+import threading
 
 class Controller:
     
@@ -32,6 +33,9 @@ class Controller:
     #      (returns once scan is complete)
     def scan (self, crd_list, process_func, speed, repeat = 1):
         
+        # unset any previously set stop events
+        self.stop = threading.Event()
+        
         # repeat indefinitely
         if repeat == True:
             self.scan_queue = 1
@@ -39,7 +43,7 @@ class Controller:
             self.scan_queue = repeat
         
         # queue and process scan
-        while self.scan_queue > 0:
+        while self.scan_queue > 0 and not self.stop.is_set():
             
             # process forward scan and wait until scan is complete
             process_func(crd_list, speed)
@@ -65,20 +69,11 @@ class Controller:
     def process_hor (self, crd_list, speed):
         
         i = 0
-        Done = False
         
-        def next_item ():
-            if len(crd_list) > i:
-                self.goto(crd_list[i], speed, next_item)
-            else:
-                Done = True
-                
-        # start processing first item
-        next_item()
-        
-        # stall until scan is complete
-        while not Done:
-            time.sleep(0.1)
+        # loop through all segments
+        while len(crd_list) > i and not self.stop.is_set():
+            self.goto(crd_list[i - 1], speed)
+            i = i + 1
         
         return 0
     
@@ -93,73 +88,56 @@ class Controller:
     def process_equ (self, crd_list, speed):
         
         i = 0
-        Done = False
         
         # start with current motor position
         azi, alt = self.current_pos()
         prev_azi, prev_alt = np.degrees(azi), np.degrees(alt)
         
-        # this function should be called once processing of previous item in
-        #  list is complete
-        def next_item ():
+        # loop through all segments
+        while len(crd_list) > i and not self.stop.is_set():
             
-            if len(crd_list) > i:
+            ##
+            # iteratively compute the altitude and azimuth of a set of
+            # equatorial coordinates at the time which we will reach that
+            # point with the telescope -- ie. the current altitude and
+            # azimuth of a particular set of a particular set of equatorial
+            # coordinates will no longer be current by the time we get
+            # there -- we need to find the new coordinates before moving
+            ##
+            dt0 = 0
+            
+            # continue looping until we've converged close enough to the
+            #  actual amount of time it takes to reach our target point
+            while True:
                 
-                ##
-                # iteratively compute the altitude and azimuth of a set of
-                # equatorial coordinates at the time which we will reach that
-                # point with the telescope -- ie. the current altitude and
-                # azimuth of a particular set of a particular set of equatorial
-                # coordinates will no longer be current by the time we get
-                # there -- we need to find the new coordinates before moving
-                ##
-                dt0 = 0
-                
-                # continue looping until we've converged close enough to the
-                #  actual amount of time it takes to reach our target point
-                while True:
-                    
-                    # compute estimate of distance to the next point
-                    azi, alt = self.converter.radec_to_azel(
-                        crd_list[i][0], crd_list[i][1], dt0)
-                    d_azi = azi - prev_azi
-                    d_alt = alt - prev_alt
-                    cosAlt = math.cos(ephem.degree * 0.5 * (alt + prev_alt))
-                    
-                    # approximate angular distance to move (in degrees)
-                    delta = math.sqrt(d_azi ** 2 + (d_alt * cosAlt) ** 2)
-                    
-                    # estimate of time needed to get to next point
-                    dt = delta / speed
-                    if math.abs(dt - dt0) < 0.01:
-                        break # accurate enough, stop loop
-                    
-                    # not accurate enough, continue looping
-                    dt0 = dt
-                    
-                # compute horizontal coordinates of equatorial coordinates after
-                #  time dt has passed (the point where we should slew to)
+                # compute estimate of distance to the next point
                 azi, alt = self.converter.radec_to_azel(
-                    crd_list[i][0], crd_list[i][1], dt)
-                new_crd_h = [np.degrees(azi), np.degrees(alt)]
+                    crd_list[i][0], crd_list[i][1], dt0)
+                d_azi = azi - prev_azi
+                d_alt = alt - prev_alt
+                cosAlt = math.cos(ephem.degree * 0.5 * (alt + prev_alt))
                 
-                # move onto the next item the next time this function is called
-                i = i + 1
-                prev_azi, prev_alt = azi, alt
+                # approximate angular distance to move (in degrees)
+                delta = math.sqrt(d_azi ** 2 + (d_alt * cosAlt) ** 2)
                 
-                # move to computed horizontal coordinates, returning to the
-                #  beginning of this current function when complete
-                self.goto(new_crd_h, speed, next_item)
+                # estimate of time needed to get to next point
+                dt = delta / speed
+                if math.abs(dt - dt0) < 0.01:
+                    break # accurate enough, stop loop
                 
-            else:
-                Done = True
+                # not accurate enough, continue looping
+                dt0 = dt
+                
+            # compute horizontal coordinates of equatorial coordinates after
+            #  time dt has passed (the point where we should slew to)
+            azi, alt = self.converter.radec_to_azel(
+                crd_list[i][0], crd_list[i][1], dt)
+            new_crd_h = [np.degrees(azi), np.degrees(alt)]
             
-        # move to first item (will recursively continue until all items complete)
-        next_item()
-        
-        # stall until scan is complete
-        while not Done:
-            time.sleep(0.1)
+            # move to new position and reset for the next iteration
+            self.goto(new_crd_h, speed, next_item)
+            prev_azi, prev_alt = azi, alt
+            i = i + 1
         
         return 0
     
@@ -168,10 +146,11 @@ class Controller:
     #
     #   coord_h -> [azimuth, altitude]: new position to slew to
     #   speed: rate (degrees/sec) to slew to new position
-    #   on_done: argument-less function to call when complete
     #
     # -> error_code, error_msg
-    def goto (self, coord_h, speed, on_done):
+    def goto (self, coord_h, speed):
+        print("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
+        # TODO: stall until slew is finished
         return 0
     
     
