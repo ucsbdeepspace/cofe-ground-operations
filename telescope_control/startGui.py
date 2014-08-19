@@ -180,102 +180,6 @@ class MainWindow(gui.TelescopeControlFrame):
                 break
         #print ''
         return
-
-    #The next two functions really feel like they can be 
-    #abstracted into one, more powerful function. I couldn't
-    #decide on a way to do it that would be good. :p
-
-    def __single_axis_scan_func_continuous(self, flag):
-        #A private helper function written to control
-        #continuous scans. I think this was a bit buggy...
-        funcs = [lambda x: 'scan_'+x+'_input',
-                lambda x: getattr(self, x).GetValue(),
-                eval]
-
-        inputs = map_(['min_'+flag, 'max_'+flag, 'period'], funcs)
-
-        encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(inputs[1]-inputs[0])
-        period = inputs[2]
-        axis = 0 if flag == 'az' else 1
-
-        while not self.scan_thread_stop.is_set():
-            check = self.galil.inMotion(axis)
-            if not check:
-                print 'THE GALIL CONTROLLER IS TELlING ME IT IS NOT MOVING!!!'
-                print 'Starting {} Scan'.format(flag.upper())
-                print self.galil.scan(axis, 
-                                    encoders,
-                                    period,
-                                    1)
-            time.sleep(.125)
-        return
-
-    def __single_axis_scan_func(self, flag, step=False):
-        #A private helper function to control single axis scans.
-        # funcs = [lambda x: 'scan_'+x+'_input',
-        # 		 lambda x: getattr(self, x).GetValue(),
-        # 		 int]
-
-        #inputs = map_(['min_'+flag, 'max_'+flag, 'period', 'cycles'], funcs)
-
-        if flag == "az":
-            scanMin = int(self.textCtrlScanMinAz.GetValue())
-            scanMax = int(self.textCtrlScanMaxAz.GetValue())
-        elif flag == "el":
-            scanMin = int(self.textCtrlScanMinEl.GetValue())
-            scanMax = int(self.textCtrlScanMaxEl.GetValue())
-        else:
-            raise ValueError("Invalid scan func!", flag)
-
-        scanPeriod = int(self.scan_period_input.GetValue())
-        scanCycles = int(self.scan_cycles_input.GetValue())
-
-        encoders = getattr(self.converter, '{}_to_encoder'.format(flag))(scanMax-scanMin)
-        axis = 0 if flag == 'az' else 1
-
-        if step:
-            encoders = encoders / self.config["SCAN_STEPS"]
-            scanPeriod = self.config["SCAN_STEP_PERIOD"]
-            scanCycles = .5
-        
-        print self.galil.scan(axis,
-                            abs(encoders),
-                            scanPeriod,
-                            scanCycles)
-        # print ''
-
-    def azimuth_scan_func_continuous(self):
-        return self.__single_axis_scan_func_continuous('az')
-
-    def elevation_scan_func_continuous(self):
-        return self.__single_axis_scan_func_continuous('el')
-
-    def azimuth_scan_func(self, step=False):
-        self.__single_axis_scan_func('az', step)
-
-    def elevation_scan_func(self, step=False):
-        self.__single_axis_scan_func('el', step)
-
-    def square_scan_func(self, step_el=True):
-        #This really needs to be redone and thought through more.
-        #I just quickly hacked this nonsense together.
-        scans = [self.azimuth_scan_func, self.elevation_scan_func]
-        steps = self.config["SCAN_STEPS"]
-        axis = not step_el
-
-        # scan_func_stop does not exist!
-        while not self.scan_func_stop.is_set():
-            if not self.galil.inMotion(axis):
-                if axis != step_el:
-                    scans[axis]()
-                else:
-                    scans[axis](step=True)
-                    steps -= 1
-            if steps == 0:
-                break
-            axis = not axis
-            time.sleep(.125)
-        
     
     def scan(self, event):
         
@@ -297,7 +201,8 @@ class MainWindow(gui.TelescopeControlFrame):
             self.controller.scan(scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns),
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
-                speed, self.scan_continuous_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
+                float(self.scan_speed_input.GetValue()),
+                self.scan_continuous_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
         event.Skip()

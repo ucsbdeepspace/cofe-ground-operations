@@ -387,12 +387,12 @@ class TelescopeControlFrame(wx.Frame):
         self.label_2_copy_3                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
         self.textCtrlScanMaxEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
         self.sizer_45_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Coord B (Altitude, Declination)")
-        self.label_scan_period                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Period:")
-        self.scan_period_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "3")
+        self.label_scan_speed                     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s):")
+        self.scan_speed_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")
         self.label_scan_cycles                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles:")
         self.scan_cycles_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.scan_continuous_input                = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Continuous")
-        self.buttonScanStart                      = wx.Button(notebookScanningPane, wx.ID_ANY, "Scan")
+        self.scan_continuous_input                = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
+        self.buttonScanStart                      = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
 
         coord_sys = ["Horizontal", "Equatorial"]
         self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
@@ -436,8 +436,8 @@ class TelescopeControlFrame(wx.Frame):
         sizer_43.Add(sizer_45, 1, wx.EXPAND)
         
         sizer_13_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_4.Add(self.label_scan_period)
-        sizer_13_copy_4.Add(self.scan_period_input)
+        sizer_13_copy_4.Add(self.label_scan_speed)
+        sizer_13_copy_4.Add(self.scan_speed_input)
         
         sizer_14_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_14_copy_4.Add(self.label_scan_cycles)
