@@ -6,9 +6,11 @@ import units
 import controller
 import scans
 
+import logging
+import math
+import sys
 import time
 import wx
-import math
 
 import traceback
 
@@ -37,7 +39,15 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread_stop = None
         self.step_size = 0
         
-        self.controller = controller.Controller(
+        # set logging output
+        self.logger = logging.getLogger()
+        debug = logging.StreamHandler(sys.stdout)
+        debug.setFormatter(logging.Formatter('%(message)s'))
+        debug.setLevel(logging.DEBUG)
+        self.logger.addHandler(debug)
+        self.logger.setLevel(logging.DEBUG)
+        
+        self.controller = controller.Controller(self.logger,
             self.galil, self.converter, self.config)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)

@@ -9,7 +9,8 @@ import threading
 
 class Controller:
     
-    def __init__ (self, galil, converter, config):
+    def __init__ (self, logger, galil, converter, config):
+        self.logger = logger
         self.galil = galil
         self.converter = converter
         self.config = config
@@ -149,7 +150,7 @@ class Controller:
     #
     # -> error_code, error_msg
     def goto (self, coord_h, speed):
-        print("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
+        self.logger.info("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
         # TODO: stall until slew is finished
         return 0
     
