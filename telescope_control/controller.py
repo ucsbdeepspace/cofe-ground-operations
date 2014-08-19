@@ -25,7 +25,7 @@ class Controller:
     #     crd_a = coordinate that goes from 0 to 360 degrees
     #     crd_b = coordinate that goes from -90 to 90 degrees
     #   process_func: function to process list of points
-    #     (see "queue_hor" and "queue_equ" below)
+    #     (optionally, use "process_hor" and "process_equ" below)
     #   speed: rate (degrees/sec) to slew at
     #      note: use max speed if speed <= 0 or speed >= max speed
     #   repeat: number of times to repeat (use "True" for indefinite repetition)
@@ -150,9 +150,23 @@ class Controller:
     # -> error_code, error_msg
     def goto (self, coord_h, speed):
         self.logger.info("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
+        
+        # compute movement in each axis
+        prev_azi, prev_alt = self.current_pos()
+        d_azi = coord_h[0] - prev_azi
+        d_alt = coord_h[1] - prev_alt
+        
+        # compute (top) speed to move each axis
+        alt_av = 0.5 * (prev_alt + coord_h[1])
+        d_azi_cos_alt = d_azi * math.cos(np.radians(alt_av))
+        dist_deg = math.sqrt(d_azi_cos_alt ** 2 + d_alt ** 2)
+        time_needed = speed / dist_deg # due to accel, this is not actual time
+        
+        angspeed_azi = d_azi / time_needed
+        angspeed_alt = d_alt / time_needed
+        
         # TODO: stall until slew is finished
         return 0
-    
     
     # move_axis: move single axis to some position at some speed
     #
