@@ -62,7 +62,11 @@ class Chart (glcanvas.GLCanvas):
     
     # scrolling to change field of view directly on the sky chart
     def scroll_fov (self, event):
-        self.h_fov += -2 * float(event.GetWheelRotation()) / 120
+        if self.h_fov < 100 or \
+                int(self.h_fov) == 50 and event.GetWheelRotation() > 0:
+            self.h_fov += -2 * float(event.GetWheelRotation()) / 120
+        else:
+            self.h_fov += -4 * float(event.GetWheelRotation()) / 120
         
         # constraint to range [1, 180]
         if self.h_fov > 180:
@@ -118,17 +122,6 @@ class Chart (glcanvas.GLCanvas):
         
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
         
-        # draw lines representing the path
-        glLineWidth(2)         # width of 2px
-        glColor(0.9, 0.9, 0.9) # light gray
-        glBegin(GL_LINE_STRIP)
-        
-        for point in self.path:
-            screen_x, screen_y = self.project(point)
-            glVertex(screen_x, screen_y)
-        
-        glEnd()
-        
         # draw grid
         glLineWidth(2.5)            # width of 2.5px
         glColor(0.5, 0.5, 0.5)    # gray
@@ -165,5 +158,16 @@ class Chart (glcanvas.GLCanvas):
         
         glEnd()
         glDisable(GL_LINE_STIPPLE)
+        
+        # draw the path
+        glLineWidth(3)         # width of 3px
+        glColor(0.9, 0.9, 0.9) # light gray
+        glBegin(GL_LINE_STRIP)
+        
+        for point in self.path:
+            screen_x, screen_y = self.project(point)
+            glVertex(screen_x, screen_y)
+        
+        glEnd()
         
         glFlush()
