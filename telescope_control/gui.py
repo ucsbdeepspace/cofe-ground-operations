@@ -541,8 +541,8 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning ")
         self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
         
-        footerSizer.Add(self.controlNotebook, proportion=2, flag=wx.EXPAND)
         footerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
+        footerSizer.Add(self.controlNotebook, proportion=2, flag=wx.EXPAND)
         
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(headerSizer, proportion=1, flag=wx.EXPAND)

@@ -204,13 +204,13 @@ class MainWindow(gui.TelescopeControlFrame):
         
         if len(points) > 0:
             # find point in the middle of scanning area
-            d_azi = (crd2a % 360.0) - (crd1a % 360.0)
+            d_azi = (crd2a - crd1a) % 360
             
             # account for wrap-around, in case other direction is closer
             if math.fabs(d_azi) <= 180:
                 center_azi = (crd1a + 0.5 * d_azi) % 360
-            else: # assume: |d_azi [+/-] 180| < 180
-                center_azi = (crd1a + 0.5 * d_azi + 180) % 360
+            else: # assume: 180 < d_azi < 360
+                center_azi = (crd1a + 0.5 * (d_azi - 180)) % 360
             
             self.sky_chart.center = [center_azi, 0.5 * (crd1b + crd2b)]
             self.sky_chart.Refresh()
