@@ -505,7 +505,7 @@ class TelescopeControlFrame(wx.Frame):
         
         # create field of view display
         fov_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        fov_label = wx.StaticText(self.sky_panel, label="Horizontal Field of View:  ")
+        fov_label = wx.StaticText(self.sky_panel, label=" Horizontal Field of View:  ")
         fov_sizer.Add(fov_label)
         self.chart_fov = wx.SpinCtrl(self.sky_panel, value="90", min=1, max=180)
         fov_sizer.Add(self.chart_fov, 1, wx.EXPAND)

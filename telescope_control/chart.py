@@ -1,7 +1,8 @@
 # chart.py
 # wx widget for showing a chart of objects
-#   (note: depends on python-opengl)
+#   (depends: python-opengl, pyftgl)
 
+import FTGL
 from OpenGL.GL import *
 import sys
 import wx
@@ -140,23 +141,31 @@ class Chart (glcanvas.GLCanvas):
         else: # self.h_fov < 10
             mark = 1
         
-        glBegin(GL_LINES)
-        
         # vertical lines
         for azi in range(0, 360/mark):
             point = self.project([azi * mark, 0])
             if -1 < point[0] < self.width + 1:
+                # draw line
+                glBegin(GL_LINES)
                 glVertex(point[0], 0)
                 glVertex(point[0], self.height)
+                glEnd()
+                
+                # draw label
+                
         
-        # vertical lines
+        # horizontal lines
         for alt in range(-90/mark, 90/mark + 1):
             point = self.project([0, alt * mark])
             if -1 < point[1] < self.height + 1:
+                # draw line
+                glBegin(GL_LINES)
                 glVertex(0, point[1])
                 glVertex(self.width, point[1])
+                glEnd()
+                
+                # draw label
         
-        glEnd()
         glDisable(GL_LINE_STIPPLE)
         
         # draw the path
