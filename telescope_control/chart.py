@@ -17,7 +17,7 @@ class Chart (glcanvas.GLCanvas):
         # drawing settings
         self.path = [] # list of points [x, y]
         self.center = [0, 0]
-        self.h_fov = 20 # horizontal field of view
+        self.h_fov = 90 # horizontal field of view
         
         # initialize OpenGL
         glDisable(GL_DEPTH_TEST)
@@ -33,7 +33,6 @@ class Chart (glcanvas.GLCanvas):
         size = self.GetClientSize()
         self.resize(size.width, size.height)
         
-        self.Update()
         self.Refresh()
         event.Skip()
     
@@ -65,7 +64,7 @@ class Chart (glcanvas.GLCanvas):
     def project (self, sky_coord):
         
         # find displacement of sky coordinate from center of screen
-        displace = [(sky_coord[0] - self.center[0]) % 360,
+        displace = [(sky_coord[0] - self.center[0]) % 360.0,
                      sky_coord[1] - self.center[1]]
         
         # transform (-360, 360) -> [0, 360)
@@ -90,7 +89,7 @@ class Chart (glcanvas.GLCanvas):
         
         # draw white lines representing the path
         glColor(1, 1, 1)
-        glBegin(GL_LINES)
+        glBegin(GL_LINE_STRIP)
         
         for point in self.path:
             screen_x, screen_y = self.project(point)

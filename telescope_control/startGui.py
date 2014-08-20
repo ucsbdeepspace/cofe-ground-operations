@@ -189,16 +189,33 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # load some settings
         speed = 4 # angular speed in deg/s
-        crd1a = self.textCtrlScanMinAz.GetValue()
-        crd1b = self.textCtrlScanMinEl.GetValue()
-        crd2a = self.textCtrlScanMaxAz.GetValue()
-        crd2b = self.textCtrlScanMaxEl.GetValue()
+        crd1a = float(self.textCtrlScanMinAz.GetValue()) % 360
+        crd1b = float(self.textCtrlScanMinEl.GetValue()) % 360
+        crd2a = float(self.textCtrlScanMaxAz.GetValue()) % 360
+        crd2b = float(self.textCtrlScanMaxEl.GetValue()) % 360
         num_turns = 10
         
         scan_id = self.comboBoxScanOptions.GetSelection()
         
+        # compute a list of points to scan to
+        points = scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns)
+        self.sky_chart.path = points[:] # show path on chart
+        
+        if len(points) > 0:
+            # find point in the middle of scanning area
+            d_azi = (crd2a % 360.0) - (crd1a % 360.0)
+            
+            # account for wrap-around, in case other direction is closer
+            if math.fabs(d_azi) <= 180:
+                center_azi = (crd1a + 0.5 * d_azi) % 360
+            else: # assume: |d_azi [+/-] 180| < 180
+                center_azi = (crd1a + 0.5 * d_azi + 180) % 360
+            
+            self.sky_chart.center = [center_azi, 0.5 * (crd1b + crd2b)]
+            self.sky_chart.Refresh()
+        
         self.scan_thread = Thread(target=lambda:
-            self.controller.scan(scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns),
+            self.controller.scan(points,
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
                 float(self.scan_speed_input.GetValue()),
