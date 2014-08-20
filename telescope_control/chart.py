@@ -19,13 +19,29 @@ class Chart (glcanvas.GLCanvas):
         self.center = [0, 0]
         self.h_fov = 90.0 # horizontal field of view
         
-        # initialize OpenGL
-        glDisable(GL_DEPTH_TEST)
-        glClearColor(0, 0, 0, 1) # black background
-        
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_PAINT, self.on_paint)
+        
+        self.initialized = False
+        
+    # initialize OpenGL
+    def gl_init (self):
+        self.initialized = True
+        self.resize(self.width, self.height)
+        
+        glDisable(GL_DEPTH_TEST) # using 2D drawing, so no depth
+        glClearColor(0, 0, 0, 1) # black background
+        
+        # enable antialiasing on lines
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        
+        # other line settings
+        glLineWidth(2)         # width of 2px
+        glColor(0.9, 0.9, 0.9) # light gray
     
     # event handlers
     def on_resize (self, event):
@@ -84,11 +100,12 @@ class Chart (glcanvas.GLCanvas):
     
     # draw: draw all objects onto the screen
     def draw (self):
-        self.resize(self.width, self.height)
+        if not self.initialized:
+            self.gl_init()
+        
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
         
-        # draw white lines representing the path
-        glColor(1, 1, 1)
+        # draw lines representing the path
         glBegin(GL_LINE_STRIP)
         
         for point in self.path:
