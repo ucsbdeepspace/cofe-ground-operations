@@ -445,11 +445,11 @@ class TelescopeControlFrame(wx.Frame):
         sizer_7_copy_4.Add(sizer_13_copy_4, 1, wx.EXPAND)
         sizer_7_copy_4.Add(sizer_14_copy_4, 1, wx.EXPAND)
         sizer_7_copy_4.Add(self.scan_repeat_input)
-        sizer_7_copy_4.Add(self.coordsys_selector)
         
-        sizer_51 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_51.Add(self.buttonScanStart)
-        sizer_51.Add(self.comboBoxScanOptions)
+        sizer_51 = wx.BoxSizer(wx.VERTICAL)
+        sizer_51.Add(self.coordsys_selector, 1, wx.EXPAND)
+        sizer_51.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
+        sizer_51.Add(self.buttonScanStart, 1, wx.EXPAND)
                 
         sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
         sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
@@ -530,9 +530,10 @@ class TelescopeControlFrame(wx.Frame):
         headerSizer = wx.BoxSizer(wx.HORIZONTAL)
 
         headerSizer.Add(self.__create_readoutPanel(), proportion=1, flag=wx.EXPAND)
-        headerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
-        headerSizer.Add(self.__create_chart(), proportion=1, flag=wx.EXPAND)
+        headerSizer.Add(self.__create_chart(), proportion=2, flag=wx.EXPAND)
         headerSizer.Add(self.__create_controls_sizer(), proportion=1, flag=wx.EXPAND)
+        
+        footerSizer = wx.BoxSizer(wx.HORIZONTAL)
     
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
@@ -540,9 +541,12 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning ")
         self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
         
+        footerSizer.Add(self.controlNotebook, proportion=2, flag=wx.EXPAND)
+        footerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
+        
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(headerSizer, proportion=1, flag=wx.EXPAND)
-        mainSizer.Add(self.controlNotebook, proportion=1, flag=wx.EXPAND)
+        mainSizer.Add(footerSizer, proportion=1, flag=wx.EXPAND)
         self.SetSizer(mainSizer)
         mainSizer.Fit(self)
         
