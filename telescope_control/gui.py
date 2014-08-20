@@ -104,17 +104,17 @@ class TelescopeControlFrame(wx.Frame):
 
         return sizer
 
-    def __create_pointing_ctrl_StaticBox(self, parent):
+    def __create_fov_StaticBox(self, parent):
 
         gridSizer = wx.FlexGridSizer(rows=1, cols=2)
 
-        self.button_goto_balloon = wx.Button(parent, wx.ID_ANY, "Goto Balloon")
+        self.chart_fov = wx.SpinCtrl(parent, value="90", min=1, max=180)
 
-        gridSizer.AddF(self.button_goto_balloon, self.sizerFlags)
+        gridSizer.AddF(self.chart_fov, self.sizerFlags)
         gridSizer.Add([1,1])
 
-        controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Pointing Control")
-        sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+        chart_box = wx.StaticBox(parent, wx.ID_ANY, "<< Chart Horiz Field of View")
+        sizer = wx.StaticBoxSizer(chart_box, wx.VERTICAL)
         sizer.Add(gridSizer, flag=wx.EXPAND)
 
         return sizer
@@ -153,7 +153,7 @@ class TelescopeControlFrame(wx.Frame):
 
         sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-        sizer.Add(self.__create_pointing_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+        sizer.Add(self.__create_fov_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add([1,1], proportion=1, flag=wx.EXPAND)
 
 
@@ -378,14 +378,14 @@ class TelescopeControlFrame(wx.Frame):
         # TODO: CLEANUP, name sizers sanely
         notebookScanningPane    = wx.Panel(self.controlNotebook)
         self.label_1_copy_2     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-        self.textCtrlScanMinAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "0")
+        self.textCtrlScanMinAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         self.label_2_copy_2     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-        self.textCtrlScanMaxAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "90")
+        self.textCtrlScanMaxAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "80")
         self.sizer_44_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Coord A (Azimuth, Right Ascension)")
         self.label_1_copy_3     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-        self.textCtrlScanMinEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        self.textCtrlScanMinEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-20")
         self.label_2_copy_3     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-        self.textCtrlScanMaxEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.textCtrlScanMaxEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "20")
         self.sizer_45_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Coord B (Altitude, Declination)")
         self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s):")
         self.scan_speed_input   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")

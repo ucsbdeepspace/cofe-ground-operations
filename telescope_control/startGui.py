@@ -79,6 +79,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
         self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
+        self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
 
     def move_abs(self, event):
         azPos = float(self.absolute_move_ctrl_az.GetValue())
@@ -190,9 +191,9 @@ class MainWindow(gui.TelescopeControlFrame):
         # load some settings
         speed = 4 # angular speed in deg/s
         crd1a = float(self.textCtrlScanMinAz.GetValue()) % 360
-        crd1b = float(self.textCtrlScanMinEl.GetValue()) % 360
+        crd1b = float(self.textCtrlScanMinEl.GetValue())
         crd2a = float(self.textCtrlScanMaxAz.GetValue()) % 360
-        crd2b = float(self.textCtrlScanMaxEl.GetValue()) % 360
+        crd2b = float(self.textCtrlScanMaxEl.GetValue())
         num_turns = 10
         
         scan_id = self.comboBoxScanOptions.GetSelection()
@@ -224,6 +225,12 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread.start()
         event.Skip()
 
+    # spin control for chart field of view changed
+    def change_fov (self, event):
+        self.sky_chart.h_fov = float(self.chart_fov.GetValue())
+        self.sky_chart.Refresh()
+        event.Skip()
+    
     def update_display(self, event):
         if not self.galil:  # Short circuit in test-mode
             return

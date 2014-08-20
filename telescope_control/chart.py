@@ -17,7 +17,7 @@ class Chart (glcanvas.GLCanvas):
         # drawing settings
         self.path = [] # list of points [x, y]
         self.center = [0, 0]
-        self.h_fov = 90 # horizontal field of view
+        self.h_fov = 90.0 # horizontal field of view
         
         # initialize OpenGL
         glDisable(GL_DEPTH_TEST)
