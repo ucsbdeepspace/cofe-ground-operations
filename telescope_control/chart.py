@@ -42,10 +42,6 @@ class Chart (glcanvas.GLCanvas):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-        
-        # other line settings
-        glLineWidth(2)         # width of 2px
-        glColor(0.9, 0.9, 0.9) # light gray
     
     # event handlers
     def on_resize (self, event):
@@ -103,9 +99,6 @@ class Chart (glcanvas.GLCanvas):
         displace = [(sky_coord[0] - self.center[0]) % 360.0,
                      sky_coord[1] - self.center[1]]
         
-        # transform (-360, 360) -> [0, 360)
-        if displace[0] < 0:
-            displace[0] += 360
         # transform [0, 360) -> (-180, 180]
         if displace[0] > 180:
             displace[0] -= 360
@@ -126,6 +119,8 @@ class Chart (glcanvas.GLCanvas):
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
         
         # draw lines representing the path
+        glLineWidth(2)         # width of 2px
+        glColor(0.9, 0.9, 0.9) # light gray
         glBegin(GL_LINE_STRIP)
         
         for point in self.path:
@@ -133,4 +128,42 @@ class Chart (glcanvas.GLCanvas):
             glVertex(screen_x, screen_y)
         
         glEnd()
+        
+        # draw grid
+        glLineWidth(2.5)            # width of 2.5px
+        glColor(0.5, 0.5, 0.5)    # gray
+        glLineStipple(2, 0xAAAA)  # dashed lines
+        glEnable(GL_LINE_STIPPLE)
+        
+        # mark frequency
+        if self.h_fov >= 150:
+            mark = 30
+        elif self.h_fov >= 50:
+            mark = 10
+        elif self.h_fov >= 25:
+            mark = 5
+        elif self.h_fov >= 10:
+            mark = 2
+        else: # self.h_fov < 10
+            mark = 1
+        
+        glBegin(GL_LINES)
+        
+        # vertical lines
+        for azi in range(0, 360/mark):
+            point = self.project([azi * mark, 0])
+            if -1 < point[0] < self.width + 1:
+                glVertex(point[0], 0)
+                glVertex(point[0], self.height)
+        
+        # vertical lines
+        for alt in range(-90/mark, 90/mark + 1):
+            point = self.project([0, alt * mark])
+            if -1 < point[1] < self.height + 1:
+                glVertex(0, point[1])
+                glVertex(self.width, point[1])
+        
+        glEnd()
+        glDisable(GL_LINE_STIPPLE)
+        
         glFlush()
