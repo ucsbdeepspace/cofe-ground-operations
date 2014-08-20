@@ -9,10 +9,13 @@ from wx import glcanvas
 
 class Chart (glcanvas.GLCanvas):
     
-    def __init__ (self, parent):
+    def __init__ (self, parent, fov_ctrl):
         glcanvas.GLCanvas.__init__(self, parent, -1)
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
+        
+        # field of view indicator widget
+        self.fov_ctrl = fov_ctrl
         
         # drawing settings
         self.path = [] # list of points [x, y]
@@ -22,6 +25,7 @@ class Chart (glcanvas.GLCanvas):
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_MOUSEWHEEL, self.scroll_fov)
         
         self.initialized = False
         
@@ -58,6 +62,22 @@ class Chart (glcanvas.GLCanvas):
         self.draw()
         self.SwapBuffers()
         
+        event.Skip()
+    
+    # scrolling to change field of view directly on the sky chart
+    def scroll_fov (self, event):
+        self.h_fov += -2 * float(event.GetWheelRotation()) / 120
+        
+        # constraint to range [1, 180]
+        if self.h_fov > 180:
+            self.h_fov = 180.0
+        elif self.h_fov < 1:
+            self.h_fov = 1.0
+        
+        # show new value on field of view indicator
+        self.fov_ctrl.SetValue(self.h_fov)
+        
+        self.Refresh()
         event.Skip()
         
     # resize: update 2D OpenGL display with new size

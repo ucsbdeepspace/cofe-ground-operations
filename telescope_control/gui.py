@@ -104,21 +104,6 @@ class TelescopeControlFrame(wx.Frame):
 
         return sizer
 
-    def __create_fov_StaticBox(self, parent):
-
-        gridSizer = wx.FlexGridSizer(rows=1, cols=2)
-
-        self.chart_fov = wx.SpinCtrl(parent, value="90", min=1, max=180)
-
-        gridSizer.AddF(self.chart_fov, self.sizerFlags)
-        gridSizer.Add([1,1])
-
-        chart_box = wx.StaticBox(parent, wx.ID_ANY, "<< Chart Horiz Field of View")
-        sizer = wx.StaticBoxSizer(chart_box, wx.VERTICAL)
-        sizer.Add(gridSizer, flag=wx.EXPAND)
-
-        return sizer
-
     def __create_motion_control_StaticBox(self, parent):
 
 
@@ -145,15 +130,14 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_controls_sizer(self):
 
-        controlButtonPanel                   = wx.Panel(self)
+        controlButtonPanel = wx.Panel(self)
         
 
-        controlButtonsStaticBox        = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
+        controlButtonsStaticBox = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
         sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
 
         sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-        sizer.Add(self.__create_fov_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add([1,1], proportion=1, flag=wx.EXPAND)
 
 
@@ -517,12 +501,21 @@ class TelescopeControlFrame(wx.Frame):
         
     def __create_chart(self):
         self.sky_panel = wx.Panel(self)
+        sky_sizer = wx.BoxSizer(wx.VERTICAL)
         
-        self.sky_chart = Chart(self.sky_panel)
-        sky_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        # create field of view display
+        fov_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        fov_label = wx.StaticText(self.sky_panel, label="Horizontal Field of View:  ")
+        fov_sizer.Add(fov_label)
+        self.chart_fov = wx.SpinCtrl(self.sky_panel, value="90", min=1, max=180)
+        fov_sizer.Add(self.chart_fov, 1, wx.EXPAND)
+        sky_sizer.Add(fov_sizer, 0, wx.EXPAND)
+        
+        # create OpenGL canvas
+        self.sky_chart = Chart(self.sky_panel, self.chart_fov)
         sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
-        self.sky_panel.SetSizer(sky_sizer)
         
+        self.sky_panel.SetSizer(sky_sizer)
         return self.sky_panel
 
     def __create_layout(self):
