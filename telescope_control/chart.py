@@ -15,6 +15,10 @@ class Chart (glcanvas.GLCanvas):
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
         
+        # load font
+        self.font = FTGL.BitmapFont("fonts/DejaVuSans.ttf")
+        self.font.FaceSize(12)
+        
         # field of view indicator widget
         self.fov_ctrl = fov_ctrl
         
@@ -133,7 +137,7 @@ class Chart (glcanvas.GLCanvas):
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
         
         # draw grid
-        glLineWidth(2.5)            # width of 2.5px
+        glLineWidth(2.5)          # width of 2.5px
         glColor(0.5, 0.5, 0.5)    # gray
         glLineStipple(2, 0xAAAA)  # dashed lines
         glEnable(GL_LINE_STIPPLE)
@@ -153,27 +157,35 @@ class Chart (glcanvas.GLCanvas):
         # vertical lines
         for azi in range(0, 360/mark):
             point = self.project([azi * mark, 0])
-            if -1 < point[0] < self.width + 1:
+            if -1 < point[0] < self.width - 30:
                 # draw line
                 glBegin(GL_LINES)
                 glVertex(point[0], 0)
-                glVertex(point[0], self.height)
+                glVertex(point[0], self.height - self.font.line_height)
                 glEnd()
                 
                 # draw label
-                
+                text = str(azi * mark)
+                glRasterPos(point[0] - 0.5 * self.font.Advance(text),
+                            self.height - 5)
+                self.font.Render(text)
         
         # horizontal lines
         for alt in range(-90/mark, 90/mark + 1):
             point = self.project([0, alt * mark])
-            if -1 < point[1] < self.height + 1:
+            if -1 < point[1] < self.height - self.font.line_height:
+                
                 # draw line
                 glBegin(GL_LINES)
                 glVertex(0, point[1])
-                glVertex(self.width, point[1])
+                glVertex(self.width - 30, point[1])
                 glEnd()
                 
                 # draw label
+                text = str(alt * mark)
+                glRasterPos(self.width - self.font.Advance(text) - 5,
+                            point[1] + 3)
+                self.font.Render(text)
         
         glDisable(GL_LINE_STIPPLE)
         
