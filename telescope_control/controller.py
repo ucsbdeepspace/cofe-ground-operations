@@ -1,6 +1,7 @@
 # controller.py
 # layer of abstraction for moving motors
 
+import circle
 import ephem
 import math
 import numpy as np
@@ -40,8 +41,7 @@ class Controller:
     #      note: use max speed if speed <= 0 or speed >= max speed
     #   repeat: number of times to repeat (use "True" for indefinite repetition)
     #   
-    # -> error_code (0 = no error), error_msg (None, if error_code == 0)
-    #      (returns once scan is complete)
+    # -> (returns once scan is complete)
     def scan (self, crd_list, process_func, speed, repeat = 1):
         
         # unset any previously set stop events
@@ -75,8 +75,7 @@ class Controller:
     #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
     #   speed: rate (degrees/sec) to slew at
     #
-    # -> error_code, error_msg
-    #      (returns once scan is complete)
+    # -> (returns once scan is complete)
     def process_hor (self, crd_list, speed):
         
         i = 0
@@ -94,8 +93,7 @@ class Controller:
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
     #   speed: rate (degrees/sec) to slew at
     #
-    # -> error_code (0 = no error), error_msg (None, if error_code == 0)
-    #      (returns once scan is complete)
+    # -> (returns once scan is complete)
     def process_equ (self, crd_list, speed):
         
         i = 0
@@ -157,56 +155,23 @@ class Controller:
     #   coord_h -> [azimuth, altitude]: new position to slew to
     #   speed: rate (degrees/sec) to slew to new position
     #
-    # -> error_code, error_msg
+    # -> (returns once slew has reached destination point)
     def goto (self, coord_h, speed):
         self.logger.info("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
         
-        # compute movement in each axis
-        prev_azi, prev_alt = self.current_pos()
-        d_azi = min(math.fabs(coord_h[0] - prev_azi),
-                    math.fabs(coord_h[0] - prev_azi + 180),
-                    math.fabs(coord_h[0] - prev_azi - 180))
-        d_alt = math.fabs(coord_h[1] - prev_alt)
+        # angular distance and bearing to new point
+        cur_a, cur_b = self.current_pos()
+        ang_dist = circle.distance(cur_a, cur_b, coord_h[0], coord_h[1])
+        bearing = circle.bearing(cur_a, cur_b, coord_h[0], coord_h[1])
         
-        # compute (top) speed to move each axis
-        alt_av = 0.5 * (prev_alt + coord_h[1])
-        d_azi_cos_alt = d_azi * math.cos(np.radians(alt_av))
-        dist_deg = math.sqrt(d_azi_cos_alt ** 2 + d_alt ** 2)
-        time_needed = speed / dist_deg # due to accel, this is not actual time
+        # generate list of intermediate points to slew to
+        num_int = int(ang_dist) # one intermediate point per degree
+        point_list = []
         
-        angspeed_azi = d_azi / time_needed
-        angspeed_alt = d_alt / time_needed
+        for i in range(1, num_int + 1):
+            a, b = circle.waypoint(cur_a, cur_b, bearing,
+                i * ang_dist / num_int)
+            point_list.append([a, b])
         
-        # move both axes
-        self.move_axis(0, coord_h[0], angspeed_azi)
-        self.move_axis(1, coord_h[1], angspeed_alt)
-        self.begin_move()
-        
-        # TODO: stall until slew is finished
-        return 0
-    
-    # move_axis: queue a move single axis to some position at some speed
-    #
-    #   axis: integer indicating axis
-    #      0 = azimuth axis
-    #      1 = altitude axis
-    #   new_pos: coordinate (degrees) to move axis to
-    #   speed: rate (degrees/sec) to slew to new position
-    #
-    # -> error_code, error_msg
-    def move_axis (self, axis, new_pos, speed):
-        old_pos = self.current_pos()[axis]
-        delta = (new_pos - old_pos) % 360 # in range [0, 360)
-        
-        # azimuth axis involves wrap-around
-        if axis == 0 and delta > 180:
-            delta -= 360 # in range (-180, 180]
-        
-        # TODO: set move relative by 'delta' with proper acceleration
-        #       and deceleration to and from the given speed
-        return 0
-    
-    # begin_move: submit all move commands in queue to run at once
-    # -> error_code, error_msg
-    def begin_move (self):
+        # TODO: slew to all points in point_list; stall until slew is finished
         return 0
