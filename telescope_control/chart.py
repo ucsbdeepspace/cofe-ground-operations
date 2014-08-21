@@ -63,11 +63,20 @@ class Chart (glcanvas.GLCanvas):
     
     # scrolling to change field of view directly on the sky chart
     def scroll_fov (self, event):
-        if self.h_fov < 100 or \
-                int(self.h_fov) == 50 and event.GetWheelRotation() > 0:
+        if self.h_fov < 20 or \
+                int(self.h_fov) == 20 and event.GetWheelRotation() > 0:
+            self.h_fov += -1 * float(event.GetWheelRotation()) / 120
+            
+        elif self.h_fov < 60 or \
+                int(self.h_fov) == 60 and event.GetWheelRotation() > 0:
             self.h_fov += -2 * float(event.GetWheelRotation()) / 120
-        else:
+            
+        elif self.h_fov < 100 or \
+                int(self.h_fov) == 100 and event.GetWheelRotation() > 0:
             self.h_fov += -4 * float(event.GetWheelRotation()) / 120
+            
+        else:
+            self.h_fov += -8 * float(event.GetWheelRotation()) / 120
         
         # constraint to range [1, 180]
         if self.h_fov > 180:
