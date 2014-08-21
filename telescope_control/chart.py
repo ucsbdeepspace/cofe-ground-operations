@@ -126,7 +126,7 @@ class Chart (glcanvas.GLCanvas):
         
         # convert displacement from center in sky coordinates into displacement
         # in screen coordinates and compute final screen position
-        return 0.5 * self.width  + displace[0] * pix_per_deg, \
+        return 0.5 * self.width  - displace[0] * pix_per_deg, \
                0.5 * self.height - displace[1] * pix_per_deg
     
     # draw: draw all objects onto the screen
