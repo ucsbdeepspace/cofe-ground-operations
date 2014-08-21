@@ -361,16 +361,16 @@ class TelescopeControlFrame(wx.Frame):
     def __create_scanning_pane(self):	
         # TODO: CLEANUP, name sizers sanely
         notebookScanningPane    = wx.Panel(self.controlNotebook)
-        self.label_1_copy_2     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-        self.textCtrlScanMinAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.label_2_copy_2     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-        self.textCtrlScanMaxAz  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "80")
-        self.sizer_44_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Coord A (Azimuth, Right Ascension)")
-        self.label_1_copy_3     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-        self.textCtrlScanMinEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-20")
-        self.label_2_copy_3     = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-        self.textCtrlScanMaxEl  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "20")
-        self.sizer_45_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Coord B (Altitude, Declination)")
+        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "0")
+        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "80")
+        self.corner1_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 1")
+        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-20")
+        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "20")
+        self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
         self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s):")
         self.scan_speed_input   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")
         self.label_scan_cycles  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles:")
@@ -390,26 +390,26 @@ class TelescopeControlFrame(wx.Frame):
 
 
         sizer_13_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_2.Add(self.label_1_copy_2)
-        sizer_13_copy_2.Add(self.textCtrlScanMinAz)
+        sizer_13_copy_2.Add(self.corner1_crda_label)
+        sizer_13_copy_2.Add(self.corner1_crda_box)
 
         sizer_14_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_14_copy_2.Add(self.label_2_copy_2)
-        sizer_14_copy_2.Add(self.textCtrlScanMaxAz)
+        sizer_14_copy_2.Add(self.corner1_crdb_label)
+        sizer_14_copy_2.Add(self.corner1_crdb_box)
         
-        sizer_44 = wx.StaticBoxSizer(self.sizer_44_staticbox, wx.VERTICAL)
+        sizer_44 = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
         sizer_44.Add(sizer_13_copy_2, 1, wx.EXPAND)
         sizer_44.Add(sizer_14_copy_2, 1, wx.EXPAND)
         
         sizer_13_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_3.Add(self.label_1_copy_3)
-        sizer_13_copy_3.Add(self.textCtrlScanMinEl)
+        sizer_13_copy_3.Add(self.corner2_crda_label)
+        sizer_13_copy_3.Add(self.corner2_crda_box)
                 
         sizer_14_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_14_copy_3.Add(self.label_2_copy_3)
-        sizer_14_copy_3.Add(self.textCtrlScanMaxEl)
+        sizer_14_copy_3.Add(self.corner2_crdb_label)
+        sizer_14_copy_3.Add(self.corner2_crdb_box)
         
-        sizer_45 = wx.StaticBoxSizer(self.sizer_45_staticbox, wx.VERTICAL)
+        sizer_45 = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
         sizer_45.Add(sizer_13_copy_3, 1, wx.EXPAND)
         sizer_45.Add(sizer_14_copy_3, 1, wx.EXPAND)
         
