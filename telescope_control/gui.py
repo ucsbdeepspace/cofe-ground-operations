@@ -121,20 +121,16 @@ class TelescopeControlFrame(wx.Frame):
         horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
         verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
 
-        controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
+        controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
         sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
         sizer.Add(verticalSizer)
 
         return sizer
 
-
     def __create_controls_sizer(self):
 
         controlButtonPanel = wx.Panel(self)
-        
-
-        controlButtonsStaticBox = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
-        sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+        sizer = wx.BoxSizer(wx.VERTICAL)
 
         sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
@@ -142,7 +138,6 @@ class TelescopeControlFrame(wx.Frame):
 
 
         controlButtonPanel.SetSizer(sizer)
-
         return controlButtonPanel
 
 
@@ -366,25 +361,25 @@ class TelescopeControlFrame(wx.Frame):
         self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
         self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
         
         self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
         self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
+        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
         self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
         
         self.corner3_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 3")
         self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
+        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
         self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         
         self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
         self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
         self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         
         self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
         self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
@@ -551,13 +546,25 @@ class TelescopeControlFrame(wx.Frame):
         self.sky_panel = wx.Panel(self)
         sky_sizer = wx.BoxSizer(wx.VERTICAL)
         
+        # top bar controls
+        ctrl_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.chart_crdsys = wx.ComboBox(self.sky_panel, wx.ID_ANY,
+            choices=["Horizontal"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.chart_crdsys.SetSelection(0)
+        ctrl_sizer.Add(self.chart_crdsys)
+        
+        self.chart_proj = wx.ComboBox(self.sky_panel, wx.ID_ANY,
+            choices=["Equirectangular"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.chart_proj.SetSelection(0)
+        ctrl_sizer.Add(self.chart_proj)
+        
         # create field of view display
-        fov_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        fov_label = wx.StaticText(self.sky_panel, label=" Horizontal Field of View:  ")
-        fov_sizer.Add(fov_label)
+        fov_label = wx.StaticText(self.sky_panel, label=" FOV:  ")
+        ctrl_sizer.Add(fov_label)
         self.chart_fov = wx.SpinCtrl(self.sky_panel, value="90", min=1, max=180)
-        fov_sizer.Add(self.chart_fov, 1, wx.EXPAND)
-        sky_sizer.Add(fov_sizer, 0, wx.EXPAND)
+        ctrl_sizer.Add(self.chart_fov, 1, wx.EXPAND)
+        sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
         
         # create OpenGL canvas
         self.sky_chart = Chart(self.sky_panel, self.chart_fov)
