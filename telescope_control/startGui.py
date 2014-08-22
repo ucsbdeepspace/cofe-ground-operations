@@ -227,11 +227,6 @@ class MainWindow(gui.TelescopeControlFrame):
             crd_a = atan2(y, x)
             crd_b = atan2(z, math.sqrt(x*x + y*y))
             
-            # TODO: convert from equatorial to horizontal coordinates if the
-            #       chart is to always show horizontal coordinates
-            # an alternative is to have a horizontal and equatorial mode
-            # in which case the coordinate conversion happens here
-            
             self.sky_chart.center = [crd_a, crd_b]
             self.sky_chart.Refresh()
             
