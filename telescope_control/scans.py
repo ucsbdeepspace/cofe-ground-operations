@@ -14,13 +14,31 @@ def serpentine (pt1, pt2, pt3, pt4, num_turns):
     
     crd_list = [] # final list of coordinates
     
-    for i in range(0, num_turns + 1):
+    for i in range(0, num_turns):
         
         # start on pt1 side and move toward pt2 side
-        crd_list.append([i/num_turns*pt1[0] + (1 - i/num_turns)*pt4[0],
-                         i/num_turns*pt1[1] + (1 - i/num_turns)*pt4[1]])
-        crd_list.append([i/num_turns*pt2[0] + (1 - i/num_turns)*pt3[0],
-                         i/num_turns*pt2[1] + (1 - i/num_turns)*pt3[1]])
+        crd_list.append(
+            [(1 - float(i)/num_turns)*pt1[0] + float(i)/num_turns*pt4[0],
+             (1 - float(i)/num_turns)*pt1[1] + float(i)/num_turns*pt4[1]]
+        )
+        crd_list.append(
+            [(1 - float(i)/num_turns)*pt2[0] + float(i)/num_turns*pt3[0],
+             (1 - float(i)/num_turns)*pt2[1] + float(i)/num_turns*pt3[1]]
+        )
+        
+        # move towards pt3 half a step and go the other direction
+        crd_list.append(
+            [(1 - (i + 0.5)/num_turns)*pt2[0] + (i + 0.5)/num_turns*pt3[0],
+             (1 - (i + 0.5)/num_turns)*pt2[1] + (i + 0.5)/num_turns*pt3[1]]
+        )
+        crd_list.append(
+            [(1 - (i + 0.5)/num_turns)*pt1[0] + (i + 0.5)/num_turns*pt4[0],
+             (1 - (i + 0.5)/num_turns)*pt1[1] + (i + 0.5)/num_turns*pt4[1]]
+        )
+    
+    # execute the final stretch of the scan
+    crd_list.append([pt4[0], pt4[1]])
+    crd_list.append([pt3[0], pt3[1]])
     
     return crd_list
 
@@ -39,12 +57,12 @@ def zigzag (pt1, pt2, pt3, pt4, num_turns):
         
         # start on pt1 side and move toward pt2 side
         crd_list.append(
-            [float(i)/num_turns*pt1[0] + (1 - float(i)/num_turns)*pt4[0],
-             float(i)/num_turns*pt1[1] + (1 - float(i)/num_turns)*pt4[1]]
+            [(1 - float(i)/num_turns)*pt1[0] + float(i)/num_turns*pt4[0],
+             (1 - float(i)/num_turns)*pt1[1] + float(i)/num_turns*pt4[1]]
         )
         crd_list.append(
-            [float(i)/num_turns*pt2[0] + (1 - float(i)/num_turns)*pt3[0],
-             float(i)/num_turns*pt2[1] + (1 - float(i)/num_turns)*pt3[1]]
+            [(1 - float(i)/num_turns)*pt2[0] + float(i)/num_turns*pt3[0],
+             (1 - float(i)/num_turns)*pt2[1] + float(i)/num_turns*pt3[1]]
         )
     
     return crd_list
