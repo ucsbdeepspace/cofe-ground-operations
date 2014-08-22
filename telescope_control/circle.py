@@ -5,61 +5,62 @@ import math
 
 # distance: angular distance (degrees) between two points on a sphere
 #
-#   pt1_a, pt1_b: azimuth and elevation angles of first point
-#   pt2_a, pt2_b: azimuth and elevation angles of second point
+#   pt1 -> [crd_a, crd_b]: azimuth and elevation angles of first point
+#   pt2 -> [crd_a, crd_b]: azimuth and elevation angles of second point
 #
 # -> theta: angular distance between pt1 and pt2
-def distance (pt1_a, pt1_b, pt2_a, pt2_b):
+def distance (pt1, pt2):
     
     # <pt1, pt2> = ||pt1|| ||pt2|| cos(theta)
     # cos(theta) = <pt1, pt2> / (||pt1|| ||pt2||)
     #            = <pt1, pt2>             <-- letting pt1, pt2 be unit vectors
-    #            = sin(pt1_b)*sin(pt2_b)+cos(pt1_b)*cos(pt2_b)*cos(pt2_a-pt1_a)
+    #            = sin(pt1[1])*sin(pt2[1])+cos(pt1[1])*cos(pt2[1])*cos(pt2[0]-pt1[0])
     return math.degrees(math.acos(
-        math.sin(math.radians(pt1_b)) * math.sin(math.radians(pt2_b)) +
-        math.cos(math.radians(pt1_b)) * math.cos(math.radians(pt2_b))
-            * math.cos(math.radians(pt2_a - pt1_a))))
+        math.sin(math.radians(pt1[1])) * math.sin(math.radians(pt2[1])) +
+        math.cos(math.radians(pt1[1])) * math.cos(math.radians(pt2[1]))
+            * math.cos(math.radians(pt2[0] - pt1[0]))))
 
 
 # bearing: direction to go from one point to another
 #
-#   pt1_a, pt1_b: point to start and get the bearing at
-#   pt2_a, pt2_b: destination point
+#   pt1 -> [crd_a, crd_b]: point to start and get the bearing at
+#   pt2 -> [crd_a, crd_b]: destination point
 #
 # -> angle: degrees east of north
-def bearing (pt1_a, pt1_b, pt2_a, pt2_b):
-    return math.degrees(math.atan2(math.sin(math.radians(pt2_a - pt1_a)),
-        math.cos(math.radians(pt1_b)) * math.sin(math.radians(pt2_b)) -
-        math.sin(math.radians(pt1_b)) * math.cos(math.radians(pt2_a - pt1_a))))
+def bearing (pt1, pt2):
+    
+    # convert inputs to radians
+    pt1_a = math.radians(pt1[0])
+    pt1_b = math.radians(pt1[1])
+    pt2_a = math.radians(pt2[0])
+    pt2_b = math.radians(pt2[1])
+    
+    return math.degrees(math.atan2(
+        math.cos(pt2_b) * math.sin(pt2_a - pt1_a),
+        math.cos(pt1_b) * math.sin(pt2_b) -
+            math.sin(pt1_b) * math.cos(pt2_b) * math.cos(pt2_a - pt1_a)))
 
 
 # waypoint: compute the position of a point on a great circle
 #
-#   pt1_a, pt1_b: point to start at
-#   bearing_1: bearing of great circle at (pt1_a, pt1_b)
+#   pt1 -> [crd_a, crd_b]: point to start at
+#   bearing_1: bearing of great circle at pt1
 #   delta: angular distance to travel along great circle (degrees)
 #
-# -> pt2_a, pt2_b: the point delta along the great circle from (pt1_a, pt1_b)
-def waypoint (pt1_a, pt1_b, bearing_1, delta):
+# -> pt2: the point delta along the great circle from pt1
+def waypoint (pt1, bearing_1, delta):
     
-    # bearing at the ascending node (radians)
-    bearing_an = math.asin(
-        math.sin(math.radians(bearing_1)) * math.cos(math.radians(pt1_b)))
-    
-    # angular distance of (pt1_a, pt1_b) from the ascending node (radians)
-    dist_an = math.atan2(math.tan(math.radians(pt1_b)),
-                         math.cos(math.radians(bearing_1)))
-    
-    # longitude of the ascending node (degrees)
-    lon_an = pt1_a - math.degrees(math.atan2(
-        math.sin(bearing_an) * math.sin(dist_an),
-        math.cos(dist_an)))
-    
-    # compute point from Napier's rules
+    # convert inputs to radians
+    pt1_b = math.radians(pt1[1])
+    dist = math.radians(delta)
+    b_rad = math.radians(bearing_1)
+
     return \
-        lon_an + math.degrees(math.atan2(
-            math.sin(bearing_an) * math.sin(math.radians(delta)),
-            math.cos(math.radians(delta)))), \
+        (pt1[0] + math.degrees(math.atan2(
+            math.sin(dist) * math.sin(b_rad),
+            math.cos(pt1_b) * math.cos(dist) -
+            math.sin(pt1_b) * math.sin(dist) * math.cos(b_rad)))) % 360, \
         \
-        math.degrees(math.asin(math.cos(bearing_an) *
-            math.sin(math.radians(delta))))
+        math.degrees(math.asin(
+            math.sin(pt1_b) * math.cos(dist) +
+            math.cos(pt1_b) * math.sin(dist) * math.cos(b_rad)))

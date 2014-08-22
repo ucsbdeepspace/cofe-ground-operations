@@ -8,6 +8,8 @@ import sys
 import wx
 from wx import glcanvas
 
+import circle
+
 class Chart (glcanvas.GLCanvas):
     
     def __init__ (self, parent, fov_ctrl):
@@ -194,9 +196,24 @@ class Chart (glcanvas.GLCanvas):
         glColor(0.9, 0.9, 0.9) # light gray
         glBegin(GL_LINE_STRIP)
         
-        for point in self.path:
-            screen_x, screen_y = self.project(point)
-            glVertex(screen_x, screen_y)
+        prev_pt = False
+        for next_pt in self.path:
+            
+            # intermediate points
+            if prev_pt:
+                glVertex(*self.project(prev_pt))
+                ang_dist = circle.distance(prev_pt, next_pt)
+                bearing = circle.bearing(prev_pt, next_pt)
+                
+                # generate list of intermediate points to slew to
+                num_int = int(ang_dist) # one intermediate point per degree
+                
+                for i in range(1, num_int + 1):
+                    a, b = circle.waypoint(prev_pt, bearing,
+                        i * ang_dist / num_int)
+                    glVertex(*self.project([a, b]))
+            
+            prev_pt = next_pt
         
         glEnd()
         

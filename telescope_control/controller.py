@@ -164,15 +164,15 @@ class Controller:
         
         # angular distance and bearing to new point
         cur_a, cur_b = self.current_pos()
-        ang_dist = circle.distance(cur_a, cur_b, coord_h[0], coord_h[1])
-        bearing = circle.bearing(cur_a, cur_b, coord_h[0], coord_h[1])
+        ang_dist = circle.distance([cur_a, cur_b], coord_h)
+        bearing = circle.bearing([cur_a, cur_b], coord_h)
         
         # generate list of intermediate points to slew to
         num_int = int(ang_dist) # one intermediate point per degree
         point_list = []
         
         for i in range(1, num_int + 1):
-            a, b = circle.waypoint(cur_a, cur_b, bearing,
+            a, b = circle.waypoint([cur_a, cur_b], bearing,
                 i * ang_dist / num_int)
             point_list.append([a, b])
         
