@@ -31,10 +31,9 @@ def map_(array, func_list):
 
 class MainWindow(gui.TelescopeControlFrame):
     def __init__(self, galilInterface, converter, conf, *args, **kwargs):
-        gui.TelescopeControlFrame.__init__(self, *args, **kwargs)
+        gui.TelescopeControlFrame.__init__(self, converter, *args, **kwargs)
         self.poll_update = wx.Timer(self)
         self.galil = galilInterface
-        self.converter = converter
         self.config = conf
         self.scan_thread = None
         self.scan_thread_stop = None
@@ -203,6 +202,8 @@ class MainWindow(gui.TelescopeControlFrame):
         # compute a list of points to scan to and update sky chart
         points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
         self.sky_chart.path = points[:] # show path on chart
+        self.sky_chart.given_equ = \
+            (self.coordsys_selector.GetSelection() == 1)
         
         # center sky chart in the middle of the scan region
         if len(points) > 0:
@@ -233,10 +234,12 @@ class MainWindow(gui.TelescopeControlFrame):
             
             self.sky_chart.center = [crd_a, crd_b]
             self.sky_chart.Refresh()
+            
+        return points
 
     # scan button clicked
     def scan (self, event):
-        self.show_scan()
+        points = self.show_scan()
         
         # run scan in new thread
         self.scan_thread = Thread(target=lambda:

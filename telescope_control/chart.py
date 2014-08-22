@@ -2,7 +2,9 @@
 # wx widget for showing a chart of objects
 #   (depends: python-opengl, pyftgl)
 
+import ephem
 import FTGL
+import math
 from OpenGL.GL import *
 import sys
 import wx
@@ -12,10 +14,11 @@ import circle
 
 class Chart (glcanvas.GLCanvas):
     
-    def __init__ (self, parent, fov_ctrl):
+    def __init__ (self, parent, fov_ctrl, converter):
         glcanvas.GLCanvas.__init__(self, parent, -1)
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
+        self.converter = converter
         
         # load font
         self.font = FTGL.BitmapFont("fonts/DejaVuSans.ttf")
@@ -25,7 +28,8 @@ class Chart (glcanvas.GLCanvas):
         self.fov_ctrl = fov_ctrl
         
         # drawing settings
-        self.path = []    # list of points [crd_a, crd_b]
+        self.path = [] # list of points [crd_a, crd_b]
+        self.given_equ = False # whether the path points are equatorial
         self.center = [0, 0]
         self.h_fov = 90.0 # horizontal field of view
         
@@ -35,6 +39,7 @@ class Chart (glcanvas.GLCanvas):
         self.Bind(wx.EVT_MOUSEWHEEL, self.scroll_fov)
         
         self.initialized = False
+    
         
     # initialize OpenGL
     def gl_init (self):
@@ -95,7 +100,8 @@ class Chart (glcanvas.GLCanvas):
         
         self.Refresh()
         event.Skip()
-        
+
+
     # resize: update 2D OpenGL display with new size
     #   width, height: new chart size (pixels)
     def resize (self, width, height):
@@ -109,15 +115,17 @@ class Chart (glcanvas.GLCanvas):
         glOrtho(0, width, height, 0, 0, 1)
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-    
+
+
     # project: convert from sky coordinates to screen coordinates
     #          using equirectangular projection
     #   sky_coord -> [crd_a, crd_b]: position of object in the sky
-    def project (self, sky_coord):
+    #   sky_center -> [crd_a, crd_b]: position to be centered on
+    def project (self, sky_coord, sky_center):
         
         # find displacement of sky coordinate from center of screen
-        displace = [(sky_coord[0] - self.center[0]) % 360.0,
-                     sky_coord[1] - self.center[1]]
+        displace = [(sky_coord[0] - sky_center[0]) % 360.0,
+                     sky_coord[1] - sky_center[1]]
         
         # transform [0, 360) -> (-180, 180]
         if displace[0] > 180:
@@ -130,7 +138,37 @@ class Chart (glcanvas.GLCanvas):
         # in screen coordinates and compute final screen position
         return 0.5 * self.width  + displace[0] * pix_per_deg, \
                0.5 * self.height - displace[1] * pix_per_deg
+
+
+    # project_point: convert to display sky coordinates, then project
+    #
+    #   point -> [crd_a, crd_b]: position in given coordinate system
+    def project_point (self, point):
+        
+        # convert to proper coordinate system
+        if self.given_equ: # convert to horizontal
+            az, el = self.converter.radec_to_azel(
+                math.radians(point[0]), math.radians(point[1]))
+            sky_coord = [math.degrees(az), math.degrees(el)]
+            
+        else: # already in horizontal coordinates
+            sky_coord = point[:]
+        
+        return self.project (sky_coord, self.center_display())
+
     
+    # center_display: get center of screen in display sky coordinates
+    def center_display (self):
+        
+        if self.given_equ:
+            cen_az, cen_el = \
+                self.converter.radec_to_azel(
+                    math.radians(self.center[0]), math.radians(self.center[1]))
+            return [math.degrees(cen_az), math.degrees(cen_el)]
+        else:
+            return self.center[:]
+    
+
     # draw: draw all objects onto the screen
     def draw (self):
         if not self.initialized:
@@ -158,7 +196,7 @@ class Chart (glcanvas.GLCanvas):
         
         # vertical lines
         for azi in range(0, 360/mark):
-            point = self.project([azi * mark, 0])
+            point = self.project([azi * mark, 0], self.center_display())
             if -1 < point[0] < self.width - 30:
                 # draw line
                 glBegin(GL_LINES)
@@ -174,7 +212,7 @@ class Chart (glcanvas.GLCanvas):
         
         # horizontal lines
         for alt in range(-90/mark, 90/mark + 1):
-            point = self.project([0, alt * mark])
+            point = self.project([0, alt * mark], self.center_display())
             if -1 < point[1] < self.height - self.font.line_height:
                 
                 # draw line
@@ -201,7 +239,7 @@ class Chart (glcanvas.GLCanvas):
             
             # intermediate points
             if prev_pt:
-                glVertex(*self.project(prev_pt))
+                glVertex(*self.project_point(prev_pt))
                 ang_dist = circle.distance(prev_pt, next_pt)
                 bearing = circle.bearing(prev_pt, next_pt)
                 
@@ -211,7 +249,7 @@ class Chart (glcanvas.GLCanvas):
                 for i in range(1, num_int + 1):
                     a, b = circle.waypoint(prev_pt, bearing,
                         i * ang_dist / num_int)
-                    glVertex(*self.project([a, b]))
+                    glVertex(*self.project_point([a, b]))
             
             prev_pt = next_pt
         

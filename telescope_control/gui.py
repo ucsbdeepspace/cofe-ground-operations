@@ -4,9 +4,12 @@ import wx
 import scans
 
 class TelescopeControlFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, converter, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
+        
+        # unit converter (needed for sky chart)
+        self.converter = converter
 
         print "Building UI"
         # Common flags for adding things to sizers
@@ -572,7 +575,7 @@ class TelescopeControlFrame(wx.Frame):
         sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
         
         # create OpenGL canvas
-        self.sky_chart = Chart(self.sky_panel, self.chart_fov)
+        self.sky_chart = Chart(self.sky_panel, self.chart_fov, self.converter)
         sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
         
         self.sky_panel.SetSizer(sky_sizer)

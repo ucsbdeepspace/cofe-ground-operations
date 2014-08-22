@@ -119,9 +119,10 @@ class Controller:
                 
                 # compute estimate of distance to the next point
                 azi, alt = self.converter.radec_to_azel(
-                    crd_list[i][0], crd_list[i][1], dt0)
-                d_azi = azi - prev_azi
-                d_alt = alt - prev_alt
+                    math.radians(crd_list[i][0]), math.radians(crd_list[i][1]),
+                    dt0)
+                d_azi = math.degrees(azi) - prev_azi
+                d_alt = math.degrees(alt) - prev_alt
                 cosAlt = math.cos(ephem.degree * 0.5 * (alt + prev_alt))
                 
                 # approximate angular distance to move (in degrees)
@@ -137,13 +138,9 @@ class Controller:
                 
             # compute horizontal coordinates of equatorial coordinates after
             #  time dt has passed (the point where we should slew to)
-            azi_dms_str, alt_dms_str = self.converter.radec_to_azel(
-                crd_list[i][0], crd_list[i][1], dt)
-            azi_dms = azi.split(":")
-            alt_dms = alt.split(":")
-            azi = azi_dms[0] + azi_dms[1]/60.0 + azi_dms[2]/3600.0
-            alt = alt_dns[0] + alt_dms[1]/60.0 + alt_dms[2]/3600.0
-            new_crd_h = [azi, alt]
+            azi, alt = self.converter.radec_to_azel(
+                math.radians(crd_list[i][0]), math.radians(crd_list[i][1]), dt)
+            new_crd_h = [math.degrees(azi), math.degrees(alt)]
             
             # move to new position and reset for the next iteration
             self.goto(new_crd_h, speed)
