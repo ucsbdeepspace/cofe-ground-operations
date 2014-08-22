@@ -5,6 +5,7 @@ import config
 import units
 import controller
 import scans
+from threading import Thread
 
 import logging
 import math
@@ -79,6 +80,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
         self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
+        self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
 
     def move_abs(self, event):
@@ -181,12 +183,9 @@ class MainWindow(gui.TelescopeControlFrame):
                 break
         #print ''
         return
-    
-    def scan(self, event):
-        
-        #This is the function that gets called when
-        #you press the scan button.
-        from threading import Thread
+
+    # show selected scan on sky chart
+    def show_scan (self):
         
         # load some settings
         pt1 = [float(self.corner1_crda_box.GetValue()) % 360,
@@ -197,11 +196,11 @@ class MainWindow(gui.TelescopeControlFrame):
                float(self.corner3_crdb_box.GetValue())]
         pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
                float(self.corner4_crdb_box.GetValue())]
-        num_turns = int(self.num_turns_input.GetValue())
         
+        num_turns = int(self.num_turns_input.GetValue())
         scan_id = self.comboBoxScanOptions.GetSelection()
         
-        # compute a list of points to scan to
+        # compute a list of points to scan to and update sky chart
         points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
         self.sky_chart.path = points[:] # show path on chart
         
@@ -234,7 +233,12 @@ class MainWindow(gui.TelescopeControlFrame):
             
             self.sky_chart.center = [crd_a, crd_b]
             self.sky_chart.Refresh()
+
+    # scan button clicked
+    def scan (self, event):
+        self.show_scan()
         
+        # run scan in new thread
         self.scan_thread = Thread(target=lambda:
             self.controller.scan(points,
                 self.coordsys_selector.GetSelection() == 0 and
@@ -244,6 +248,11 @@ class MainWindow(gui.TelescopeControlFrame):
                     float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
+        event.Skip()
+    
+    # show preview of scan
+    def set_preview (self, event):
+        self.show_scan()
         event.Skip()
 
     # spin control for chart field of view changed

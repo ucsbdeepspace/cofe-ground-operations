@@ -389,6 +389,7 @@ class TelescopeControlFrame(wx.Frame):
         self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
         self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
         self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
+        self.preview_scan       = wx.Button(notebookScanningPane, wx.ID_ANY, "Preview")
 
         coord_sys = ["Horizontal", "Equatorial"]
         self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
@@ -473,14 +474,18 @@ class TelescopeControlFrame(wx.Frame):
         sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
         sizer_7_copy_4.Add(self.scan_repeat_input)
         
-        sizer_51 = wx.BoxSizer(wx.VERTICAL)
-        sizer_51.Add(self.coordsys_selector, 1, wx.EXPAND)
-        sizer_51.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
-        sizer_51.Add(self.buttonScanStart, 1, wx.EXPAND)
+        scan_select_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_select_sizer.Add(self.coordsys_selector, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
+        
+        scan_button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        scan_button_sizer.Add(self.preview_scan, 1, wx.EXPAND)
+        scan_button_sizer.Add(self.buttonScanStart, 1, wx.EXPAND)
+        scan_select_sizer.Add(scan_button_sizer, 1, wx.EXPAND)
                 
         sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
         sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
-        sizer_49.Add(sizer_51, 1, wx.EXPAND)
+        sizer_49.Add(scan_select_sizer, 1, wx.EXPAND)
 
         sizer_42 = wx.BoxSizer(wx.VERTICAL)
         sizer_42.Add(corners_sizer, 1, wx.EXPAND)
