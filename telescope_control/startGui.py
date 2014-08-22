@@ -205,17 +205,34 @@ class MainWindow(gui.TelescopeControlFrame):
         points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
         self.sky_chart.path = points[:] # show path on chart
         
+        # center sky chart in the middle of the scan region
         if len(points) > 0:
-            # find point in the middle of scanning area
-            d_azi = (crd2a - crd1a) % 360
             
-            # account for wrap-around, in case other direction is closer
-            if math.fabs(d_azi) <= 180:
-                center_azi = (crd1a + 0.5 * d_azi) % 360
-            else: # assume: 180 < d_azi < 360
-                center_azi = (crd1a + 0.5 * (d_azi - 180)) % 360
+            # trig functions in degrees
+            def cos (x):
+                return math.cos(math.radians(x))
+            def sin (x):
+                return math.sin(math.radians(x))
+            def atan2 (y, x):
+                return math.degrees(math.atan2(y, x))
             
-            self.sky_chart.center = [center_azi, 0.5 * (crd1b + crd2b)]
+            # convert the corner points to rectangular vectors and sum
+            x = cos(pt1[0])*cos(pt1[1]) + cos(pt2[0])*cos(pt2[1]) + \
+                cos(pt3[0])*cos(pt3[1]) + cos(pt4[0])*cos(pt4[1])
+            y = sin(pt1[0])*cos(pt1[1]) + sin(pt2[0])*cos(pt2[1]) + \
+                sin(pt3[0])*cos(pt3[1]) + sin(pt4[0])*cos(pt4[1])
+            z = sin(pt1[1]) + sin(pt2[1]) + sin(pt3[1]) + sin(pt4[1])
+            
+            # convert the resulting vector into spherical coordinates
+            crd_a = atan2(y, x)
+            crd_b = atan2(z, math.sqrt(x*x + y*y))
+            
+            # TODO: convert from equatorial to horizontal coordinates if the
+            #       chart is to always show horizontal coordinates
+            # an alternative is to have a horizontal and equatorial mode
+            # in which case the coordinate conversion happens here
+            
+            self.sky_chart.center = [crd_a, crd_b]
             self.sky_chart.Refresh()
         
         self.scan_thread = Thread(target=lambda:

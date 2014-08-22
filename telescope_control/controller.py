@@ -48,7 +48,7 @@ class Controller:
         self.stop = threading.Event()
         
         # repeat indefinitely
-        if repeat == True:
+        if str(repeat) == str(True):
             self.scan_queue = 1
         else: # repeat for <repeat> times
             self.scan_queue = repeat
@@ -65,7 +65,7 @@ class Controller:
             
             # reset direction and prepare for next time
             crd_list.reverse()
-            if repeat != True:
+            if str(repeat) != str(True):
                 self.scan_queue = self.scan_queue - 1
         
         return 0

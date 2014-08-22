@@ -40,7 +40,7 @@ def bearing (pt1_a, pt1_b, pt2_a, pt2_b):
 #   delta: angular distance to travel along great circle (degrees)
 #
 # -> pt2_a, pt2_b: the point delta along the great circle from (pt1_a, pt1_b)
-def waypoint (pt1_a, pt1_b, bearing_0, delta):
+def waypoint (pt1_a, pt1_b, bearing_1, delta):
     
     # bearing at the ascending node (radians)
     bearing_an = math.asin(

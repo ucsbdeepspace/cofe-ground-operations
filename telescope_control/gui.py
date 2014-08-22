@@ -366,11 +366,11 @@ class TelescopeControlFrame(wx.Frame):
         self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
         self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         
         self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
         self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
         self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
         self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         
@@ -378,11 +378,11 @@ class TelescopeControlFrame(wx.Frame):
         self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
         self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
         self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
         
         self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
         self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
+        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
         self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
         self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
         
