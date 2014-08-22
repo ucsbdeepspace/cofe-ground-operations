@@ -11,7 +11,6 @@ class TelescopeControlFrame(wx.Frame):
         # unit converter (needed for sky chart)
         self.converter = converter
 
-        print "Building UI"
         # Common flags for adding things to sizers
         # Huzzah for {sizer}.AddF(item, SizerFlags)
         self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)

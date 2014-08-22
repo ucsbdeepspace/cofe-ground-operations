@@ -304,14 +304,22 @@ class MainWindow(gui.TelescopeControlFrame):
         return
 
 def main():		# Shut up pylinter
+    print "Reading configuration file..."
     conf = config.Config("config.txt") #make the config object...
     galilInterface = globalConf.gInt
+    
+    print "Setting up converter..."
     converter = units.Units(conf) #...and the converter...
+    
+    print "Launching app..."
     app = wx.App()
-    #...and pass them to your MainWindow class!!!
+    
+    print "Building UI..."
     mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
     app.SetTopWindow(mainFrame)
     mainFrame.Show()
+    
+    print "Entering main loop..."
     app.MainLoop()
 
     # close galil interface on exit
