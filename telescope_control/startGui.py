@@ -197,7 +197,7 @@ class MainWindow(gui.TelescopeControlFrame):
                float(self.corner3_crdb_box.GetValue())]
         pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
                float(self.corner4_crdb_box.GetValue())]
-        num_turns = 10
+        num_turns = int(self.num_turns_input.GetValue())
         
         scan_id = self.comboBoxScanOptions.GetSelection()
         

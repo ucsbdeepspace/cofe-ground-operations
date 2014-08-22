@@ -386,6 +386,8 @@ class TelescopeControlFrame(wx.Frame):
         self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
         self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
         
+        self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
+        self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
         self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s): ")
         self.scan_speed_input   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")
         self.label_scan_cycles  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
@@ -458,17 +460,22 @@ class TelescopeControlFrame(wx.Frame):
         corners_sizer.Add(corner3_sizer, 1, wx.EXPAND)
         corners_sizer.Add(corner4_sizer, 1, wx.EXPAND)
         
-        sizer_13_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_4.Add(self.label_scan_speed)
-        sizer_13_copy_4.Add(self.scan_speed_input)
+        turns_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        turns_sizer.Add(self.num_turns_label)
+        turns_sizer.Add(self.num_turns_input)
         
-        sizer_14_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_14_copy_4.Add(self.label_scan_cycles)
-        sizer_14_copy_4.Add(self.scan_cycles_input)
+        speed_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        speed_sizer.Add(self.label_scan_speed)
+        speed_sizer.Add(self.scan_speed_input)
+        
+        cycles_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        cycles_sizer.Add(self.label_scan_cycles)
+        cycles_sizer.Add(self.scan_cycles_input)
         
         sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
-        sizer_7_copy_4.Add(sizer_13_copy_4, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(sizer_14_copy_4, 1, wx.EXPAND)
+        sizer_7_copy_4.Add(turns_sizer, 1, wx.EXPAND)
+        sizer_7_copy_4.Add(speed_sizer, 1, wx.EXPAND)
+        sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
         sizer_7_copy_4.Add(self.scan_repeat_input)
         
         sizer_51 = wx.BoxSizer(wx.VERTICAL)
