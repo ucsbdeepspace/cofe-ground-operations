@@ -186,20 +186,23 @@ class MainWindow(gui.TelescopeControlFrame):
         
         #This is the function that gets called when
         #you press the scan button.
-        from threading import Thread, Event
+        from threading import Thread
         
         # load some settings
-        speed = 4 # angular speed in deg/s
-        crd1a = float(self.textCtrlScanMinAz.GetValue()) % 360
-        crd1b = float(self.textCtrlScanMinEl.GetValue())
-        crd2a = float(self.textCtrlScanMaxAz.GetValue()) % 360
-        crd2b = float(self.textCtrlScanMaxEl.GetValue())
+        pt1 = [float(self.corner1_crda_box.GetValue()) % 360,
+               float(self.corner1_crdb_box.GetValue())]
+        pt2 = [float(self.corner2_crda_box.GetValue()) % 360,
+               float(self.corner2_crdb_box.GetValue())]
+        pt3 = [float(self.corner3_crda_box.GetValue()) % 360,
+               float(self.corner3_crdb_box.GetValue())]
+        pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
+               float(self.corner4_crdb_box.GetValue())]
         num_turns = 10
         
         scan_id = self.comboBoxScanOptions.GetSelection()
         
         # compute a list of points to scan to
-        points = scans.scan_list[scan_id](crd1a, crd1b, crd2a, crd2b, num_turns)
+        points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
         self.sky_chart.path = points[:] # show path on chart
         
         if len(points) > 0:
@@ -220,7 +223,8 @@ class MainWindow(gui.TelescopeControlFrame):
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
                 float(self.scan_speed_input.GetValue()),
-                self.scan_repeat_input.GetValue() and 1 or float(self.scan_cycles_input.GetValue())))
+                self.scan_repeat_input.GetValue() and 1 or
+                    float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
         event.Skip()

@@ -361,20 +361,35 @@ class TelescopeControlFrame(wx.Frame):
     def __create_scanning_pane(self):	
         # TODO: CLEANUP, name sizers sanely
         notebookScanningPane    = wx.Panel(self.controlNotebook)
-        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "0")
-        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "80")
+        
         self.corner1_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 1")
-        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-20")
-        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "20")
+        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        
         self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
-        self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s):")
+        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        
+        self.corner3_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 3")
+        self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
+        self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        
+        self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
+        self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "30")
+        self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "-10")
+        
+        self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s): ")
         self.scan_speed_input   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")
-        self.label_scan_cycles  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles:")
-        self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.label_scan_cycles  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
+        self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
         self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
         self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
 
@@ -389,33 +404,59 @@ class TelescopeControlFrame(wx.Frame):
         self.sizer_49_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Scan Options")
 
 
-        sizer_13_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_2.Add(self.corner1_crda_label)
-        sizer_13_copy_2.Add(self.corner1_crda_box)
+        corner1_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner1_crda_sizer.Add(self.corner1_crda_label)
+        corner1_crda_sizer.Add(self.corner1_crda_box)
 
-        sizer_14_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_14_copy_2.Add(self.corner1_crdb_label)
-        sizer_14_copy_2.Add(self.corner1_crdb_box)
+        corner1_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner1_crdb_sizer.Add(self.corner1_crdb_label)
+        corner1_crdb_sizer.Add(self.corner1_crdb_box)
         
-        sizer_44 = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
-        sizer_44.Add(sizer_13_copy_2, 1, wx.EXPAND)
-        sizer_44.Add(sizer_14_copy_2, 1, wx.EXPAND)
+        corner1_sizer = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
+        corner1_sizer.Add(corner1_crda_sizer, 1, wx.EXPAND)
+        corner1_sizer.Add(corner1_crdb_sizer, 1, wx.EXPAND)
         
-        sizer_13_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_13_copy_3.Add(self.corner2_crda_label)
-        sizer_13_copy_3.Add(self.corner2_crda_box)
+        corner2_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner2_crda_sizer.Add(self.corner2_crda_label)
+        corner2_crda_sizer.Add(self.corner2_crda_box)
                 
-        sizer_14_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_14_copy_3.Add(self.corner2_crdb_label)
-        sizer_14_copy_3.Add(self.corner2_crdb_box)
+        corner2_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner2_crdb_sizer.Add(self.corner2_crdb_label)
+        corner2_crdb_sizer.Add(self.corner2_crdb_box)
         
-        sizer_45 = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
-        sizer_45.Add(sizer_13_copy_3, 1, wx.EXPAND)
-        sizer_45.Add(sizer_14_copy_3, 1, wx.EXPAND)
+        corner2_sizer = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
+        corner2_sizer.Add(corner2_crda_sizer, 1, wx.EXPAND)
+        corner2_sizer.Add(corner2_crdb_sizer, 1, wx.EXPAND)
         
-        sizer_43 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_43.Add(sizer_44, 1, wx.EXPAND)
-        sizer_43.Add(sizer_45, 1, wx.EXPAND)
+        corner3_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner3_crda_sizer.Add(self.corner3_crda_label)
+        corner3_crda_sizer.Add(self.corner3_crda_box)
+                
+        corner3_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner3_crdb_sizer.Add(self.corner3_crdb_label)
+        corner3_crdb_sizer.Add(self.corner3_crdb_box)
+        
+        corner3_sizer = wx.StaticBoxSizer(self.corner3_box, wx.VERTICAL)
+        corner3_sizer.Add(corner3_crda_sizer, 1, wx.EXPAND)
+        corner3_sizer.Add(corner3_crdb_sizer, 1, wx.EXPAND)
+        
+        corner4_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner4_crda_sizer.Add(self.corner4_crda_label)
+        corner4_crda_sizer.Add(self.corner4_crda_box)
+                
+        corner4_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner4_crdb_sizer.Add(self.corner4_crdb_label)
+        corner4_crdb_sizer.Add(self.corner4_crdb_box)
+        
+        corner4_sizer = wx.StaticBoxSizer(self.corner4_box, wx.VERTICAL)
+        corner4_sizer.Add(corner4_crda_sizer, 1, wx.EXPAND)
+        corner4_sizer.Add(corner4_crdb_sizer, 1, wx.EXPAND)
+        
+        corners_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corners_sizer.Add(corner1_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner2_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner3_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner4_sizer, 1, wx.EXPAND)
         
         sizer_13_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_13_copy_4.Add(self.label_scan_speed)
@@ -440,7 +481,7 @@ class TelescopeControlFrame(wx.Frame):
         sizer_49.Add(sizer_51, 1, wx.EXPAND)
 
         sizer_42 = wx.BoxSizer(wx.VERTICAL)
-        sizer_42.Add(sizer_43, 1, wx.EXPAND)
+        sizer_42.Add(corners_sizer, 1, wx.EXPAND)
         sizer_42.Add(sizer_49, 1, wx.EXPAND)
         
         notebookScanningPane.SetSizer(sizer_42)
