@@ -4,7 +4,6 @@
 import circle
 import ephem
 import math
-import numpy as np
 import time
 import threading
 
@@ -138,9 +137,13 @@ class Controller:
                 
             # compute horizontal coordinates of equatorial coordinates after
             #  time dt has passed (the point where we should slew to)
-            azi, alt = self.converter.radec_to_azel(
+            azi_dms_str, alt_dms_str = self.converter.radec_to_azel(
                 crd_list[i][0], crd_list[i][1], dt)
-            new_crd_h = [np.degrees(azi), np.degrees(alt)]
+            azi_dms = azi.split(":")
+            alt_dms = alt.split(":")
+            azi = azi_dms[0] + azi_dms[1]/60.0 + azi_dms[2]/3600.0
+            alt = alt_dns[0] + alt_dms[1]/60.0 + alt_dms[2]/3600.0
+            new_crd_h = [azi, alt]
             
             # move to new position and reset for the next iteration
             self.goto(new_crd_h, speed)
