@@ -80,6 +80,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
+        self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
 
     def move_abs(self, event):
@@ -252,6 +253,11 @@ class MainWindow(gui.TelescopeControlFrame):
     def set_preview (self, event):
         self.show_scan()
         event.Skip()
+
+    # change the coordinate system of the chart
+    def change_cs (self, event):
+        self.sky_chart.show_equ = bool(self.chart_crdsys.GetSelection())
+        self.sky_chart.Refresh()
 
     # spin control for chart field of view changed
     def change_fov (self, event):

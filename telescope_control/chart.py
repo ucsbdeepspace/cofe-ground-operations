@@ -32,6 +32,7 @@ class Chart (glcanvas.GLCanvas):
         self.given_equ = False # whether the path points are equatorial
         self.center = [0, 0]
         self.h_fov = 90.0 # horizontal field of view
+        self.show_equ = False # whether to show in equatorial coordinates
         
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
@@ -136,9 +137,12 @@ class Chart (glcanvas.GLCanvas):
         
         # convert displacement from center in sky coordinates into displacement
         # in screen coordinates and compute final screen position
-        return 0.5 * self.width  + displace[0] * pix_per_deg, \
-               0.5 * self.height - displace[1] * pix_per_deg
-
+        if self.show_equ: # -> right ascension increases to the left
+            return 0.5 * self.width  - displace[0] * pix_per_deg, \
+                   0.5 * self.height - displace[1] * pix_per_deg
+        else: # show horizontal system -> azimuth increases to the right
+            return 0.5 * self.width  + displace[0] * pix_per_deg, \
+                   0.5 * self.height - displace[1] * pix_per_deg
 
     # project_point: convert to display sky coordinates, then project
     #
@@ -146,12 +150,17 @@ class Chart (glcanvas.GLCanvas):
     def project_point (self, point):
         
         # convert to proper coordinate system
-        if self.given_equ: # convert to horizontal
+        if self.given_equ and not self.show_equ: # equatorial -> horizontal
             az, el = self.converter.radec_to_azel(
                 math.radians(point[0]), math.radians(point[1]))
             sky_coord = [math.degrees(az), math.degrees(el)]
             
-        else: # already in horizontal coordinates
+        elif not self.given_equ and self.show_equ: # horizontal -> equatorial
+            ra, de = self.converter.azel_to_radec(
+                math.radians(point[0]), math.radians(point[1]))
+            sky_coord = [math.degrees(ra), math.degrees(de)]
+        
+        else: # already in correct coordinates
             sky_coord = point[:]
         
         return self.project (sky_coord, self.center_display())
@@ -160,12 +169,20 @@ class Chart (glcanvas.GLCanvas):
     # center_display: get center of screen in display sky coordinates
     def center_display (self):
         
-        if self.given_equ:
+        # find center in proper coordinate system
+        if self.given_equ and not self.show_equ: # equatorial -> horizontal
             cen_az, cen_el = \
                 self.converter.radec_to_azel(
                     math.radians(self.center[0]), math.radians(self.center[1]))
             return [math.degrees(cen_az), math.degrees(cen_el)]
-        else:
+        
+        elif not self.given_equ and self.show_equ: # horizontal -> equatoria
+            cen_ra, cen_de = \
+                self.converter.azel_to_radec(
+                    math.radians(self.center[0]), math.radians(self.center[1]))
+            return [math.degrees(cen_ra), math.degrees(cen_de)]
+        
+        else: # already in correct coordinates
             return self.center[:]
     
 
@@ -231,7 +248,7 @@ class Chart (glcanvas.GLCanvas):
         
         # draw the path
         glLineWidth(3)         # width of 3px
-        glColor(0.9, 0.9, 0.9) # light gray
+        glColor(0.8, 0.8, 0.8) # light gray
         glBegin(GL_LINE_STRIP)
         
         prev_pt = False

@@ -393,7 +393,7 @@ class TelescopeControlFrame(wx.Frame):
         self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
         self.preview_scan       = wx.Button(notebookScanningPane, wx.ID_ANY, "Preview")
 
-        coord_sys = ["Horizontal", "Equatorial"]
+        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=DE)"]
         self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
             choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
@@ -553,29 +553,26 @@ class TelescopeControlFrame(wx.Frame):
         self.sky_panel = wx.Panel(self)
         sky_sizer = wx.BoxSizer(wx.VERTICAL)
         
-        # top bar controls
+        # control bar
         ctrl_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
         self.chart_crdsys = wx.ComboBox(self.sky_panel, wx.ID_ANY,
-            choices=["Horizontal"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+            choices=["Horizontal (Azimuth, Altitude)",
+                     "Equatorial (Right Asc, Declination)"],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.chart_crdsys.SetSelection(0)
-        ctrl_sizer.Add(self.chart_crdsys)
-        
-        self.chart_proj = wx.ComboBox(self.sky_panel, wx.ID_ANY,
-            choices=["Equirectangular"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        self.chart_proj.SetSelection(0)
-        ctrl_sizer.Add(self.chart_proj)
+        ctrl_sizer.Add(self.chart_crdsys, 1, wx.EXPAND)
         
         # create field of view display
-        fov_label = wx.StaticText(self.sky_panel, label=" FOV:  ")
+        fov_label = wx.StaticText(self.sky_panel, label="   Field of View: ")
         ctrl_sizer.Add(fov_label)
         self.chart_fov = wx.SpinCtrl(self.sky_panel, value="90", min=1, max=180)
-        ctrl_sizer.Add(self.chart_fov, 1, wx.EXPAND)
-        sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
+        ctrl_sizer.Add(self.chart_fov)
         
         # create OpenGL canvas
         self.sky_chart = Chart(self.sky_panel, self.chart_fov, self.converter)
         sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
+        sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
         
         self.sky_panel.SetSizer(sky_sizer)
         return self.sky_panel
