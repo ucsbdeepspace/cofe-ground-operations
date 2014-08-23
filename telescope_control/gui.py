@@ -354,7 +354,12 @@ class TelescopeControlFrame(wx.Frame):
 
         return notebookJoystickPane
 
+    # simple scans: use the least motor movements between points
+    def __create_simple_scans (self):
+        simple_panel = wx.Panel(self.controlNotebook)
+        return simple_panel
 
+    # short scans: take the shortest angular distance between points
     def __create_scanning_pane(self):	
         # TODO: CLEANUP, name sizers sanely
         notebookScanningPane    = wx.Panel(self.controlNotebook)
@@ -590,6 +595,7 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
         self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
+        self.controlNotebook.AddPage(self.__create_simple_scans(), "Simple Scans ")
         self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning ")
         self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
         
