@@ -357,6 +357,14 @@ class TelescopeControlFrame(wx.Frame):
     # simple scans: use the least motor movements between points
     def __create_simple_scans (self):
         simple_panel = wx.Panel(self.controlNotebook)
+        simple_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        # box for zenith spiral scan
+        zenith_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Zenith Spiral Scan")
+        zenith_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
+        simple_sizer.Add(zenith_box, 1, wx.EXPAND)
+        
+        simple_panel.SetSizer(simple_sizer)
         return simple_panel
 
     # short scans: take the shortest angular distance between points
@@ -390,9 +398,7 @@ class TelescopeControlFrame(wx.Frame):
         
         self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
         self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
-        self.label_scan_speed   = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Speed (deg/s): ")
-        self.scan_speed_input   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "4")
-        self.label_scan_cycles  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
+        self.scan_cycles_label  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
         self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
         self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
         self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
@@ -467,17 +473,12 @@ class TelescopeControlFrame(wx.Frame):
         turns_sizer.Add(self.num_turns_label)
         turns_sizer.Add(self.num_turns_input)
         
-        speed_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        speed_sizer.Add(self.label_scan_speed)
-        speed_sizer.Add(self.scan_speed_input)
-        
         cycles_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        cycles_sizer.Add(self.label_scan_cycles)
+        cycles_sizer.Add(self.scan_cycles_label)
         cycles_sizer.Add(self.scan_cycles_input)
         
         sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
         sizer_7_copy_4.Add(turns_sizer, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(speed_sizer, 1, wx.EXPAND)
         sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
         sizer_7_copy_4.Add(self.scan_repeat_input)
         
@@ -503,45 +504,22 @@ class TelescopeControlFrame(wx.Frame):
         return notebookScanningPane
 
     def __create_options_pane(self):
-        notebookOptionsPane            = wx.Panel(self.controlNotebook)
+        notebookOptionsPane = wx.Panel(self.controlNotebook)
         
-        staticTextVelocityLabel        = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Velocity:")
-        staticTextAccelerationLabel    = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Acceleration:")
-        optionRadioButtonsForSomething = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "(Placeholder text):")
-
-        self.ctrl_velocity             = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "")
-        self.ctrl_acceleration         = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "")
-        self.button_set_accel_vel      = wx.Button(notebookOptionsPane, wx.ID_ANY, "Set Accel/Vel")
-        self.radio_btn_az              = wx.RadioButton(notebookOptionsPane, wx.ID_ANY, "AZ")
-        self.radio_btn_el              = wx.RadioButton(notebookOptionsPane, wx.ID_ANY, "EL")
-        self.button_open_config        = wx.Button(notebookOptionsPane, wx.ID_ANY, "Open Config File")
-        self.sizer_52_staticbox        = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Move Options")
-
+        scan_speed_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Speed (deg/s): ")
+        self.scan_speed_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "4")
+        
+        scan_accel_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Accel (deg/s^2):")
+        self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "10")
 
         gridSizer = wx.FlexGridSizer(4,2)
-        gridSizer.AddF(staticTextVelocityLabel, self.sizerFlags)
-        gridSizer.AddF(self.ctrl_velocity, self.sizerFlags)
+        gridSizer.AddF(scan_speed_label, self.sizerFlags)
+        gridSizer.AddF(self.scan_speed_input, self.sizerFlags)
 
-        
-        gridSizer.AddF(staticTextAccelerationLabel, self.sizerFlags)
-        gridSizer.AddF(self.ctrl_acceleration, self.sizerFlags)
-        
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.button_set_accel_vel, flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=5)
-        
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.button_open_config, flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=5)
-        
-        radioButtonSizer = wx.BoxSizer(wx.VERTICAL)
-        radioButtonSizer.Add(optionRadioButtonsForSomething)
-        radioButtonSizer.Add(self.radio_btn_az)
-        radioButtonSizer.Add(self.radio_btn_el)
+        gridSizer.AddF(scan_accel_label, self.sizerFlags)
+        gridSizer.AddF(self.scan_accel_input, self.sizerFlags)
 
-        baseSizer = wx.StaticBoxSizer(self.sizer_52_staticbox, wx.HORIZONTAL)
-        baseSizer.Add(gridSizer, 1, wx.EXPAND)
-        baseSizer.Add(radioButtonSizer, 1, wx.EXPAND)
-
-        notebookOptionsPane.SetSizer(baseSizer)
+        notebookOptionsPane.SetSizer(gridSizer)
 
         return notebookOptionsPane
 
