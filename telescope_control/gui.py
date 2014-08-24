@@ -361,8 +361,40 @@ class TelescopeControlFrame(wx.Frame):
         
         # box for zenith spiral scan
         zenith_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Zenith Spiral Scan")
-        zenith_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
-        simple_sizer.Add(zenith_box, 1, wx.EXPAND)
+        zenith_box_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
+        
+        zs_sizer = wx.FlexGridSizer(4, 2)
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
+            self.sizerFlags)
+        self.zst_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        zs_sizer.AddF(self.zst_azimuth_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
+            self.sizerFlags)
+        self.zst_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        zs_sizer.AddF(self.zst_altitude_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Altitude Increment: "),
+            self.sizerFlags)
+        self.zen_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        zs_sizer.AddF(self.zen_inc_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
+            self.sizerFlags)
+        self.zen_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        zs_sizer.AddF(self.zen_cycles_input, self.sizerFlags)
+        
+        zs_sizer.Add([1, 1])
+        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        zs_sizer.AddF(self.zs_begin_input, self.sizerFlags)
+        
+        zenith_box_sizer.Add(zs_sizer)
+        simple_sizer.Add(zenith_box_sizer, 1, wx.EXPAND)
+        
+        # box for horizontal graticule scans
+        horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")
+        horiz_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
+        simple_sizer.Add(horiz_sizer, 1, wx.EXPAND)
         
         simple_panel.SetSizer(simple_sizer)
         return simple_panel
