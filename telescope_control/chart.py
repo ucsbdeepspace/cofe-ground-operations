@@ -252,11 +252,14 @@ class Chart (glcanvas.GLCanvas):
         glBegin(GL_LINE_STRIP)
         
         prev_pt = False
+        prev_x, prev_y = 0, 0
         for next_pt in self.path:
             
             # intermediate points
             if prev_pt:
-                glVertex(*self.project_point(prev_pt))
+                x, y = self.project_point(prev_pt)
+                glVertex(x, y)
+                prev_x, prev_y = x, y
                 ang_dist = circle.distance(prev_pt, next_pt)
                 bearing = circle.bearing(prev_pt, next_pt)
                 
@@ -266,8 +269,20 @@ class Chart (glcanvas.GLCanvas):
                 for i in range(1, num_int + 1):
                     a, b = circle.waypoint(prev_pt, bearing,
                         i * ang_dist / num_int)
-                    glVertex(*self.project_point([a, b]))
-            
+                    x, y = self.project_point([a, b])
+                    
+                    # check whether we need to break the list for wrap-around
+                    if x < 0 and prev_x > self.width or \
+                       x > self.width and prev_x < 0 or \
+                       y < 0 and prev_y > self.height or \
+                       y > self.height and prev_y < 0:
+                        glEnd()
+                        glBegin(GL_LINE_STRIP)
+                    else:
+                        glVertex(x, y)
+                    
+                    prev_x, prev_y = x, y
+                
             prev_pt = next_pt
         
         glEnd()
