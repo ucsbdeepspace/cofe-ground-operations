@@ -119,6 +119,8 @@ class MainWindow(gui.TelescopeControlFrame):
         buttons is pressed."""
         if self.controller.stop:
             self.controller.stop.set()
+        if self.zspiral.stop:
+            self.zspiral.stop.set()
         stops = [(self.button_stop_all, None),
                 (self.button_stop_az, 0),
                 (self.button_stop_el, 1)]
