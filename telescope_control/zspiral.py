@@ -21,7 +21,7 @@ class Scan:
     #   repeat: number of complete in and out cycles to run
     #
     # -> (returns once scan is complete)
-    def scan (start_pt, increment, speed, accel, repeat):
+    def scan (self, start_pt, increment, speed, accel, repeat):
         self.stop = threading.Event()
         
         # compute horizon speed of each axis (only used if |speed| > 1e-5)
@@ -53,7 +53,7 @@ class Scan:
                 
         # non-zero increment -- slew in ccw spiral to zenith then back
         else: # math.fabs(increment) > 1e-5
-            while self.scan_queue > 0 and not self.stop_is_set():
+            while self.scan_queue > 0 and not self.stop.is_set():
                 # TODO: move azimuth motor at speed min(10*speed, v_az/cos(alt)
                 #       until altitude = 90; move altitude motor at speed
                 #       v_el until altitude = 90.
@@ -79,7 +79,7 @@ class Scan:
     #
     # -> point_list -> list([az, el]): list of closely spaced points along
     #                                  the scan path
-    def points (start_pt, increment):
+    def points (self, start_pt, increment):
         point_list = []
         
         # no increment, stay on same level
@@ -93,7 +93,7 @@ class Scan:
             rotations = (90.0 - start_pt[1]) / increment
             for i in range(0, int(360 * rotations)):
                 point_list.append([(start_pt[0] + i) % 360.0,
-                                    start_pt[1] + i / 360.0])
+                                    start_pt[1] + i / 360.0 * increment])
             return point_list
         
         # negative increment: approach zenith in cw spiral
@@ -101,5 +101,5 @@ class Scan:
             rotations = -(90.0 - start_pt[1]) / increment
             for i in range(0, int(360 * rotations)):
                 point_list.append([(start_pt[0] - i) % 360.0,
-                                    start_pt[1] + i / 360.0])
+                                    start_pt[1] + i / 360.0 * increment])
             return point_list

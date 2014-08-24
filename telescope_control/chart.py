@@ -251,14 +251,24 @@ class Chart (glcanvas.GLCanvas):
         glColor(0.8, 0.8, 0.8) # light gray
         glBegin(GL_LINE_STRIP)
         
-        prev_pt = False
-        prev_x, prev_y = 0, 0
+        prev_pt = False # previous actual point specified in path
+        prev_x, prev_y = 0, 0 # previous point including intermediate points
         for next_pt in self.path:
             
             # intermediate points
             if prev_pt:
                 x, y = self.project_point(prev_pt)
-                glVertex(x, y)
+                    
+                # check whether we need to break the list for wrap-around
+                if x < 0 and prev_x > self.width or \
+                   x > self.width and prev_x < 0 or \
+                   y < 0 and prev_y > self.height or \
+                   y > self.height and prev_y < 0:
+                    glEnd()
+                    glBegin(GL_LINE_STRIP)
+                else:
+                    glVertex(x, y)
+                
                 prev_x, prev_y = x, y
                 ang_dist = circle.distance(prev_pt, next_pt)
                 bearing = circle.bearing(prev_pt, next_pt)

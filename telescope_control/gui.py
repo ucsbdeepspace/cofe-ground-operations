@@ -376,19 +376,25 @@ class TelescopeControlFrame(wx.Frame):
         
         zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Altitude Increment: "),
             self.sizerFlags)
-        self.zen_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
-        zs_sizer.AddF(self.zen_inc_input, self.sizerFlags)
+        self.zs_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        zs_sizer.AddF(self.zs_inc_input, self.sizerFlags)
         
         zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
             self.sizerFlags)
-        self.zen_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
-        zs_sizer.AddF(self.zen_cycles_input, self.sizerFlags)
-        
-        zs_sizer.Add([1, 1])
-        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
-        zs_sizer.AddF(self.zs_begin_input, self.sizerFlags)
+        self.zs_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        zs_sizer.AddF(self.zs_cycles_input, self.sizerFlags)
         
         zenith_box_sizer.Add(zs_sizer)
+        
+        zs_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.zs_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        zs_buttons_sizer.Add(self.zs_preview_input)
+        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        zs_buttons_sizer.Add(self.zs_begin_input)
+        
+        zenith_box_sizer.Add(zs_buttons_sizer)
+        
         simple_sizer.Add(zenith_box_sizer, 1, wx.EXPAND)
         
         # box for horizontal graticule scans

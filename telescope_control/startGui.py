@@ -1,11 +1,12 @@
 
+import config
+import controller
 import gui
 import globalConf
-import config
 import units
-import controller
 import scans
-from threading import Thread
+import threading
+import zspiral
 
 import logging
 import math
@@ -47,8 +48,11 @@ class MainWindow(gui.TelescopeControlFrame):
         self.logger.addHandler(debug)
         self.logger.setLevel(logging.DEBUG)
         
+        # standard scan
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter)
+        # simple scans
+        self.zs_scan = zspiral.Scan(self.logger, self.galil)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
@@ -78,10 +82,16 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.goto, self.buttonGotoPosition)
         self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
         self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
+        
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
+        
+        self.Bind(wx.EVT_BUTTON, self.zenith_scan, self.zs_begin_input)
+        self.Bind(wx.EVT_BUTTON, self.zs_preview, self.zs_preview_input)
+        
         self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
+        
 
     def move_abs(self, event):
         azPos = float(self.absolute_move_ctrl_az.GetValue())
@@ -238,7 +248,7 @@ class MainWindow(gui.TelescopeControlFrame):
         points = self.show_scan()
         
         # run scan in new thread
-        self.scan_thread = Thread(target=lambda:
+        self.scan_thread = threading.Thread(target=lambda:
             self.controller.scan(points,
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
@@ -254,6 +264,35 @@ class MainWindow(gui.TelescopeControlFrame):
     def set_preview (self, event):
         self.show_scan()
         event.Skip()
+        
+    # execute a zenith spiral scan
+    def zenith_scan (self, event):
+        self.zs_preview(event)
+        
+        self.scan_thread = threading.Thread(target=lambda:
+            self.zs_scan.scan(
+                [float(self.zst_azimuth_input.GetValue()),
+                 float(self.zst_altitude_input.GetValue())],
+                float(self.zs_inc_input.GetValue()),
+                float(self.scan_speed_input.GetValue()),
+                float(self.scan_accel_input.GetValue()),
+                float(self.zs_cycles_input.GetValue())))
+        self.scan_thread.start()
+        event.Skip()
+    
+    # show preview of zenith spiral scan
+    def zs_preview (self, event):
+        self.sky_chart.path = self.zs_scan.points(
+            [float(self.zst_azimuth_input.GetValue()),
+             float(self.zst_altitude_input.GetValue())],
+            float(self.zs_inc_input.GetValue()))
+        
+        self.sky_chart.given_equ = False
+        self.sky_chart.center = \
+            [float(self.zst_azimuth_input.GetValue()),
+             0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
+        
+        self.sky_chart.Refresh()
 
     # change the coordinate system of the chart
     def change_cs (self, event):
