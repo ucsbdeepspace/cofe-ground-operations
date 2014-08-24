@@ -31,4 +31,26 @@ class Scan:
     # -> point_list -> list([az, el]): list of closely spaced points along
     #                                  the scan path
     def points (start_pt, increment):
-        pass
+        point_list = []
+        
+        # no increment, stay on same level
+        if increment == 0:
+            for i in range (0, 361):
+                point_list.append([float(i), start_pt[0]])
+            return point_list
+        
+        # positive increment: approach zenith in ccw spiral
+        if increment > 0:
+            rotations = (90.0 - start_pt[1]) / increment
+            for i in range(0, int(360 * rotations)):
+                point_list.append([(start_pt[0] + i) % 360.0,
+                                    start_pt[1] + i / 360.0])
+            return point_list
+        
+        # negative increment: approach zenith in cw spiral
+        if increment < 0:
+            rotations = -(90.0 - start_pt[1]) / increment
+            for i in range(0, int(360 * rotations)):
+                point_list.append([(start_pt[0] - i) % 360.0,
+                                    start_pt[1] + i / 360.0])
+            return point_list
