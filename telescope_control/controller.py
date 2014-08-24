@@ -9,11 +9,10 @@ import threading
 
 class Controller:
     
-    def __init__ (self, logger, galil, converter, config):
+    def __init__ (self, logger, galil, converter):
         self.logger = logger
         self.galil = galil
         self.converter = converter
-        self.config = config
         
         self.scan_queue = 0 # number of scans left to do
     
@@ -38,10 +37,11 @@ class Controller:
     #     (optionally, use "process_hor" and "process_equ" below)
     #   speed: rate (degrees/sec) to slew at
     #      note: use max speed if speed <= 0 or speed >= max speed
+    #   accel: acceleration (degrees/sec^2) to change velocity
     #   repeat: number of times to repeat (use "True" for indefinite repetition)
     #   
     # -> (returns once scan is complete)
-    def scan (self, crd_list, process_func, speed, repeat = 1):
+    def scan (self, crd_list, process_func, speed, accel, repeat = 1):
         
         # unset any previously set stop events
         self.stop = threading.Event()
@@ -56,11 +56,11 @@ class Controller:
         while self.scan_queue > 0 and not self.stop.is_set():
             
             # process forward scan and wait until scan is complete
-            process_func(crd_list, speed)
+            process_func(crd_list, speed, accel)
             
             # reverse direction and repeat, waiting until scan is complete
             crd_list.reverse()
-            process_func(crd_list, speed)
+            process_func(crd_list, speed, accel)
             
             # reset direction and prepare for next time
             crd_list.reverse()
@@ -73,9 +73,10 @@ class Controller:
     #
     #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
     #   speed: rate (degrees/sec) to slew at
+    #   accel: acceleration (degrees/sec^2) to change velocity
     #
     # -> (returns once scan is complete)
-    def process_hor (self, crd_list, speed):
+    def process_hor (self, crd_list, speed, accel):
         
         i = 0
         
@@ -91,9 +92,10 @@ class Controller:
     #
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
     #   speed: rate (degrees/sec) to slew at
+    #   accel: acceleration (degrees/sec^2) to change velocity
     #
     # -> (returns once scan is complete)
-    def process_equ (self, crd_list, speed):
+    def process_equ (self, crd_list, speed, accel):
         
         i = 0
         
@@ -143,7 +145,7 @@ class Controller:
             new_crd_h = [math.degrees(azi), math.degrees(alt)]
             
             # move to new position and reset for the next iteration
-            self.goto(new_crd_h, speed)
+            self.goto(new_crd_h, speed, accel)
             prev_azi, prev_alt = azi, alt
             i = i + 1
         
@@ -154,9 +156,10 @@ class Controller:
     #
     #   coord_h -> [azimuth, altitude]: new position to slew to
     #   speed: rate (degrees/sec) to slew to new position
+    #   accel: acceleration (degrees/sec^2) to change velocity
     #
     # -> (returns once slew has reached destination point)
-    def goto (self, coord_h, speed):
+    def goto (self, coord_h, speed, accel):
         self.logger.info("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
         
         # angular distance and bearing to new point

@@ -48,7 +48,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.logger.setLevel(logging.DEBUG)
         
         self.controller = controller.Controller(self.logger,
-            self.galil, self.converter, self.config)
+            self.galil, self.converter)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
@@ -243,6 +243,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 self.coordsys_selector.GetSelection() == 0 and
                 self.controller.process_hor or self.controller.process_equ,
                 float(self.scan_speed_input.GetValue()),
+                float(self.scan_accel_input.GetValue()),
                 self.scan_repeat_input.GetValue() and 1 or
                     float(self.scan_cycles_input.GetValue())))
                     
