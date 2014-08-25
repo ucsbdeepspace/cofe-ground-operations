@@ -354,6 +354,59 @@ class TelescopeControlFrame(wx.Frame):
 
         return notebookJoystickPane
 
+    # list of targets to slew and sync to
+    def __create_targets_pane (self):
+        targets_panel = wx.Panel(self.controlNotebook)
+        targets_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        # box for solar system objects
+        sso_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Solar System Objects")
+        sso_box_sizer = wx.StaticBoxSizer(sso_box, wx.VERTICAL)
+        
+        sso_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sso_sizer.Add(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "))
+        self.sso_input = wx.ComboBox(targets_panel, wx.ID_ANY,
+            choices=["Sun", "Moon", "Mercury", "Venus", "Mars",
+                     "Jupiter", "Saturn", "Uranus", "Neptune"],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.sso_input.SetSelection(0)
+        sso_sizer.Add(self.sso_input)
+        sso_box_sizer.Add(sso_sizer)
+        
+        sso_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        sso_buttons_sizer.Add(self.sso_goto_input)
+        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        sso_buttons_sizer.Add(self.sso_sync_input)
+        sso_box_sizer.Add(sso_buttons_sizer)
+        
+        targets_sizer.Add(sso_box_sizer, 1, wx.EXPAND)
+        
+        # box for other objects
+        nss_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Non-Solar System")
+        nss_box_sizer = wx.StaticBoxSizer(nss_box, wx.VERTICAL)
+        
+        nss_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        nss_sizer.Add(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "))
+        self.nss_input = wx.ComboBox(targets_panel, wx.ID_ANY,
+            choices=[""],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.nss_input.SetSelection(0)
+        nss_sizer.Add(self.nss_input)
+        nss_box_sizer.Add(nss_sizer)
+        
+        nss_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.nss_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        nss_buttons_sizer.Add(self.nss_goto_input)
+        self.nss_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        nss_buttons_sizer.Add(self.nss_sync_input)
+        nss_box_sizer.Add(nss_buttons_sizer)
+        
+        targets_sizer.Add(nss_box_sizer, 1, wx.EXPAND)
+        
+        targets_panel.SetSizer(targets_sizer)
+        return targets_panel
+    
     # simple scans: use the least motor movements between points
     def __create_simple_scans (self):
         simple_panel = wx.Panel(self.controlNotebook)
@@ -611,8 +664,9 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
         self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
-        self.controlNotebook.AddPage(self.__create_simple_scans(), "Simple Scans ")
-        self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning ")
+        self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
+        self.controlNotebook.AddPage(self.__create_simple_scans(), "Simple Scans")
+        self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning")
         self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
         
         footerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
