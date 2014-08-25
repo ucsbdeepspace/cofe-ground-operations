@@ -101,5 +101,5 @@ class Scan:
             rotations = -(90.0 - start_pt[1]) / increment
             for i in range(0, int(360 * rotations)):
                 point_list.append([(start_pt[0] - i) % 360.0,
-                                    start_pt[1] + i / 360.0 * increment])
+                                    start_pt[1] - i / 360.0 * increment])
             return point_list
