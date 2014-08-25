@@ -1,6 +1,7 @@
-from chart import *
 import wx
 
+from chart import *
+import planets
 import scans
 
 class TelescopeControlFrame(wx.Frame):
@@ -366,9 +367,7 @@ class TelescopeControlFrame(wx.Frame):
         sso_sizer = wx.BoxSizer(wx.HORIZONTAL)
         sso_sizer.Add(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "))
         self.sso_input = wx.ComboBox(targets_panel, wx.ID_ANY,
-            choices=["Sun", "Moon", "Mercury", "Venus", "Mars",
-                     "Jupiter", "Saturn", "Uranus", "Neptune"],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+            choices=planets.objects, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.sso_input.SetSelection(0)
         sso_sizer.Add(self.sso_input)
         sso_box_sizer.Add(sso_sizer)

@@ -1,34 +1,19 @@
+import logging
+import math
+import sys
+import time
+import traceback
+import wx
 
 import config
 import controller
 import gui
 import globalConf
-import units
+import planets
 import scans
 import threading
+import units
 import zspiral
-
-import logging
-import math
-import sys
-import time
-import wx
-
-import traceback
-
-# WHRYYYYYYYYYYYYYYYYYY (Connor)
-#This is just to aid in some nonsensical
-#programming I have in here. I Lol'd!
-def map_(array, func_list):
-    """WARNING! This breaks if your func_list is over 1000
-    functions long! :p"""
-    if len(func_list) == 0:
-        return array
-    fList = func_list[0]
-    ret = map_([fList(x) for x in array], func_list[1:])
-    print ret
-    return ret
-
 
 class MainWindow(gui.TelescopeControlFrame):
     def __init__(self, galilInterface, converter, conf, *args, **kwargs):
@@ -53,6 +38,9 @@ class MainWindow(gui.TelescopeControlFrame):
             self.galil, self.converter)
         # simple scans
         self.zs_scan = zspiral.Scan(self.logger, self.galil)
+        
+        # positions of solar system objects
+        self.planets = planets.Planets(self.logger, self.converter)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
@@ -74,14 +62,19 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.button_el_motor)
         self.Bind(wx.EVT_TEXT_ENTER, self.set_step_size, self.step_size_input)
+        
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_right)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_down)
         self.Bind(wx.EVT_BUTTON, self.move_abs, self.button_start_move)
+        
         self.Bind(wx.EVT_BUTTON, self.goto, self.buttonGotoPosition)
         self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
         self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
+        
+        self.Bind(wx.EVT_BUTTON, self.sso_goto, self.sso_goto_input)
+        self.Bind(wx.EVT_BUTTON, self.sso_sync, self.sso_sync_input)
         
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
@@ -245,6 +238,15 @@ class MainWindow(gui.TelescopeControlFrame):
             
         return points
 
+    # slew to a solar system object
+    def sso_goto (self, event):
+        event.Skip()
+    
+    # set current position as position of solar system object
+    def sso_sync (self, event):
+        event.Skip()
+    
+    
     # scan button clicked
     def scan (self, event):
         points = self.show_scan()
