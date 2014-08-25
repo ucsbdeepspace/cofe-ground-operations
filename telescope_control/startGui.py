@@ -308,6 +308,10 @@ class MainWindow(gui.TelescopeControlFrame):
         event.Skip()
     
     def update_display(self, event):
+        
+        # update sky chart
+        self.sky_chart.Refresh()
+        
         if not self.galil:  # Short circuit in test-mode
             return
 
