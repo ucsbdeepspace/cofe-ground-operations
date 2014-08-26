@@ -82,6 +82,8 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
         
+        self.Bind(wx.EVT_BUTTON, self.horiz_scan, self.hg_begin_input)
+        self.Bind(wx.EVT_BUTTON, self.hg_preview, self.hg_preview_input)
         self.Bind(wx.EVT_BUTTON, self.zenith_scan, self.zs_begin_input)
         self.Bind(wx.EVT_BUTTON, self.zs_preview, self.zs_preview_input)
         
@@ -271,6 +273,47 @@ class MainWindow(gui.TelescopeControlFrame):
     def set_preview (self, event):
         self.show_scan()
         event.Skip()
+    
+    # execute a horizontal graticule scan
+    def horiz_scan (self, event):
+        self.hg_preview(event)
+        
+        self.scan_thread = threading.Thread(target=lambda:
+            self.hg_scan.scan(
+                float(self.left_azimuth_input.GetValue()),
+                float(self.right_azimuth_input.GetValue()),
+                float(self.low_altitude_input.GetValue()),
+                float(self.high_altitude_input.GetValue()),
+                int(self.hg_turns_input.GetValue()),
+                float(self.scan_speed_input.GetValue()),
+                float(self.scan_accel_input.GetValue()),
+                float(self.hg_cycles_input.GetValue()) == 0.0 or
+                    float(self.hg_cycles_input.GetValue())))
+        self.scan_thread.start()
+        event.Skip()
+    
+    # show preview of horizontal graticule scan
+    def hg_preview (self, event):
+        self.sky_chart.path = self.hg_scan.points(
+            float(self.left_azimuth_input.GetValue()),
+            float(self.right_azimuth_input.GetValue()),
+            float(self.low_altitude_input.GetValue()),
+            float(self.high_altitude_input.GetValue()),
+            int(self.hg_turns_input.GetValue()))
+        
+        self.sky_chart.given_equ = False
+        
+        # determine the point in the center of the scan
+        left_az = float(self.left_azimuth_input.GetValue()) % 360
+        right_az = float(self.right_azimuth_input.GetValue()) % 360
+        if left_az > right_az:
+            left_az -= 360
+        cen_az = 0.5 * (left_az + right_az)
+        cen_el = 0.5 * (float(self.low_altitude_input.GetValue()) +
+                        float(self.high_altitude_input.GetValue()))
+        
+        self.sky_chart.center = [cen_az, cen_el]
+        self.sky_chart.Refresh()
         
     # execute a zenith spiral scan
     def zenith_scan (self, event):
@@ -283,7 +326,8 @@ class MainWindow(gui.TelescopeControlFrame):
                 float(self.zs_inc_input.GetValue()),
                 float(self.scan_speed_input.GetValue()),
                 float(self.scan_accel_input.GetValue()),
-                float(self.zs_cycles_input.GetValue())))
+                float(self.zs_cycles_input.GetValue()) == 0.0 or
+                    float(self.zs_cycles_input.GetValue())))
         self.scan_thread.start()
         event.Skip()
     

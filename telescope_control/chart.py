@@ -31,7 +31,7 @@ class Chart (glcanvas.GLCanvas):
         self.path = [] # list of points [crd_a, crd_b]
         self.given_equ = False # whether the path points are equatorial
         self.center = [0, 0]
-        self.h_fov = 90.0 # horizontal field of view
+        self.h_fov = 100.0 # horizontal field of view
         self.show_equ = False # whether to show in equatorial coordinates
         
         # event handlers
@@ -87,12 +87,16 @@ class Chart (glcanvas.GLCanvas):
                 int(self.h_fov) == 100 and event.GetWheelRotation() > 0:
             self.h_fov += -4 * float(event.GetWheelRotation()) / 120
             
-        else:
+        elif self.h_fov < 180 or \
+                int(self.h_fov) == 180 and event.GetWheelRotation() > 0:
             self.h_fov += -8 * float(event.GetWheelRotation()) / 120
+            
+        else:
+            self.h_fov += -20 * float(event.GetWheelRotation()) / 120
         
         # constraint to range [1, 180]
-        if self.h_fov > 180:
-            self.h_fov = 180.0
+        if self.h_fov > 360:
+            self.h_fov = 360.0
         elif self.h_fov < 1:
             self.h_fov = 1.0
         

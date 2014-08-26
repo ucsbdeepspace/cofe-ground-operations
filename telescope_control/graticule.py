@@ -95,7 +95,7 @@ class Scan:
     # -> point_list -> list([az, el]): list of closely spaced points along
     #                                  the scan path
     def points (self, left_az, right_az, low_el, high_el, num_turns):
-        point_list = []
+        crd_list = []
         
         # ensure that right_az-360 < left_az < right_az
         left_az = left_az % 360
@@ -109,21 +109,21 @@ class Scan:
             # start on left_az side and move toward right_az side
             alt1 = (1 - float(i)/num_turns)*low_el \
                       + float(i)/num_turns*high_el
-            crd_list.append(left_az, alt1)
+            crd_list.append([left_az, alt1])
             for j in range(1, int(right_az - left_az)):
-                crd_list.append(left_az + j, alt1)
-            crd_list.append(right_az, alt1)
+                crd_list.append([left_az + j, alt1])
+            crd_list.append([right_az, alt1])
             
             # move towards pt3 half a step and go the other direction
             alt2 = (1.0 - (i+0.5)/num_turns)*low_el \
                         + (i+0.5)/num_turns*high_el
-            crd_list.append(right_az, alt2)
+            crd_list.append([right_az, alt2])
             for j in range(1, int(right_az - left_az)):
-                crd_list.append(right_az - j, alt2)
-            crd_list.append(left_az, alt2)
+                crd_list.append([right_az - j, alt2])
+            crd_list.append([left_az, alt2])
         
         # execute the final stretch of the scan
-        crd_list.append(left_az, high_el)
-        crd_list.append(right_az, high_el)
+        crd_list.append([left_az, high_el])
+        crd_list.append([right_az, high_el])
         
-        return point_list
+        return crd_list

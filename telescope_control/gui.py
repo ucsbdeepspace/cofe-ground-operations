@@ -681,7 +681,7 @@ class TelescopeControlFrame(wx.Frame):
         # create field of view display
         fov_label = wx.StaticText(self.sky_panel, label="   Field of View: ")
         ctrl_sizer.Add(fov_label)
-        self.chart_fov = wx.SpinCtrl(self.sky_panel, value="90", min=1, max=180)
+        self.chart_fov = wx.SpinCtrl(self.sky_panel, value="100", min=1, max=360)
         ctrl_sizer.Add(self.chart_fov)
         
         # create OpenGL canvas
