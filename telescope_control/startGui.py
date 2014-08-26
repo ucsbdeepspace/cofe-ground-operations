@@ -24,7 +24,6 @@ class MainWindow(gui.TelescopeControlFrame):
         self.galil = galilInterface
         self.config = conf
         self.scan_thread = None
-        self.scan_thread_stop = None
         self.step_size = 0
         
         # set logging output
@@ -123,8 +122,10 @@ class MainWindow(gui.TelescopeControlFrame):
         buttons is pressed."""
         if self.controller.stop:
             self.controller.stop.set()
-        if self.zspiral.stop:
-            self.zspiral.stop.set()
+        if self.hg_scan.stop:
+            self.hg_scan.stop.set()
+        if self.zs_scan.stop:
+            self.zs_scan.stop.set()
         stops = [(self.button_stop_all, None),
                 (self.button_stop_az, 0),
                 (self.button_stop_el, 1)]

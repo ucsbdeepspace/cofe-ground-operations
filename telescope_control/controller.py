@@ -176,3 +176,12 @@ class Controller:
         
         # TODO: slew to all points in point_list; stall until slew is finished
         return 0
+    
+    # track: follow an equatorial position indefinitely
+    #
+    #   coord_e -> [ra, de]: position to track
+    #
+    # -> (returns once tracking ends)
+    def track (self, coord_e):
+        # TODO: slew to equatorial coordinate and continue to track
+        None
