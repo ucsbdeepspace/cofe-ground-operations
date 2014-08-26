@@ -30,10 +30,12 @@ class Chart (glcanvas.GLCanvas):
         # drawing settings
         self.path = [] # list of points [crd_a, crd_b]
         self.given_equ = False # whether the path points are equatorial
-        self.center = [0, 0]
+        self.scan_center = [0, 0] # center of scan
         self.curpos_h = [0, 0] # current pointing direction in horiz coordinates
         self.h_fov = 100.0 # horizontal field of view
         self.show_equ = False # whether to show in equatorial coordinates
+        self.cen_curscan = False # center the current scan
+                                 #   (otherwise, center current position)
         
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
@@ -95,9 +97,9 @@ class Chart (glcanvas.GLCanvas):
         else:
             self.h_fov += -20 * float(event.GetWheelRotation()) / 120
         
-        # constraint to range [1, 180]
-        if self.h_fov > 360:
-            self.h_fov = 360.0
+        # constrain to range [1, 340]
+        if self.h_fov > 340:
+            self.h_fov = 340.0
         elif self.h_fov < 1:
             self.h_fov = 1.0
         
@@ -174,21 +176,38 @@ class Chart (glcanvas.GLCanvas):
     # center_display: get center of screen in display sky coordinates
     def center_display (self):
         
-        # find center in proper coordinate system
-        if self.given_equ and not self.show_equ: # equatorial -> horizontal
+        # center on current position
+        if not self.cen_curscan:
+            
+            # need to convert to equatorial
+            if self.given_equ:
+                cur_ra, cur_de = \
+                self.converter.azel_to_radec(
+                    math.radians(self.curpos_h[0]),
+                    math.radians(self.curpos_h[1]))
+                return [math.degrees(cur_ra), math.degrees(cur_de)]
+            
+            # no need to convert to equatorial
+            else:
+                return self.curpos_h[0], self.curpos_h[1]
+        
+        # find scan center in proper coordinate system
+        elif self.given_equ and not self.show_equ: # equatorial -> horizontal
             cen_az, cen_el = \
                 self.converter.radec_to_azel(
-                    math.radians(self.center[0]), math.radians(self.center[1]))
+                    math.radians(self.scan_center[0]),
+                    math.radians(self.scan_center[1]))
             return [math.degrees(cen_az), math.degrees(cen_el)]
         
         elif not self.given_equ and self.show_equ: # horizontal -> equatoria
             cen_ra, cen_de = \
                 self.converter.azel_to_radec(
-                    math.radians(self.center[0]), math.radians(self.center[1]))
+                    math.radians(self.scan_center[0]),
+                    math.radians(self.scan_center[1]))
             return [math.degrees(cen_ra), math.degrees(cen_de)]
         
         else: # already in correct coordinates
-            return self.center[:]
+            return self.scan_center[:]
     
 
     # draw: draw all objects onto the screen
@@ -325,7 +344,7 @@ class Chart (glcanvas.GLCanvas):
         if self.given_equ:
             cur_ra, cur_de = \
                 self.converter.azel_to_radec(
-                    math.radians(self.center[0]), math.radians(self.center[1]))
+                    math.radians(self.scan_center[0]), math.radians(self.scan_center[1]))
             curpos = [math.degrees(cur_ra), math.degrees(cur_de)]
         else: # already in horizontal coordinates
             curpos = self.curpos_h[:]

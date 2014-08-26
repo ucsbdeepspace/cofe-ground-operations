@@ -27,10 +27,6 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread_stop = None
         self.step_size = 0
         
-        # center of previously selected scan
-        self.scan_center = [0, 0]
-        self.scan_equ = False
-        
         # set logging output
         self.logger = logging.getLogger()
         debug = logging.StreamHandler(sys.stdout)
@@ -218,9 +214,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # compute a list of points to scan to and update sky chart
         points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
         self.sky_chart.path = points[:] # show path on chart
-        self.scan_equ = \
-            (self.coordsys_selector.GetSelection() == 1)
-        self.sky_chart.given_equ = self.scan_equ
+        self.sky_chart.given_equ = (self.coordsys_selector.GetSelection() == 1)
         
         # center sky chart in the middle of the scan region
         if len(points) > 0:
@@ -244,8 +238,7 @@ class MainWindow(gui.TelescopeControlFrame):
             crd_a = atan2(y, x)
             crd_b = atan2(z, math.sqrt(x*x + y*y))
             
-            self.scan_center = [crd_a, crd_b]
-            self.sky_chart.center = self.scan_center[:]
+            self.sky_chart.scan_center = [crd_a, crd_b]
             self.sky_chart.Refresh()
             
         return points
@@ -290,6 +283,8 @@ class MainWindow(gui.TelescopeControlFrame):
     def set_preview (self, event):
         self.show_scan()
         self.cur_center_input.SetSelection(1) # center on scan
+        self.change_cen(event)
+        
         event.Skip()
     
     # execute a horizontal graticule scan
@@ -320,7 +315,6 @@ class MainWindow(gui.TelescopeControlFrame):
             int(self.hg_turns_input.GetValue()))
         
         self.sky_chart.given_equ = False
-        self.scan_equ = False
         
         # determine the point in the center of the scan
         left_az = float(self.left_azimuth_input.GetValue()) % 360
@@ -331,10 +325,10 @@ class MainWindow(gui.TelescopeControlFrame):
         cen_el = 0.5 * (float(self.low_altitude_input.GetValue()) +
                         float(self.high_altitude_input.GetValue()))
         
-        self.scan_center = [cen_az, cen_el]
-        self.sky_chart.center = self.scan_center[:]
+        self.sky_chart.scan_center = [cen_az, cen_el]
         
         self.cur_center_input.SetSelection(1) # center on scan
+        self.change_cen(event)
         self.sky_chart.Refresh()
         
     # execute a zenith spiral scan
@@ -360,14 +354,13 @@ class MainWindow(gui.TelescopeControlFrame):
              float(self.zst_altitude_input.GetValue())],
             float(self.zs_inc_input.GetValue()))
         
-        self.scan_equ = False
         self.sky_chart.given_equ = False
-        self.scan_center = \
+        self.sky_chart.scan_center = \
             [float(self.zst_azimuth_input.GetValue()),
              0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
-        self.sky_chart.center = self.scan_center[:]
         
         self.cur_center_input.SetSelection(1) # center on scan
+        self.change_cen(event)
         self.sky_chart.Refresh()
 
     # change the coordinate system of the chart
@@ -384,17 +377,10 @@ class MainWindow(gui.TelescopeControlFrame):
     # change the center of the sky chart
     def change_cen (self, event):
         
-        # center on current position
-        if self.cur_center_input.GetSelection() == 0:
-            self.sky_chart.center = self.controller.current_pos()
-            self.sky_chart.given_equ = False
-        
-        # center of current scan
-        elif self.cur_center_input.GetSelection() == 1:
-            self.sky_chart.center = self.scan_center[:]
-            self.sky_chart.given_equ = self.scan_equ
-        
+        # center on current position if needed
+        self.sky_chart.cen_curscan = bool(self.cur_center_input.GetSelection())
         self.sky_chart.Refresh()
+        
         event.Skip()
     
     def update_display (self, event):
