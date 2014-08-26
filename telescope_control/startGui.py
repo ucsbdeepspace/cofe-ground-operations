@@ -13,6 +13,8 @@ import planets
 import scans
 import threading
 import units
+
+import graticule
 import zspiral
 
 class MainWindow(gui.TelescopeControlFrame):
@@ -37,7 +39,8 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter)
         # simple scans
-        self.zs_scan = zspiral.Scan(self.logger, self.galil)
+        self.hg_scan = graticule.Scan(self.logger, self.galil, self.converter)
+        self.zs_scan = zspiral.Scan(self.logger, self.galil, self.converter)
         
         # positions of solar system objects
         self.planets = planets.Planets(self.logger, self.converter)

@@ -6,9 +6,10 @@ import threading
 
 class Scan:
     
-    def __init__ (self, logger, galil):
+    def __init__ (self, logger, galil, converter):
         self.logger = logger
         self.galil = galil
+        self.converter = converter
     
     # scan: execute a scan
     #
@@ -58,7 +59,8 @@ class Scan:
                 #       until altitude = 90; move altitude motor at speed
                 #       v_el until altitude = 90.
                 
-                if str(repeat) != str(True) and self.scan_queue <= 0.5:
+                if self.scan_queue <= 0.5 or self.stop.is_set():
+                    self.scan_queue = 0
                     break
                 
                 # TODO: repeat scan, moving both motors in opposite direction
