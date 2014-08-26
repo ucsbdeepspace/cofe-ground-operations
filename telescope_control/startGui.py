@@ -386,6 +386,7 @@ class MainWindow(gui.TelescopeControlFrame):
     def update_display (self, event):
         
         # update sky chart
+        self.sky_chart.curpos_h = self.controller.current_pos()
         self.sky_chart.Refresh()
         
         if not self.galil:  # Short circuit in test-mode

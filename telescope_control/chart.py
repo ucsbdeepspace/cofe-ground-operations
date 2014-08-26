@@ -31,6 +31,7 @@ class Chart (glcanvas.GLCanvas):
         self.path = [] # list of points [crd_a, crd_b]
         self.given_equ = False # whether the path points are equatorial
         self.center = [0, 0]
+        self.curpos_h = [0, 0] # current pointing direction in horiz coordinates
         self.h_fov = 100.0 # horizontal field of view
         self.show_equ = False # whether to show in equatorial coordinates
         
@@ -197,7 +198,9 @@ class Chart (glcanvas.GLCanvas):
         
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
         
+        ##
         # draw grid
+        ##
         glLineWidth(2.5)          # width of 2.5px
         glColor(0.5, 0.5, 0.5)    # gray
         glLineStipple(2, 0xAAAA)  # dashed lines
@@ -250,7 +253,9 @@ class Chart (glcanvas.GLCanvas):
         
         glDisable(GL_LINE_STIPPLE)
         
+        ##
         # draw the path
+        ##
         glLineWidth(3)         # width of 3px
         glColor(0.8, 0.8, 0.8) # light gray
         glBegin(GL_LINE_STRIP)
@@ -307,6 +312,44 @@ class Chart (glcanvas.GLCanvas):
                     y < 0 and prev_y > self.height or \
                     y > self.height and prev_y < 0):
                 glVertex(x, y)
+        
+        glEnd()
+        
+        ##
+        # show a cross-hair at the current position
+        ##
+        glColor(1, 1, 1)
+        glLineWidth(4)
+        
+        # convert current position to be same as path coordinates
+        if self.given_equ:
+            cur_ra, cur_de = \
+                self.converter.azel_to_radec(
+                    math.radians(self.center[0]), math.radians(self.center[1]))
+            curpos = [math.degrees(cur_ra), math.degrees(cur_de)]
+        else: # already in horizontal coordinates
+            curpos = self.curpos_h[:]
+        
+        x, y = self.project_point(curpos)
+        
+        # draw cross hair
+        glBegin(GL_LINES)
+        
+        # top
+        glVertex(x, y - 10)
+        glVertex(x, y - 3)
+        
+        # right
+        glVertex(x + 10, y)
+        glVertex(x + 3, y)
+        
+        # bottom
+        glVertex(x, y + 10)
+        glVertex(x, y + 3)
+        
+        # left
+        glVertex(x - 10, y)
+        glVertex(x - 3, y)
         
         glEnd()
         
