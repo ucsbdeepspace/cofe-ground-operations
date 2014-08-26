@@ -129,6 +129,22 @@ class TelescopeControlFrame(wx.Frame):
         sizer.Add(verticalSizer)
 
         return sizer
+    
+    def __create_chart_options(self, parent):
+        chart_options_box = wx.StaticBox(parent, wx.ID_ANY, "Chart Options")
+        options_box_sizer = wx.StaticBoxSizer(chart_options_box, wx.VERTICAL)
+        list_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        list_sizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Center on:"), self.sizerFlags)
+        
+        self.cur_center_input = wx.ComboBox(parent, wx.ID_ANY,
+            choices=["Current Position", "Current Scan"],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        list_sizer.AddF(self.cur_center_input, self.sizerFlags)
+        self.cur_center_input.SetSelection(0)
+        options_box_sizer.Add(list_sizer)
+        
+        return options_box_sizer
 
     def __create_controls_sizer(self):
 
@@ -137,7 +153,7 @@ class TelescopeControlFrame(wx.Frame):
 
         sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-        sizer.Add([1,1], proportion=1, flag=wx.EXPAND)
+        sizer.Add(self.__create_chart_options(controlButtonPanel), flag=wx.EXPAND)
 
 
         controlButtonPanel.SetSizer(sizer)
