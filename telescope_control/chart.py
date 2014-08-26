@@ -180,7 +180,7 @@ class Chart (glcanvas.GLCanvas):
         if not self.cen_curscan:
             
             # need to convert to equatorial
-            if self.given_equ:
+            if self.show_equ:
                 cur_ra, cur_de = \
                 self.converter.azel_to_radec(
                     math.radians(self.curpos_h[0]),
