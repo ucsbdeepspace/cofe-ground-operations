@@ -124,6 +124,8 @@ class Scan:
         
         # execute the final stretch of the scan
         crd_list.append([left_az, high_el])
+        for j in range(1, int(right_az - left_az)):
+            crd_list.append([left_az + j, high_el])
         crd_list.append([right_az, high_el])
         
         return crd_list

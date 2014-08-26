@@ -476,7 +476,7 @@ class TelescopeControlFrame(wx.Frame):
         
         hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Num of Turns: "),
             self.sizerFlags)
-        self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "5")
         hg_sizer.AddF(self.hg_turns_input, self.sizerFlags)
         
         hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),

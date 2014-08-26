@@ -262,7 +262,7 @@ class Chart (glcanvas.GLCanvas):
             # intermediate points
             if prev_pt:
                 x, y = self.project_point(prev_pt)
-                    
+                
                 # check whether we need to break the list for wrap-around
                 if x < 0 and prev_x > self.width or \
                    x > self.width and prev_x < 0 or \
@@ -298,6 +298,15 @@ class Chart (glcanvas.GLCanvas):
                     prev_x, prev_y = x, y
                 
             prev_pt = next_pt
+        
+        # add in last point
+        if prev_pt:
+            x, y = self.project_point(prev_pt)
+            if not (x < 0 and prev_x > self.width or \
+                    x > self.width and prev_x < 0 or \
+                    y < 0 and prev_y > self.height or \
+                    y > self.height and prev_y < 0):
+                glVertex(x, y)
         
         glEnd()
         
