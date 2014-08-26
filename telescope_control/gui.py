@@ -451,8 +451,50 @@ class TelescopeControlFrame(wx.Frame):
         
         # box for horizontal graticule scans
         horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")
-        horiz_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
-        simple_sizer.Add(horiz_sizer, 1, wx.EXPAND)
+        horiz_box_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
+        
+        hg_sizer = wx.FlexGridSizer(4, 2)
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "),
+            self.sizerFlags)
+        self.left_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        hg_sizer.AddF(self.left_azimuth_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Right Azimuth: "),
+            self.sizerFlags)
+        self.right_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "190")
+        hg_sizer.AddF(self.right_azimuth_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Low Altitude: "),
+            self.sizerFlags)
+        self.low_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        hg_sizer.AddF(self.low_altitude_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "High Altitude: "),
+            self.sizerFlags)
+        self.high_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "80")
+        hg_sizer.AddF(self.high_altitude_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Num of Turns: "),
+            self.sizerFlags)
+        self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        hg_sizer.AddF(self.hg_turns_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
+            self.sizerFlags)
+        self.hg_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        hg_sizer.AddF(self.hg_cycles_input, self.sizerFlags)
+        
+        horiz_box_sizer.Add(hg_sizer)
+        
+        hg_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.hg_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        hg_buttons_sizer.Add(self.hg_preview_input)
+        self.hg_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        hg_buttons_sizer.Add(self.hg_begin_input)
+        
+        horiz_box_sizer.Add(hg_buttons_sizer)
+        simple_sizer.Add(horiz_box_sizer, 1, wx.EXPAND)
         
         simple_panel.SetSizer(simple_sizer)
         return simple_panel
