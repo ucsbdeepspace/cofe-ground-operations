@@ -252,6 +252,16 @@ class MainWindow(gui.TelescopeControlFrame):
 
     # slew to a solar system object
     def sso_goto (self, event):
+        
+        # run slew to object in new thread
+        self.scan_thread = threading.Thread(target=lambda:
+            self.controller.goto(self.planets.hor_pos(
+                self.planets.get_obj(self.sso_input.GetValue())),
+                float(self.scan_speed_input.GetValue()),
+                float(self.scan_accel_input.GetValue())))
+        self.scan_thread.start()
+        
+        self.cur_center_input.SetSelection(0) # center on current position
         event.Skip()
     
     # set current position as position of solar system object
@@ -279,6 +289,7 @@ class MainWindow(gui.TelescopeControlFrame):
     # show preview of scan
     def set_preview (self, event):
         self.show_scan()
+        self.cur_center_input.SetSelection(1) # center on scan
         event.Skip()
     
     # execute a horizontal graticule scan
@@ -322,6 +333,8 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.scan_center = [cen_az, cen_el]
         self.sky_chart.center = self.scan_center[:]
+        
+        self.cur_center_input.SetSelection(1) # center on scan
         self.sky_chart.Refresh()
         
     # execute a zenith spiral scan
@@ -354,6 +367,7 @@ class MainWindow(gui.TelescopeControlFrame):
              0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
         self.sky_chart.center = self.scan_center[:]
         
+        self.cur_center_input.SetSelection(1) # center on scan
         self.sky_chart.Refresh()
 
     # change the coordinate system of the chart

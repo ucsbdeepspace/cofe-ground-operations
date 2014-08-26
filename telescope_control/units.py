@@ -84,7 +84,7 @@ class Units:
         obs.lon = self.lon
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-        obs.date = (d+h).format(t = gmtime(time() + dt))
+        obs.date = (d+h).format(t = gmtime(time()))
         
         return obs
 
