@@ -141,7 +141,7 @@ class TelescopeControlFrame(wx.Frame):
             choices=["Current Position", "Current Scan"],
             style=wx.CB_DROPDOWN | wx.CB_READONLY)
         list_sizer.AddF(self.cur_center_input, self.sizerFlags)
-        self.cur_center_input.SetSelection(0)
+        self.cur_center_input.SetSelection(1)
         options_box_sizer.Add(list_sizer)
         
         return options_box_sizer

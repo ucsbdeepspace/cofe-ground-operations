@@ -93,6 +93,7 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
+        self.Bind(wx.EVT_COMBOBOX, self.change_cen, self.cur_center_input)
         
 
     def move_abs(self, event):
@@ -366,7 +367,23 @@ class MainWindow(gui.TelescopeControlFrame):
         self.sky_chart.Refresh()
         event.Skip()
     
-    def update_display(self, event):
+    # change the center of the sky chart
+    def change_cen (self, event):
+        
+        # center on current position
+        if self.cur_center_input.GetSelection() == 0:
+            self.sky_chart.center = self.controller.current_pos()
+            self.sky_chart.given_equ = False
+        
+        # center of current scan
+        elif self.cur_center_input.GetSelection() == 1:
+            self.sky_chart.center = self.scan_center[:]
+            self.sky_chart.given_equ = self.scan_equ
+        
+        self.sky_chart.Refresh()
+        event.Skip()
+    
+    def update_display (self, event):
         
         # update sky chart
         self.sky_chart.Refresh()
