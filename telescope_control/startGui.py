@@ -37,7 +37,9 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # standard scan
         self.controller = controller.Controller(self.logger,
-            self.galil, self.converter)
+            self.galil, self.converter,
+            float(self.scan_speed_input.GetValue()),
+            float(self.scan_accel_input.GetValue()))
         # simple scans
         self.hg_scan = graticule.Scan(self.logger, self.galil, self.converter)
         self.zs_scan = zspiral.Scan(self.logger, self.galil, self.converter)
@@ -90,6 +92,9 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
         self.Bind(wx.EVT_COMBOBOX, self.change_cen, self.cur_center_input)
+        
+        self.Bind(wx.EVT_TEXT_ENTER, self.change_speed, self.scan_speed_input)
+        self.Bind(wx.EVT_TEXT_ENTER, self.change_accel, self.scan_accel_input)
         
 
     def move_abs(self, event):
@@ -249,9 +254,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # run slew to object in new thread
         self.scan_thread = threading.Thread(target=lambda:
             self.controller.goto(self.planets.hor_pos(
-                self.planets.get_obj(self.sso_input.GetValue())),
-                float(self.scan_speed_input.GetValue()),
-                float(self.scan_accel_input.GetValue())))
+                self.planets.get_obj(self.sso_input.GetValue()))))
         self.scan_thread.start()
         
         self.cur_center_input.SetSelection(0) # center on current position
@@ -270,9 +273,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread = threading.Thread(target=lambda:
             self.controller.scan(points,
                 self.coordsys_selector.GetSelection() == 0 and
-                self.controller.process_hor or self.controller.process_equ,
-                float(self.scan_speed_input.GetValue()),
-                float(self.scan_accel_input.GetValue()),
+                    self.controller.process_hor or self.controller.process_equ,
                 self.scan_repeat_input.GetValue() and 1 or
                     float(self.scan_cycles_input.GetValue())))
                     
@@ -381,6 +382,16 @@ class MainWindow(gui.TelescopeControlFrame):
         self.sky_chart.cen_curscan = bool(self.cur_center_input.GetSelection())
         self.sky_chart.Refresh()
         
+        event.Skip()
+    
+    # change slew speed
+    def change_speed (self, event):
+        self.controller.speed = float(self.scan_speed_input.GetValue()) or 1.0
+        event.Skip()
+    
+    # change the acceleration
+    def change_accel (self, event):
+        self.controller.accel = float(self.scan_accel_input.GetValue()) or 1.0
         event.Skip()
     
     def update_display (self, event):
