@@ -1,3 +1,4 @@
+import logging
 import wx
 
 from chart import *
@@ -9,8 +10,19 @@ class TelescopeControlFrame(wx.Frame):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         
+        # set logging output
+        self.logger = logging.getLogger()
+        debug = logging.StreamHandler(sys.stdout)
+        debug.setFormatter(logging.Formatter('%(message)s'))
+        debug.setLevel(logging.DEBUG)
+        self.logger.addHandler(debug)
+        self.logger.setLevel(logging.DEBUG)
+        
         # unit converter (needed for sky chart)
         self.converter = converter
+        
+        # positions of solar system objects (for sky chart)
+        self.planets = planets.Planets(self.logger, self.converter)
 
         # Common flags for adding things to sizers
         # Huzzah for {sizer}.AddF(item, SizerFlags)
@@ -701,7 +713,8 @@ class TelescopeControlFrame(wx.Frame):
         ctrl_sizer.Add(self.chart_fov)
         
         # create OpenGL canvas
-        self.sky_chart = Chart(self.sky_panel, self.chart_fov, self.converter)
+        self.sky_chart = Chart(self.sky_panel, self.chart_fov,
+            self.converter, self.planets)
         sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
         sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
         

@@ -36,7 +36,7 @@ class Planets:
     #
     # -> ra, de: equatorial position of the object
     def equ_pos (self, obj):
-        obj.compute(self.converter.utc())
+        obj.compute(self.converter.get_obs())
         return math.degrees(obj.ra), math.degrees(obj.dec)
     
     # hor_pos: compute the horizontal position of a given solar system object

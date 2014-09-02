@@ -6,6 +6,7 @@ import ephem
 import FTGL
 import math
 from OpenGL.GL import *
+import planets
 import sys
 import wx
 from wx import glcanvas
@@ -14,11 +15,12 @@ import circle
 
 class Chart (glcanvas.GLCanvas):
     
-    def __init__ (self, parent, fov_ctrl, converter):
+    def __init__ (self, parent, fov_ctrl, converter, planets):
         glcanvas.GLCanvas.__init__(self, parent, -1)
         self.context = glcanvas.GLContext(self)
         self.SetCurrent(self.context)
         self.converter = converter
+        self.planets = planets
         
         # load font
         self.font = FTGL.BitmapFont("fonts/DejaVuSans.ttf")
@@ -53,11 +55,14 @@ class Chart (glcanvas.GLCanvas):
         glDisable(GL_DEPTH_TEST) # using 2D drawing, so no depth
         glClearColor(0, 0, 0, 1) # black background
         
-        # enable antialiasing on lines
+        # enable antialiasing on lines and points
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+        
+        glEnable(GL_POINT_SMOOTH)
+        glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
     
     # event handlers
     def on_resize (self, event):
@@ -216,6 +221,32 @@ class Chart (glcanvas.GLCanvas):
             self.gl_init()
         
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
+        
+        ##
+        # draw solar system objects
+        ##
+        
+        # compute positions
+        pos_list = {}
+        pos_func = self.show_equ and self.planets.equ_pos \
+                                  or self.planets.hor_pos
+        for obj_name in planets.objects:
+            pos_list[obj_name] = pos_func(self.planets.get_obj(obj_name))
+        
+        # draw as points with labels on the right
+        glColor(0.8, 0.7, 0.5) # orange tint
+        glPointSize(5)
+        
+        for name, pos in pos_list.items():
+            # draw point
+            glBegin(GL_POINTS)
+            point = self.project(pos, self.center_display())
+            glVertex(point[0], point[1])
+            glEnd()
+            
+            # draw label
+            glRasterPos(point[0] + 10, point[1] + 4)
+            self.font.Render(name)
         
         ##
         # draw grid

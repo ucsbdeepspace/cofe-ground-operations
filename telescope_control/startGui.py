@@ -1,4 +1,3 @@
-import logging
 import math
 import sys
 import time
@@ -26,14 +25,6 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread = None
         self.step_size = 0
         
-        # set logging output
-        self.logger = logging.getLogger()
-        debug = logging.StreamHandler(sys.stdout)
-        debug.setFormatter(logging.Formatter('%(message)s'))
-        debug.setLevel(logging.DEBUG)
-        self.logger.addHandler(debug)
-        self.logger.setLevel(logging.DEBUG)
-        
         # standard scan
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter,
@@ -42,9 +33,6 @@ class MainWindow(gui.TelescopeControlFrame):
         # simple scans
         self.hg_scan = graticule.Scan(self.logger, self.galil, self.converter)
         self.zs_scan = zspiral.Scan(self.logger, self.galil, self.converter)
-        
-        # positions of solar system objects
-        self.planets = planets.Planets(self.logger, self.converter)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
