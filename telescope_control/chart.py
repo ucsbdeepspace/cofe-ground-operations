@@ -242,10 +242,8 @@ class Chart (glcanvas.GLCanvas):
             glColor(level, level, level)
             
             for obj in self.ngcic:
-                name = obj[0]
-                
                 if self.show_equ:
-                    pos = obj[1][:]
+                    pos = obj[1][:] # -> [ra, de]
                 else: # convert to horizontal if display is in horizontal
                     az, el = self.converter.radec_to_azel(
                         math.radians(obj[1][0]), math.radians(obj[1][1]))
@@ -264,6 +262,10 @@ class Chart (glcanvas.GLCanvas):
                     glVertex(point[0], point[1] + 5)
                     glVertex(point[0] + 5, point[1])
                     glEnd()
+                    
+                    # draw label
+                    glRasterPos(point[0] + 10, point[1] + 4)
+                    self.font.Render(obj[0]) # obj[0] -> object name
         
         ##
         # draw solar system objects
@@ -294,6 +296,7 @@ class Chart (glcanvas.GLCanvas):
         ##
         # draw grid
         ##
+        
         glLineWidth(2.5)          # width of 2.5px
         glColor(0.5, 0.5, 0.5)    # gray
         glLineStipple(2, 0xAAAA)  # dashed lines
@@ -349,6 +352,7 @@ class Chart (glcanvas.GLCanvas):
         ##
         # draw the path
         ##
+        
         glLineWidth(3)         # width of 3px
         glColor(0.8, 0.8, 0.8) # light gray
         glBegin(GL_LINE_STRIP)
