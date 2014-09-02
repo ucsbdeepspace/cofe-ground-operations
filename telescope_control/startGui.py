@@ -67,6 +67,8 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.Bind(wx.EVT_BUTTON, self.sso_goto, self.sso_goto_input)
         self.Bind(wx.EVT_BUTTON, self.sso_sync, self.sso_sync_input)
+        self.Bind(wx.EVT_BUTTON, self.ngcic_goto, self.ngcic_goto_input)
+        self.Bind(wx.EVT_BUTTON, self.ngcic_sync, self.ngcic_sync_input)
         
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
@@ -237,6 +239,7 @@ class MainWindow(gui.TelescopeControlFrame):
             
         return points
 
+    
     # slew to a solar system object
     def sso_goto (self, event):
         
@@ -253,6 +256,42 @@ class MainWindow(gui.TelescopeControlFrame):
     def sso_sync (self, event):
         event.Skip()
     
+    # get position of an NGC or IC object
+    def get_ngcic_pos (self, name):
+        for obj in self.sky_chart.ngcic:
+            if obj[0] == name:
+                return obj[1] # -> position
+        
+        # not found
+        self.logger.error("object does not exist: " + name)
+        return None
+    
+    # slew to an NGC/IC object
+    def ngcic_goto (self, event):
+        
+        # get coordinates
+        equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+            + " " + str(self.ngcic_input.GetValue()))
+        if not equ_pos:
+            return
+        
+        # convert to horizontal
+        az, el = \
+            self.converter.radec_to_azel(
+                math.radians(equ_pos[0]), math.radians(equ_pos[1]))
+        hor_pos = [math.degrees(az), math.degrees(el)]
+        
+        # run slew to object in new thread
+        self.scan_thread = threading.Thread(target=lambda:
+            self.controller.goto(hor_pos))
+        self.scan_thread.start()
+        
+        self.cur_center_input.SetSelection(0) # center on current position
+        event.Skip()
+    
+    # set current position as position of NGC/IC object
+    def ngcic_sync (self, event):
+        event.Skip()
     
     # scan button clicked
     def scan (self, event):
