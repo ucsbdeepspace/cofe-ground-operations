@@ -23,6 +23,9 @@ class Chart (glcanvas.GLCanvas):
         self.converter = converter
         self.planets = planets
         
+        # fetch list of all NGC/IC objects and their positions
+        self.ngcic = ngcic.pos_list("data/ngcic.csv")
+        
         # load font
         self.font = FTGL.BitmapFont("fonts/DejaVuSans.ttf")
         self.font.FaceSize(12)
@@ -39,6 +42,9 @@ class Chart (glcanvas.GLCanvas):
         self.show_equ = False # whether to show in equatorial coordinates
         self.cen_curscan = False # center the current scan
                                  #   (otherwise, center current position)
+        
+        # adjusted center of screen (in display coordinates)
+        self.adj_center = [0, 0]
         
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
@@ -176,7 +182,7 @@ class Chart (glcanvas.GLCanvas):
         else: # already in correct coordinates
             sky_coord = point[:]
         
-        return self.project (sky_coord, self.center_display())
+        return self.project (sky_coord, self.adj_center)
 
     
     # center_display: get center of screen in display sky coordinates
@@ -188,14 +194,14 @@ class Chart (glcanvas.GLCanvas):
             # need to convert to equatorial
             if self.show_equ:
                 cur_ra, cur_de = \
-                self.converter.azel_to_radec(
-                    math.radians(self.curpos_h[0]),
-                    math.radians(self.curpos_h[1]))
-                return [math.degrees(cur_ra), math.degrees(cur_de)]
+                    self.converter.azel_to_radec(
+                        math.radians(self.curpos_h[0]),
+                        math.radians(self.curpos_h[1]))
+                self.adj_center = [math.degrees(cur_ra), math.degrees(cur_de)]
             
             # no need to convert to equatorial
             else:
-                return self.curpos_h[0], self.curpos_h[1]
+                self.adj_center = [self.curpos_h[0], self.curpos_h[1]]
         
         # find scan center in proper coordinate system
         elif self.given_equ and not self.show_equ: # equatorial -> horizontal
@@ -203,17 +209,17 @@ class Chart (glcanvas.GLCanvas):
                 self.converter.radec_to_azel(
                     math.radians(self.scan_center[0]),
                     math.radians(self.scan_center[1]))
-            return [math.degrees(cen_az), math.degrees(cen_el)]
+            self.adj_center = [math.degrees(cen_az), math.degrees(cen_el)]
         
         elif not self.given_equ and self.show_equ: # horizontal -> equatoria
             cen_ra, cen_de = \
                 self.converter.azel_to_radec(
                     math.radians(self.scan_center[0]),
                     math.radians(self.scan_center[1]))
-            return [math.degrees(cen_ra), math.degrees(cen_de)]
+            self.adj_center = [math.degrees(cen_ra), math.degrees(cen_de)]
         
         else: # already in correct coordinates
-            return self.scan_center[:]
+            self.adj_center = self.scan_center[:]
     
 
     # draw: draw all objects onto the screen
@@ -222,6 +228,9 @@ class Chart (glcanvas.GLCanvas):
             self.gl_init()
         
         glClear(GL_COLOR_BUFFER_BIT) # clear previous drawing
+        
+        # compute position of the center of screen
+        self.center_display()
         
         ##
         # draw solar system objects
@@ -241,13 +250,37 @@ class Chart (glcanvas.GLCanvas):
         for name, pos in pos_list.items():
             # draw point
             glBegin(GL_POINTS)
-            point = self.project(pos, self.center_display())
+            point = self.project(pos, self.adj_center)
             glVertex(point[0], point[1])
             glEnd()
             
             # draw label
             glRasterPos(point[0] + 10, point[1] + 4)
             self.font.Render(name)
+        
+        ##
+        # draw NGC/IC objects
+        ##
+        
+        if self.h_fov <= 20.0: # only show when zoomed in
+            
+            for obj in self.ngcic:
+                name = obj[0]
+                
+                if self.show_equ:
+                    pos = obj[1][:]
+                else: # convert to horizontal if display is in horizontal
+                    az, el = self.converter.radec_to_azel(
+                        math.radians(obj[1][0]), math.radians(obj[1][1]))
+                    pos = [math.degrees(az), math.degrees(el)]
+                
+                # get screen position
+                point = self.project(pos, self.adj_center)
+                if 0 < point[0] <= self.width and \
+                   0 < point[1] <= self.height:
+                    
+                    # draw square diamond shape
+                    None
         
         ##
         # draw grid
@@ -271,7 +304,7 @@ class Chart (glcanvas.GLCanvas):
         
         # vertical lines
         for azi in range(0, 360/mark):
-            point = self.project([azi * mark, 0], self.center_display())
+            point = self.project([azi * mark, 0], self.adj_center)
             if -1 < point[0] < self.width - 30:
                 # draw line
                 glBegin(GL_LINES)
@@ -287,7 +320,7 @@ class Chart (glcanvas.GLCanvas):
         
         # horizontal lines
         for alt in range(-90/mark, 90/mark + 1):
-            point = self.project([0, alt * mark], self.center_display())
+            point = self.project([0, alt * mark], self.adj_center)
             if -1 < point[1] < self.height - self.font.line_height:
                 
                 # draw line

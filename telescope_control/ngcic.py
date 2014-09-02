@@ -10,14 +10,14 @@ import csv
 # -> result -> list([name, point -> [ra, de]]): list of objects and positions
 def pos_list (csv_file):
     fp = open(csv_file, "rb")
-    reader = csv.reader(fp, delimeter=';')
+    reader = csv.reader(fp, delimiter=';')
     
     result = []
     start = False
     
     for row in reader:
         if row: # skip blank lines
-        
+            
             if start: # read data if we're past headers
                 result.append([ # name
                     (row[2] == "I" and "IC " or "NGC ") + str(int(row[3])),
@@ -25,5 +25,7 @@ def pos_list (csv_file):
                     [float(row[0]), float(row[1])]])
             
             # update whether we've past headers
-            if not start and row[0][:1] == "--":
+            if not start and row[0][:2] == "--":
                 start = True
+     
+    return result
