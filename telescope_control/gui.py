@@ -393,11 +393,12 @@ class TelescopeControlFrame(wx.Frame):
         sso_box_sizer = wx.StaticBoxSizer(sso_box, wx.VERTICAL)
         
         sso_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sso_sizer.Add(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "))
+        sso_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "),
+            self.sizerFlags)
         self.sso_input = wx.ComboBox(targets_panel, wx.ID_ANY,
             choices=planets.objects, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.sso_input.SetSelection(0)
-        sso_sizer.Add(self.sso_input)
+        sso_sizer.AddF(self.sso_input, self.sizerFlags)
         sso_box_sizer.Add(sso_sizer)
         
         sso_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -410,26 +411,32 @@ class TelescopeControlFrame(wx.Frame):
         targets_sizer.Add(sso_box_sizer, 1, wx.EXPAND)
         
         # box for other objects
-        nss_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Non-Solar System")
-        nss_box_sizer = wx.StaticBoxSizer(nss_box, wx.VERTICAL)
+        ngcic_box = wx.StaticBox(targets_panel, wx.ID_ANY, "NGC/IC Objects")
+        ngcic_box_sizer = wx.StaticBoxSizer(ngcic_box, wx.VERTICAL)
         
-        nss_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        nss_sizer.Add(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "))
-        self.nss_input = wx.ComboBox(targets_panel, wx.ID_ANY,
-            choices=[""],
-            style=wx.CB_DROPDOWN | wx.CB_READONLY)
-        self.nss_input.SetSelection(0)
-        nss_sizer.Add(self.nss_input)
-        nss_box_sizer.Add(nss_sizer)
+        ngcic_sizer = wx.FlexGridSizer(2, 2)
+        ngcic_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Catalog: "),
+            self.sizerFlags)
+        self.ngcic_catalog = wx.ComboBox(targets_panel, wx.ID_ANY,
+            choices=["NGC", "IC"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.ngcic_catalog.SetSelection(0)
+        ngcic_sizer.AddF(self.ngcic_catalog, self.sizerFlags)
         
-        nss_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.nss_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
-        nss_buttons_sizer.Add(self.nss_goto_input)
-        self.nss_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
-        nss_buttons_sizer.Add(self.nss_sync_input)
-        nss_box_sizer.Add(nss_buttons_sizer)
+        ngcic_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Number: "),
+            self.sizerFlags)
+        self.ngcic_input = wx.SpinCtrl(targets_panel, wx.ID_ANY,
+            value="1", min=1, max=7840)
+        ngcic_sizer.AddF(self.ngcic_input, self.sizerFlags)
+        ngcic_box_sizer.Add(ngcic_sizer)
         
-        targets_sizer.Add(nss_box_sizer, 1, wx.EXPAND)
+        ngcic_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        ngcic_buttons_sizer.Add(self.ngcic_goto_input)
+        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        ngcic_buttons_sizer.Add(self.ngcic_sync_input)
+        ngcic_box_sizer.Add(ngcic_buttons_sizer)
+        
+        targets_sizer.Add(ngcic_box_sizer, 1, wx.EXPAND)
         
         targets_panel.SetSizer(targets_sizer)
         return targets_panel
