@@ -6,12 +6,13 @@ import ephem
 import FTGL
 import math
 from OpenGL.GL import *
-import planets
 import sys
 import wx
 from wx import glcanvas
 
 import circle
+import ngcic
+import planets
 
 class Chart (glcanvas.GLCanvas):
     
