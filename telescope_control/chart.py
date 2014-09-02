@@ -233,6 +233,39 @@ class Chart (glcanvas.GLCanvas):
         self.center_display()
         
         ##
+        # draw NGC/IC objects
+        ##
+        
+        if self.h_fov <= 20.0: # only show when zoomed in
+            glLineWidth(2)
+            level = min((20.0 - self.h_fov) * 0.1, 1.0)
+            glColor(level, level, level)
+            
+            for obj in self.ngcic:
+                name = obj[0]
+                
+                if self.show_equ:
+                    pos = obj[1][:]
+                else: # convert to horizontal if display is in horizontal
+                    az, el = self.converter.radec_to_azel(
+                        math.radians(obj[1][0]), math.radians(obj[1][1]))
+                    pos = [math.degrees(az), math.degrees(el)]
+                
+                # get screen position
+                point = self.project(pos, self.adj_center)
+                
+                if 0 < point[0] <= self.width and \
+                   0 < point[1] <= self.height:
+                    
+                    # draw square diamond shape
+                    glBegin(GL_LINE_LOOP)
+                    glVertex(point[0], point[1] - 5)
+                    glVertex(point[0] - 5, point[1])
+                    glVertex(point[0], point[1] + 5)
+                    glVertex(point[0] + 5, point[1])
+                    glEnd()
+        
+        ##
         # draw solar system objects
         ##
         
@@ -257,30 +290,6 @@ class Chart (glcanvas.GLCanvas):
             # draw label
             glRasterPos(point[0] + 10, point[1] + 4)
             self.font.Render(name)
-        
-        ##
-        # draw NGC/IC objects
-        ##
-        
-        if self.h_fov <= 20.0: # only show when zoomed in
-            
-            for obj in self.ngcic:
-                name = obj[0]
-                
-                if self.show_equ:
-                    pos = obj[1][:]
-                else: # convert to horizontal if display is in horizontal
-                    az, el = self.converter.radec_to_azel(
-                        math.radians(obj[1][0]), math.radians(obj[1][1]))
-                    pos = [math.degrees(az), math.degrees(el)]
-                
-                # get screen position
-                point = self.project(pos, self.adj_center)
-                if 0 < point[0] <= self.width and \
-                   0 < point[1] <= self.height:
-                    
-                    # draw square diamond shape
-                    None
         
         ##
         # draw grid
