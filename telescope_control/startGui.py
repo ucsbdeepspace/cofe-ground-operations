@@ -100,8 +100,10 @@ class MainWindow(gui.TelescopeControlFrame):
     def goto(self, event):
         print "Event goto not implemented!"
 
-    def calibrate(self, event):
-        print "Event calibrate not implemented!"
+    def calibrate (self, event):
+        self.controller.sync(float(self.calibrate_az_input.GetValue()),
+                             float(self.calibrate_el_input.GetValue()))
+        event.Skip()
 
     def track_radec(self, event):
         print "Event track_radec not implemented!"

@@ -154,16 +154,16 @@ class Controller:
     
     # goto: slew to a particular coordinate from current position
     #
-    #   coord_h -> [azimuth, altitude]: new position to slew to
+    #   hor_pos -> [azimuth, altitude]: new position to slew to
     #
     # -> (returns once slew has reached destination point)
-    def goto (self, coord_h):
-        self.logger.info("slew to " + str(coord_h[0]) + ", " + str(coord_h[1]))
+    def goto (self, hor_pos):
+        self.logger.info("slew to " + str(hor_pos[0]) + ", " + str(hor_pos[1]))
         
         # angular distance and bearing to new point
         cur_a, cur_b = self.current_pos()
-        ang_dist = circle.distance([cur_a, cur_b], coord_h)
-        bearing = circle.bearing([cur_a, cur_b], coord_h)
+        ang_dist = circle.distance([cur_a, cur_b], hor_pos)
+        bearing = circle.bearing([cur_a, cur_b], hor_pos)
         
         # generate list of intermediate points to slew to
         num_int = int(ang_dist) # one intermediate point per degree
@@ -180,16 +180,16 @@ class Controller:
     
     # track: follow an equatorial position indefinitely
     #
-    #   coord_e -> [ra, de]: position to track
+    #   equ_pos -> [ra, de]: position to track
     #
     # -> (returns once tracking ends)
-    def track (self, coord_e):
+    def track (self, equ_pos):
         # TODO: slew to equatorial coordinate and continue to track
         None
 
     
     # sync: set current position of motors
-    #   coord_h -> [az, el]: position to set motor position to
-    def sync (self, coord_h):
+    #   hor_pos -> [az, el]: position to set motor position to
+    def sync (self, hor_pos):
         # TODO: set position of motors to given position
         None

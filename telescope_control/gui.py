@@ -230,9 +230,9 @@ class TelescopeControlFrame(wx.Frame):
         return baseSizer
 
     def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
-        staticBoxRaDecCal                   = wx.StaticBox(parentNotebook, wx.ID_ANY, "Calibrate Ra/Dec")
-        staticTextDecLabel                  = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-        staticTextRaLabel                   = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+        staticBoxRaDecCal = wx.StaticBox(parentNotebook, wx.ID_ANY, "Sync to Position")
+        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
+        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
 
         self.textCtrlRightAscensionCalInput = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
         self.textCtrlDeclinationCalInput    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
@@ -253,10 +253,10 @@ class TelescopeControlFrame(wx.Frame):
         return baseSizer
 
     def __create_ra_dec_pane(self):
-        notebookRaDecPane                         = wx.Panel(self.controlNotebook)
-        self.buttonDoRaDecCalibrate               = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
-        self.buttonTrackPosition                  = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
-        self.buttonTrackingToggle                 = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
+        notebookRaDecPane           = wx.Panel(self.controlNotebook)
+        self.buttonDoRaDecCalibrate = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
+        self.buttonTrackPosition    = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
+        self.buttonTrackingToggle   = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
         
         sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
         sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
@@ -305,9 +305,9 @@ class TelescopeControlFrame(wx.Frame):
         return joystickPaneSizer
 
     def __create_az_el_calibrate_panel(self, parent):
-        calibrateStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Calibrate")
-        azLabel                 = wx.StaticText(parent, wx.ID_ANY, "Az:")
-        elLabel                 = wx.StaticText(parent, wx.ID_ANY, "El:")
+        calibrateStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
+        azLabel                 = wx.StaticText(parent, wx.ID_ANY, "Azimuth:")
+        elLabel                 = wx.StaticText(parent, wx.ID_ANY, "Altitude:")
         self.calibrate_az_input = wx.TextCtrl(parent, wx.ID_ANY, "")
         self.calibrate_el_input = wx.TextCtrl(parent, wx.ID_ANY, "")
 
