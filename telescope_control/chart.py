@@ -303,15 +303,17 @@ class Chart (glcanvas.GLCanvas):
         glPointSize(5)
         
         for name, pos in self.sso_list.items():
-            # draw point
-            glBegin(GL_POINTS)
             point = self.project(pos, self.adj_center)
-            glVertex(point[0], point[1])
-            glEnd()
             
-            # draw label
-            glRasterPos(point[0] + 10, point[1] + 4)
-            self.font.Render(name)
+            if 0 < point[0] <= self.width and 0 < point[1] <= self.height:
+                # draw point
+                glBegin(GL_POINTS)
+                glVertex(point[0], point[1])
+                glEnd()
+                
+                # draw label
+                glRasterPos(point[0] + 10, point[1] + 4)
+                self.font.Render(name)
         
         ##
         # draw grid
