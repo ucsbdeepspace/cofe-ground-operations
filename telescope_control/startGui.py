@@ -38,7 +38,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.bind_events()
         self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
         print "Starting Display Update Poll"
-        self.poll_update.Start(35)
+        self.poll_update.Start(100)
         print ''
 
         print "Make sure to turn on the motors you will use!"
@@ -254,32 +254,38 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # set current position as position of solar system object
     def sso_sync (self, event):
+        hor_pos = self.planets.hor_pos(
+            self.planets.get_obj(self.sso_input.GetValue()))
+        self.controller.sync(hor_pos)
         event.Skip()
     
-    # get position of an NGC or IC object
+    # get horizontal corodinates of an NGC or IC object
     def get_ngcic_pos (self, name):
+        equ_pos = False
         for obj in self.sky_chart.ngcic:
             if obj[0] == name:
-                return obj[1] # -> position
+                equ_pos = obj[1] # -> position
         
         # not found
-        self.logger.error("object does not exist: " + name)
-        return None
+        if not equ_pos:
+            self.logger.error("object does not exist: " + name)
+            return
+        
+        # convert to horizontal
+        az, el = self.converter.radec_to_azel(
+            math.radians(equ_pos[0]), math.radians(equ_pos[1]))
+        hor_pos = [math.degrees(az), math.degrees(el)]
+        
+        return hor_pos
     
     # slew to an NGC/IC object
     def ngcic_goto (self, event):
         
         # get coordinates
-        equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+        hor_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
             + " " + str(self.ngcic_input.GetValue()))
-        if not equ_pos:
-            return
-        
-        # convert to horizontal
-        az, el = \
-            self.converter.radec_to_azel(
-                math.radians(equ_pos[0]), math.radians(equ_pos[1]))
-        hor_pos = [math.degrees(az), math.degrees(el)]
+        if not hor_pos:
+            return # object not found
         
         # run slew to object in new thread
         self.scan_thread = threading.Thread(target=lambda:
@@ -291,6 +297,15 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # set current position as position of NGC/IC object
     def ngcic_sync (self, event):
+        
+        # get coordinates
+        hor_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+            + " " + str(self.ngcic_input.GetValue()))
+        if not hor_pos:
+            return # object not found
+        
+        # sync to object position
+        self.controller.sync(hor_pos)
         event.Skip()
     
     # scan button clicked
