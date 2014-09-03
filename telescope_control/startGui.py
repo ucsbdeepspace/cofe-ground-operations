@@ -37,13 +37,13 @@ class MainWindow(gui.TelescopeControlFrame):
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
         self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
-        print "Starting Display Update Poll"
+        print("Starting Display Update Poll")
         self.poll_update.Start(100)
-        print ''
+        print('')
 
-        print "Make sure to turn on the motors you will use!"
-        print "Motors are automatically turned off when you exit."
-        print ''
+        print("Make sure to turn on the motors you will use!")
+        print("Motors are automatically turned off when you exit.")
+        print('')
 
     def bind_events(self):
         # By putting the event bindings here, it means I can clear out the event handlers from the parent class (gui.py)
@@ -98,7 +98,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.galil.beginMotion()
 
     def goto(self, event):
-        print "Event goto not implemented!"
+        print("Event goto not implemented!")
 
     def calibrate (self, event):
         self.controller.sync(float(self.calibrate_az_input.GetValue()),
@@ -106,7 +106,7 @@ class MainWindow(gui.TelescopeControlFrame):
         event.Skip()
 
     def track_radec(self, event):
-        print "Event track_radec not implemented!"
+        print("Event track_radec not implemented!")
 
 
     def stop(self, event):
@@ -123,7 +123,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 (self.button_stop_el, 1)]
         for stop, axis in stops:
             if event.GetId() == stop.GetId():
-                print "Stopping motor for axis {}".format("ALL" if axis is None else axis)
+                print("Stopping motor for axis {}".format("ALL" if axis is None else axis))
                 self.galil.endMotion(axis)
                 break
         event.Skip()
@@ -137,12 +137,12 @@ class MainWindow(gui.TelescopeControlFrame):
         if event.GetId() == self.button_el_motor.GetId():
             axis = 1
         if self.galil.checkMotorPower(axis):
-            print "Turning off motor for axis {}.".format(axis)
+            print("Turning off motor for axis {}.".format(axis))
             self.galil.motorOff(axis)
         else:
-            print "Turning on motor for axis {}.".format(axis)
+            print("Turning on motor for axis {}.".format(axis))
             self.galil.motorOn(axis)
-        print ''
+        print('')
         event.Skip()
 
     def set_step_size(self, event):
@@ -159,10 +159,8 @@ class MainWindow(gui.TelescopeControlFrame):
         degrees = value
         self.step_size = [self.converter.az_to_encoder(degrees),
                         self.converter.el_to_encoder(degrees)]
-        print "Setting joystick step size to {} degrees, {} encoder counts.".format(degrees, self.step_size[0])
-        # print "\t{} encoder counts in the AZ direction".format(self.step_size[0])
-        # print "\t{} encoder counts in the EL direction".format(self.step_size[1])
-        # print ''
+        print("Setting joystick step size to {} degrees, {} encoder counts.".
+            format(degrees, self.step_size[0]))
         
 
     def move_rel(self, event):
@@ -178,19 +176,18 @@ class MainWindow(gui.TelescopeControlFrame):
         for button, sign, axis in b_s_a:
             if event.GetId() == button.GetId():
                 try:
-                    print "Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis)
+                    print("Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis))
                     self.galil.moveRelative(axis, sign*self.step_size[axis])
                 except AttributeError:
-                    print "Can't move! No step size entered!"
-                    print "To enter a step size, type a number of degrees in"
-                    print "the box near the arrows, and press enter."
+                    print("Can't move! No step size entered!")
+                    print("To enter a step size, type a number of degrees in")
+                    print("the box near the arrows, and press enter.")
                     traceback.print_exc()
-                except Exception, error:
-                    print error
+                except (Exception, error):
+                    print(error)
                 else:
                     self.galil.beginMotion(axis)
                 break
-        #print ''
         return
 
     # show selected scan on sky chart
@@ -482,29 +479,26 @@ class MainWindow(gui.TelescopeControlFrame):
             else:
                 motStateLabels[x].SetLabel("Motor Off")
 
-        # print "motOn", self.galil.motOn
-        # print "inMot", self.galil.inMot
-
         event.Skip()
         return
 
 def main():		# Shut up pylinter
-    print "Reading configuration file..."
+    print("Reading configuration file...")
     conf = config.Config("config.txt") #make the config object...
     galilInterface = globalConf.gInt
     
-    print "Setting up converter..."
+    print("Setting up converter...")
     converter = units.Units(conf) #...and the converter...
     
-    print "Launching app..."
+    print("Launching app...")
     app = wx.App()
     
-    print "Building UI..."
+    print("Building UI...")
     mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
     app.SetTopWindow(mainFrame)
     mainFrame.Show()
     
-    print "Entering main loop..."
+    print("Entering main loop...")
     app.MainLoop()
 
     # close galil interface on exit

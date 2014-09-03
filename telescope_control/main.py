@@ -7,9 +7,9 @@ try:
 	import pycallgraph
 	pycallgraph.start_trace()
 except ImportError:
-	print "Do not have pycallgraph installed. Not tracing calls"
+	print("Do not have pycallgraph installed. Not tracing calls")
 except AttributeError:
-	print "Wat?"
+	print("AttributeError encountered")
 
 
 def go():
@@ -23,7 +23,7 @@ def go():
 	ipCheckWin = ipCheck.IpChecker(0)
 	ipCheckWin.MainLoop()
 
-	print "Startup check complete. IP = \"", globalConf.galilIP, "\""
+	print("Startup check complete. IP = \"", globalConf.galilIP, "\"")
 
 	#def __init__(self, ip, port = 23, fakeGalil = False, poll = False, resetGalil = False):
 
@@ -31,7 +31,7 @@ def go():
 
 	globalConf.gInt = PyGalil.galilInterface.GalilInterface(ip=globalConf.galilIP, poll=False, resetGalil=False)
 
-	print "opened galil. Connection:", globalConf.gInt
+	print("opened galil. Connection:", globalConf.gInt)
 	#import time
 	#time.sleep(1)
 
