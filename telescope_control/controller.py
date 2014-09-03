@@ -9,19 +9,12 @@ import threading
 
 class Controller:
     
-    #   speed: rate (degrees/sec) to slew at
-    #      note: use max speed if speed <= 0 or speed >= max speed
-    #   accel: acceleration (degrees/sec^2) to change velocity
-    def __init__ (self, logger, galil, converter, speed, accel):
+    def __init__ (self, logger, galil, converter, config):
         self.logger = logger
         self.galil = galil
         self.converter = converter
         
         self.scan_queue = 0 # number of scans left to do
-        
-        # slew settings
-        self.speed = speed
-        self.accel = accel
     
     
     # current_pos: retrieve current motor positions
@@ -131,7 +124,7 @@ class Controller:
                 delta = math.sqrt(d_azi ** 2 + (d_alt * cosAlt) ** 2)
                 
                 # estimate of time needed to get to next point
-                dt = delta / self.speed
+                dt = delta / float(self.config.get("slew", "speed"))
                 if math.fabs(dt - dt0) < 0.01:
                     break # accurate enough, stop loop
                 

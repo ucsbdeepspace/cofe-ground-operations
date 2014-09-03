@@ -5,32 +5,32 @@ class Units:
     def __init__(self, config):
         """latitude and longitude need to be strings like 'd:m:s'"""
         self.c = config
-        self.lon = self.c["LON"]
-        self.lat = self.c["LAT"]
+        self.lon = self.c.get("location", "lon")
+        self.lat = self.c.get("location", "LAT")
         
     def az_to_encoder(self, counts, ab=True):
-        return self.__to_encoder("AzEncPerRev", counts, ab)
+        return self.__to_encoder("az", counts, ab)
         
     def el_to_encoder(self, counts, ab=True):
-        return self.__to_encoder("ElEncPerRev", counts, ab)
+        return self.__to_encoder("el", counts, ab)
 
     def __to_encoder(self, flag, counts, ab):
-        if "Az" in flag :
-            offset = self.c["AzOffset"] 
+        if flag == "az":
+            offset = self.c.get("skypos", "az") 
         else: 
-            offset = self.c["ElOffset"]
-        return int(self.c[flag]/360.0*(counts + (offset if ab else 0)))
+            offset = self.c.get("skypos", "el")
+        return int(float(self.c.get("encoders", flag))/360.0*(counts + (offset if ab else 0)))
     
     def encoder_to_az(self, counts, ab=True):
-        return self.__from_encoder("AzEncPerRev", counts, ab)
+        return self.__from_encoder("az", counts, ab)
 
     def encoder_to_el(self, counts,ab=True):
-        return self.__from_encoder("ElEncPerRev", counts, ab)
+        return self.__from_encoder("el", counts, ab)
 
     def __from_encoder(self, flag, counts, ab):
-        offset = self.az_to_encoder(self.c["AzOffset"], False) if "Az" in flag else None
-        offset = self.el_to_encoder(self.c["ElOffset"], False) if offset is None else offset
-        return self.__str_degrees(360.0/self.c[flag]*(counts - (offset if ab else 0)))
+        offset = self.az_to_encoder(float(self.c.get("skypos", "az")), False) if flag == "az" else None
+        offset = self.el_to_encoder(float(self.c.get("skypos", "el")), False) if offset is None else offset
+        return self.__str_degrees(360.0/float(self.c.get("encoders", flag))*(counts - (offset if ab else 0)))
 
     def __str_degrees(self, val):
         d = int(val)
@@ -62,8 +62,8 @@ class Units:
         return star.az, star.alt
         
     def set_offset(self, wanted_Az, wanted_El, current_Az, current_El):
-        self.c["AzOffset"] = current_Az - wanted_Az
-        self.c["ElOffset"] = current_El - wanted_El
+        self.c["skypos"]["az"] = current_Az - wanted_Az
+        self.c["skypos"]["el"] = current_El - wanted_El
 
     def lst(self):
         o = ephem.Observer()

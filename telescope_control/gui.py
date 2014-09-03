@@ -6,9 +6,11 @@ import planets
 import scans
 
 class TelescopeControlFrame(wx.Frame):
-    def __init__(self, converter, *args, **kwds):
+    def __init__(self, converter, config, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
+        
+        self.config = config
         
         # set logging output
         self.logger = logging.getLogger()

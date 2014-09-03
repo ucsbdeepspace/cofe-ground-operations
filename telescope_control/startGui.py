@@ -1,10 +1,14 @@
+try:
+    import configparser
+except:
+    import ConfigParser as configparser
+
 import math
 import sys
 import time
 import traceback
 import wx
 
-import config
 import controller
 import gui
 import globalConf
@@ -17,19 +21,16 @@ import graticule
 import zspiral
 
 class MainWindow(gui.TelescopeControlFrame):
-    def __init__(self, galilInterface, converter, conf, *args, **kwargs):
-        gui.TelescopeControlFrame.__init__(self, converter, *args, **kwargs)
+    def __init__(self, galilInterface, converter, config, *args, **kwargs):
+        gui.TelescopeControlFrame.__init__(self, converter, config, *args, **kwargs)
         self.poll_update = wx.Timer(self)
         self.galil = galilInterface
-        self.config = conf
         self.scan_thread = None
         self.step_size = 0
         
         # standard scan
         self.controller = controller.Controller(self.logger,
-            self.galil, self.converter,
-            float(self.scan_speed_input.GetValue()),
-            float(self.scan_accel_input.GetValue()))
+            self.galil, self.converter, self.config)
         # simple scans
         self.hg_scan = graticule.Scan(self.logger, self.galil, self.converter)
         self.zs_scan = zspiral.Scan(self.logger, self.galil, self.converter)
@@ -428,12 +429,12 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # change slew speed
     def change_speed (self, event):
-        self.controller.speed = float(self.scan_speed_input.GetValue()) or 1.0
+        self.config.set("slew", "speed", float(self.scan_speed_input.GetValue()) or 1.0)
         event.Skip()
     
     # change the acceleration
     def change_accel (self, event):
-        self.controller.accel = float(self.scan_accel_input.GetValue()) or 1.0
+        self.config.set("slew", "accel", float(self.scan_accel_input.GetValue()) or 1.0)
         event.Skip()
     
     def update_display (self, event):
@@ -484,17 +485,21 @@ class MainWindow(gui.TelescopeControlFrame):
 
 def main():		# Shut up pylinter
     print("Reading configuration file...")
-    conf = config.Config("config.txt") #make the config object...
+    
+    # load configuration
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    
     galilInterface = globalConf.gInt
     
     print("Setting up converter...")
-    converter = units.Units(conf) #...and the converter...
+    converter = units.Units(config) #...and the converter...
     
     print("Launching app...")
     app = wx.App()
     
     print("Building UI...")
-    mainFrame = MainWindow(galilInterface, converter, conf, None, -1, "")
+    mainFrame = MainWindow(galilInterface, converter, config, None, -1, "")
     app.SetTopWindow(mainFrame)
     mainFrame.Show()
     
