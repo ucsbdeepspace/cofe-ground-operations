@@ -11,13 +11,17 @@ import math
 # -> theta: angular distance between pt1 and pt2
 def distance (pt1, pt2):
     
+    # convert to radians
+    pt1_b = math.radians(pt1[1])
+    pt2_b = math.radians(pt2[1])
+    
     # <pt1, pt2> = ||pt1|| ||pt2|| cos(theta)
     # cos(theta) = <pt1, pt2> / (||pt1|| ||pt2||)
     #            = <pt1, pt2>             <-- letting pt1, pt2 be unit vectors
     #            = sin(pt1[1])*sin(pt2[1])+cos(pt1[1])*cos(pt2[1])*cos(pt2[0]-pt1[0])
     return math.degrees(math.acos(
-        math.sin(math.radians(pt1[1])) * math.sin(math.radians(pt2[1])) +
-        math.cos(math.radians(pt1[1])) * math.cos(math.radians(pt2[1]))
+        math.sin(pt1_b) * math.sin(pt2_b) +
+        math.cos(pt1_b) * math.cos(pt2_b)
             * math.cos(math.radians(pt2[0] - pt1[0]))))
 
 

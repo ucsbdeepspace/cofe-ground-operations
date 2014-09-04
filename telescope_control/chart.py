@@ -2,9 +2,15 @@
 # wx widget for showing a chart of objects
 #   (depends: python-opengl, pyftgl)
 
+# disable OpenGL error checking
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+
 import ephem
 import FTGL
 import math
+import numpy as np
+from OpenGL.arrays.vbo import *
 from OpenGL.GL import *
 import sys
 import time
@@ -14,6 +20,7 @@ from wx import glcanvas
 import circle
 import ngcic
 import planets
+
 
 class Chart (glcanvas.GLCanvas):
     
@@ -71,6 +78,9 @@ class Chart (glcanvas.GLCanvas):
         
         glEnable(GL_POINT_SMOOTH)
         glHint(GL_POINT_SMOOTH_HINT, GL_NICEST)
+        
+        # enable drawing from vertex buffer objects
+        glEnableClientState(GL_VERTEX_ARRAY)
     
     # event handlers
     def on_resize (self, event):
@@ -271,12 +281,16 @@ class Chart (glcanvas.GLCanvas):
                    0 < point[1] <= self.height:
                     
                     # draw square diamond shape
-                    glBegin(GL_LINE_LOOP)
-                    glVertex(point[0], point[1] - 5)
-                    glVertex(point[0] - 5, point[1])
-                    glVertex(point[0], point[1] + 5)
-                    glVertex(point[0] + 5, point[1])
-                    glEnd()
+                    diamond = np.array([
+                        point[0], point[1] - 5,
+                        point[0] - 5, point[1],
+                        point[0], point[1] + 5,
+                        point[0] + 5, point[1]
+                    ], dtype=np.float32)
+                    diamond_vbo = VBO(diamond)
+                    diamond_vbo.bind()
+                    glVertexPointer(2, GL_FLOAT, 0, diamond_vbo)
+                    glDrawArrays(GL_LINE_LOOP, 0, 4)
                     
                     # draw label
                     glRasterPos(point[0] + 10, point[1] + 4)
@@ -303,9 +317,11 @@ class Chart (glcanvas.GLCanvas):
             
             if 0 < point[0] <= self.width and 0 < point[1] <= self.height:
                 # draw point
-                glBegin(GL_POINTS)
-                glVertex(point[0], point[1])
-                glEnd()
+                pt = np.array(point, dtype=np.float32)
+                pt_vbo = VBO(pt)
+                pt_vbo.bind()
+                glVertexPointer(2, GL_FLOAT, 0, pt_vbo)
+                glDrawArrays(GL_POINTS, 0, 1)
                 
                 # draw label
                 glRasterPos(point[0] + 10, point[1] + 4)
@@ -336,11 +352,16 @@ class Chart (glcanvas.GLCanvas):
         for azi in range(0, 360/mark):
             point = self.project([azi * mark, 0], self.adj_center)
             if -1 < point[0] < self.width - 30:
+                
                 # draw line
-                glBegin(GL_LINES)
-                glVertex(point[0], 0)
-                glVertex(point[0], self.height - self.font.line_height)
-                glEnd()
+                line = np.array([
+                    point[0], 0,
+                    point[0], self.height - self.font.line_height
+                ], dtype=np.float32)
+                line_vbo = VBO(line)
+                line_vbo.bind()
+                glVertexPointer(2, GL_FLOAT, 0, line_vbo)
+                glDrawArrays(GL_LINES, 0, 2)
                 
                 # draw label
                 text = str(azi * mark)
@@ -354,10 +375,14 @@ class Chart (glcanvas.GLCanvas):
             if -1 < point[1] < self.height - self.font.line_height:
                 
                 # draw line
-                glBegin(GL_LINES)
-                glVertex(0, point[1])
-                glVertex(self.width - 30, point[1])
-                glEnd()
+                line = np.array([
+                    0, point[1],
+                    self.width - 30, point[1]
+                ], dtype=np.float32)
+                line_vbo = VBO(line)
+                line_vbo.bind()
+                glVertexPointer(2, GL_FLOAT, 0, line_vbo)
+                glDrawArrays(GL_LINES, 0, 2)
                 
                 # draw label
                 text = str(alt * mark)
@@ -373,7 +398,14 @@ class Chart (glcanvas.GLCanvas):
         
         glLineWidth(3)         # width of 3px
         glColor(0.8, 0.8, 0.8) # light gray
-        glBegin(GL_LINE_STRIP)
+        line = []
+        
+        def break_line ():
+            line_vbo = VBO(np.array(line, dtype=np.float32))
+            line_vbo.bind()
+            glVertexPointer(2, GL_FLOAT, 0, line_vbo)
+            glDrawArrays(GL_LINE_STRIP, 0, len(line)/2)
+            line[:] = []
         
         prev_pt = False # previous actual point specified in path
         prev_x, prev_y = 0, 0 # previous point including intermediate points
@@ -388,10 +420,10 @@ class Chart (glcanvas.GLCanvas):
                    x > self.width and prev_x < 0 or \
                    y < 0 and prev_y > self.height or \
                    y > self.height and prev_y < 0:
-                    glEnd()
-                    glBegin(GL_LINE_STRIP)
+                    break_line()
                 else:
-                    glVertex(x, y)
+                    line.append(x)
+                    line.append(y)
                 
                 prev_x, prev_y = x, y
                 ang_dist = circle.distance(prev_pt, next_pt)
@@ -410,10 +442,10 @@ class Chart (glcanvas.GLCanvas):
                        x > self.width and prev_x < 0 or \
                        y < 0 and prev_y > self.height or \
                        y > self.height and prev_y < 0:
-                        glEnd()
-                        glBegin(GL_LINE_STRIP)
+                        break_line()
                     else:
-                        glVertex(x, y)
+                        line.append(x)
+                        line.append(y)
                     
                     prev_x, prev_y = x, y
                 
@@ -426,9 +458,10 @@ class Chart (glcanvas.GLCanvas):
                     x > self.width and prev_x < 0 or \
                     y < 0 and prev_y > self.height or \
                     y > self.height and prev_y < 0):
-                glVertex(x, y)
+                line.append(x)
+                line.append(y)
+        break_line()
         
-        glEnd()
         
         ##
         # show a cross-hair at the current position
