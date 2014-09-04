@@ -21,8 +21,19 @@ import graticule
 import zspiral
 
 class MainWindow(gui.TelescopeControlFrame):
-    def __init__(self, galilInterface, converter, config, *args, **kwargs):
-        gui.TelescopeControlFrame.__init__(self, converter, config, *args, **kwargs)
+    def __init__(self, galilInterface, *args, **kwargs):
+        
+        # load configuration
+        print("Loading configuration...")
+        self.config = configparser.ConfigParser()
+        self.config.read("config.ini")
+        
+        print("Setting up units converter...")
+        self.converter = units.Units(self.config) # ...and the converter...
+        
+        gui.TelescopeControlFrame.__init__(self, self.converter, self.config,
+            *args, **kwargs)
+        
         self.poll_update = wx.Timer(self)
         self.galil = galilInterface
         self.scan_thread = None
@@ -54,7 +65,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.buttton_az_motor)
         self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.button_el_motor)
-        self.Bind(wx.EVT_TEXT_ENTER, self.set_step_size, self.step_size_input)
+        self.Bind(wx.EVT_TEXT, self.set_step_size, self.step_size_input)
         
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
@@ -83,8 +94,8 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
         self.Bind(wx.EVT_COMBOBOX, self.change_cen, self.cur_center_input)
         
-        self.Bind(wx.EVT_TEXT_ENTER, self.change_speed, self.scan_speed_input)
-        self.Bind(wx.EVT_TEXT_ENTER, self.change_accel, self.scan_accel_input)
+        self.Bind(wx.EVT_TEXT, self.change_speed, self.scan_speed_input)
+        self.Bind(wx.EVT_TEXT, self.change_accel, self.scan_accel_input)
         
 
     def move_abs(self, event):
@@ -427,14 +438,23 @@ class MainWindow(gui.TelescopeControlFrame):
         
         event.Skip()
     
+    # write configuration file
+    def write_config (self):
+        with open("config.ini", "w") as configfile:
+            self.config.write(configfile)
+    
     # change slew speed
     def change_speed (self, event):
-        self.config.set("slew", "speed", float(self.scan_speed_input.GetValue()) or 1.0)
+        self.config.set("slew", "speed",
+            float(self.scan_speed_input.GetValue()) or 1.0)
+        self.write_config()
         event.Skip()
     
     # change the acceleration
     def change_accel (self, event):
-        self.config.set("slew", "accel", float(self.scan_accel_input.GetValue()) or 1.0)
+        self.config.set("slew", "accel",
+            float(self.scan_accel_input.GetValue()) or 1.0)
+        self.write_config()
         event.Skip()
     
     def update_display (self, event):
@@ -484,22 +504,14 @@ class MainWindow(gui.TelescopeControlFrame):
         return
 
 def main():		# Shut up pylinter
-    print("Reading configuration file...")
-    
-    # load configuration
-    config = configparser.ConfigParser()
-    config.read("config.ini")
     
     galilInterface = globalConf.gInt
-    
-    print("Setting up converter...")
-    converter = units.Units(config) #...and the converter...
     
     print("Launching app...")
     app = wx.App()
     
     print("Building UI...")
-    mainFrame = MainWindow(galilInterface, converter, config, None, -1, "")
+    mainFrame = MainWindow(galilInterface, None, -1, "")
     app.SetTopWindow(mainFrame)
     mainFrame.Show()
     

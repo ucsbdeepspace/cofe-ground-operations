@@ -676,10 +676,12 @@ class TelescopeControlFrame(wx.Frame):
         notebookOptionsPane = wx.Panel(self.controlNotebook)
         
         scan_speed_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Speed (deg/s): ")
-        self.scan_speed_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "4")
+        self.scan_speed_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("slew", "speed"))
         
         scan_accel_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Accel (deg/s^2):")
-        self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "10")
+        self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("slew", "accel"))
 
         gridSizer = wx.FlexGridSizer(4,2)
         gridSizer.AddF(scan_speed_label, self.sizerFlags)
