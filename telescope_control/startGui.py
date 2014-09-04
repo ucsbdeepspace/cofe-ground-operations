@@ -39,6 +39,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.scan_thread = None
         self.step_size = 0
         
+        print("Setting up scanning...")
         # standard scan
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter, self.config)
@@ -508,7 +509,6 @@ def main():		# Shut up pylinter
     print("Launching app...")
     app = wx.App()
     
-    print("Building UI...")
     mainFrame = MainWindow(galilInterface, None, -1, "")
     app.SetTopWindow(mainFrame)
     mainFrame.Show()

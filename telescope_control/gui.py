@@ -13,6 +13,7 @@ class TelescopeControlFrame(wx.Frame):
         self.config = config
         
         # set logging output
+        print("Setting up logging...")
         self.logger = logging.getLogger()
         debug = logging.StreamHandler(sys.stdout)
         debug.setFormatter(logging.Formatter('%(message)s'))
@@ -28,14 +29,16 @@ class TelescopeControlFrame(wx.Frame):
 
         # Common flags for adding things to sizers
         # Huzzah for {sizer}.AddF(item, SizerFlags)
-        self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)
+        self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(
+            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)
 
+        print("Building UI...")
         self.__create_layout()
         self.__set_properties()
 
         
     def __set_properties(self):
-        self.SetTitle("Telescope Control Code")
+        self.SetTitle("Telescope Control")
         self.coordsys_selector.SetSelection(0)
         self.comboBoxScanOptions.SetSelection(0)
         
