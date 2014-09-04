@@ -13,5 +13,6 @@ Requires:
  - BitString (https://code.google.com/p/python-bitstring/)
  - PyOpenGL (python-opengl)
  - pyftgl
+ - numpy
 
 Galil comms are handled by the PyGalil submodule, main repository at: https://github.com/fake-name/PyGalil
