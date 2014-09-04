@@ -57,6 +57,7 @@ class MyFrame(wx.Frame):
 		ipEntrySizer.Add(self.ipTextCtrl, 1, wx.ALL | wx.EXPAND, 3)
 
 		self.selectIpButton = wx.Button(self, -1, "Ok")
+		self.selectIpButton.SetDefault()
 		ipEntrySizer.Add(self.selectIpButton, 0, wx.ALL, 3)
 		self.selectIpButton.Bind(wx.EVT_BUTTON, self.evtIpEnter)
 

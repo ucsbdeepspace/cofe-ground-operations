@@ -677,6 +677,14 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_options_pane(self):
         notebookOptionsPane = wx.Panel(self.controlNotebook)
+        options_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        ##
+        # slew box
+        ##
+        
+        slew_box = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Slew Options")
+        slew_box_sizer = wx.StaticBoxSizer(slew_box, wx.VERTICAL)
         
         scan_speed_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Speed (deg/s): ")
         self.scan_speed_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
@@ -686,14 +694,42 @@ class TelescopeControlFrame(wx.Frame):
         self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
             self.config.get("slew", "accel"))
 
-        gridSizer = wx.FlexGridSizer(4,2)
-        gridSizer.AddF(scan_speed_label, self.sizerFlags)
-        gridSizer.AddF(self.scan_speed_input, self.sizerFlags)
+        slew_grid = wx.FlexGridSizer(4,2)
+        slew_grid.AddF(scan_speed_label, self.sizerFlags)
+        slew_grid.AddF(self.scan_speed_input, self.sizerFlags)
 
-        gridSizer.AddF(scan_accel_label, self.sizerFlags)
-        gridSizer.AddF(self.scan_accel_input, self.sizerFlags)
+        slew_grid.AddF(scan_accel_label, self.sizerFlags)
+        slew_grid.AddF(self.scan_accel_input, self.sizerFlags)
 
-        notebookOptionsPane.SetSizer(gridSizer)
+        slew_box_sizer.Add(slew_grid)
+        options_sizer.Add(slew_box_sizer, 1, wx.EXPAND)
+        
+        ##
+        # observer box
+        ##
+        
+        obs_box = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Observer Options")
+        obs_box_sizer = wx.StaticBoxSizer(obs_box, wx.VERTICAL)
+        
+        obs_lon_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Longitude (deg): ")
+        self.obs_lon_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("location", "lon"))
+        
+        obs_lat_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Latitude (deg):")
+        self.obs_lat_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("location", "lat"))
+
+        obs_grid = wx.FlexGridSizer(4,2)
+        obs_grid.AddF(obs_lon_label, self.sizerFlags)
+        obs_grid.AddF(self.obs_lon_input, self.sizerFlags)
+
+        obs_grid.AddF(obs_lat_label, self.sizerFlags)
+        obs_grid.AddF(self.obs_lat_input, self.sizerFlags)
+
+        obs_box_sizer.Add(obs_grid)
+        options_sizer.Add(obs_box_sizer, 1, wx.EXPAND)
+        
+        notebookOptionsPane.SetSizer(options_sizer)
 
         return notebookOptionsPane
 
