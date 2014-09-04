@@ -160,17 +160,15 @@ class MainWindow(gui.TelescopeControlFrame):
     def set_step_size(self, event):
         """This is called after you type a number nad press enter
         on the step size box next to the arrow buttons."""
-        value = self.step_size_input.GetValue()
         try:
-            value = float(value)
+            degrees = float(self.step_size_input.GetValue())
         except:
             raise ValueError("You need to enter a step-size first!")
-        if math.isnan(value):
+        if math.isnan(degrees):
             raise ValueError("NaN is not a valid step size. Nice try, though.")
 
-        degrees = value
         self.step_size = [self.converter.az_to_encoder(degrees),
-                        self.converter.el_to_encoder(degrees)]
+                          self.converter.el_to_encoder(degrees)]
         print("Setting joystick step size to {} degrees, {} encoder counts.".
             format(degrees, self.step_size[0]))
         

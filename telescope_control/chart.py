@@ -47,9 +47,6 @@ class Chart (glcanvas.GLCanvas):
         self.adj_center = [0, 0] # center of screen in display coordinates
         self.equ_center = [0, 0] # center of screen in equatorial coordinates
         
-        # time when the solar system object positions were last updated
-        self.sso_update = time.time() - 10
-        
         # event handlers
         self.Bind(wx.EVT_SIZE, self.on_resize)
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -290,13 +287,12 @@ class Chart (glcanvas.GLCanvas):
         ##
         
         # compute positions
-        if time.time() - self.sso_update >= 1:
-            self.sso_update = time.time()
+        if not hasattr(self, "sso_list"):
             self.sso_list = {}
-            pos_func = self.show_equ and self.planets.equ_pos \
-                                      or self.planets.hor_pos
-            for obj_name in planets.objects:
-                self.sso_list[obj_name] = pos_func(self.planets.get_obj(obj_name))
+        pos_func = self.show_equ and self.planets.equ_pos \
+                                  or self.planets.hor_pos
+        for obj_name in planets.objects:
+            self.sso_list[obj_name] = pos_func(self.planets.get_obj(obj_name))
         
         # draw as points with labels on the right
         glColor(0.8, 0.7, 0.5) # orange tint

@@ -16,9 +16,9 @@ class Units:
 
     def __to_encoder(self, flag, counts, ab):
         if flag == "az":
-            offset = self.c.get("skypos", "az") 
+            offset = float(self.c.get("skypos", "az"))
         else: 
-            offset = self.c.get("skypos", "el")
+            offset = float(self.c.get("skypos", "el"))
         return int(float(self.c.get("encoders", flag))/360.0*(counts + (offset if ab else 0)))
     
     def encoder_to_az(self, counts, ab=True):
