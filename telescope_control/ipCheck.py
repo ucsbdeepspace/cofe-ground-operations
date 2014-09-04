@@ -70,6 +70,8 @@ class MyFrame(wx.Frame):
 		statusSizer.Add(self.noticeText, 1, wx.ALL|wx.EXPAND, 5)
 
 		self.fakeGalilCheckbox = wx.CheckBox(self, style = wx.ALIGN_CENTRE, label = "Fake Galil")
+		self.fakeGalilCheckbox.SetValue(True)
+		globalConf.fakeGalil = self.fakeGalilCheckbox.IsChecked()
 		self.fakeGalilCheckbox.Bind(wx.EVT_CHECKBOX, self.changeFakeGalilState)
 		statusSizer.Add(self.fakeGalilCheckbox, 0, wx.ALL, 5)
 
