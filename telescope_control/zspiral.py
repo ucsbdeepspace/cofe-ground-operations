@@ -6,10 +6,11 @@ import threading
 
 class Scan:
     
-    def __init__ (self, logger, galil, converter):
+    def __init__ (self, logger, galil, converter, config):
         self.logger = logger
         self.galil = galil
         self.converter = converter
+        self.config = config
     
     # scan: execute a scan
     #
@@ -17,15 +18,14 @@ class Scan:
     #   increment: increment in altitude (degrees) per loop
     #      when positive => move in ccw spiral towards zenith
     #      when negative => move in cw spiral towards zenith
-    #   speed: maximum angular speed in degrees/sec to move at
-    #   accel: acceleration (degrees/sec^2) to change velocity
     #   repeat: number of complete in and out cycles to run
     #
     # -> (returns once scan is complete)
-    def scan (self, start_pt, increment, speed, accel, repeat):
+    def scan (self, start_pt, increment, repeat):
         self.stop = threading.Event()
         
         # compute horizon speed of each axis (only used if |speed| > 1e-5)
+        speed = float(self.config.get("slew", "speed"))
         v_az = speed * 360 / math.sqrt(360**2 + increment**2)
         v_el = speed * increment / math.sqrt(360**2 + increment**2)
         

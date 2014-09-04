@@ -44,8 +44,10 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter, self.config)
         # simple scans
-        self.hg_scan = graticule.Scan(self.logger, self.galil, self.converter)
-        self.zs_scan = zspiral.Scan(self.logger, self.galil, self.converter)
+        self.hg_scan = graticule.Scan(self.logger,
+            self.galil, self.converter, self.config)
+        self.zs_scan = zspiral.Scan(self.logger,
+            self.galil, self.converter, self.config)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
         self.bind_events()
@@ -354,8 +356,6 @@ class MainWindow(gui.TelescopeControlFrame):
                 float(self.low_altitude_input.GetValue()),
                 float(self.high_altitude_input.GetValue()),
                 int(self.hg_turns_input.GetValue()),
-                float(self.scan_speed_input.GetValue()),
-                float(self.scan_accel_input.GetValue()),
                 float(self.hg_cycles_input.GetValue()) == 0.0 or
                     float(self.hg_cycles_input.GetValue())))
         self.scan_thread.start()
@@ -396,8 +396,6 @@ class MainWindow(gui.TelescopeControlFrame):
                 [float(self.zst_azimuth_input.GetValue()),
                  float(self.zst_altitude_input.GetValue())],
                 float(self.zs_inc_input.GetValue()),
-                float(self.scan_speed_input.GetValue()),
-                float(self.scan_accel_input.GetValue()),
                 float(self.zs_cycles_input.GetValue()) == 0.0 or
                     float(self.zs_cycles_input.GetValue())))
         self.scan_thread.start()

@@ -6,23 +6,21 @@ import threading
 
 class Scan:
     
-    def __init__ (self, logger, galil, converter):
+    def __init__ (self, logger, galil, converter, config):
         self.logger = logger
         self.galil = galil
         self.converter = converter
+        self.config = config
     
     # scan: execute a scan
     #
     #   left_az, right_az, low_el, high_el: slew boundaries
     #      (note: starts at left_az, low_el and proceeds to right_az, high_el)
     #   num_turns: number of back and forth turns to do -- 1 turn = 2 switchbacks
-    #   speed: maximum angular speed in degrees/sec to move at
-    #   accel: acceleration (degrees/sec^2) to change velocity
     #   repeat: number of complete in and out cycles to run
     #
     # -> (returns once scan is complete)
-    def scan (self, left_az, right_az, low_el, high_el, num_turns,
-            speed, accel, repeat):
+    def scan (self, left_az, right_az, low_el, high_el, num_turns, repeat):
         self.stop = threading.Event()
         
         # ensure that right_az-360 < left_az < right_az
