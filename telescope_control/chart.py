@@ -33,6 +33,10 @@ class Chart (glcanvas.GLCanvas):
         
         # fetch list of all NGC/IC objects and their positions
         self.ngcic = ngcic.pos_list("data/ngcic.csv")
+        self.ngcic_rad = []
+        for obj in self.ngcic:
+            self.ngcic_rad.append([obj[0],
+                [math.radians(obj[1][0]), math.radians(obj[1][1])]])
         
         # load font
         self.font = FTGL.BitmapFont("fonts/DejaVuSans.ttf")
@@ -261,17 +265,22 @@ class Chart (glcanvas.GLCanvas):
             level = min((20.0 - self.h_fov) * 0.1, 1.0)
             glColor(level, level, level)
             
-            for obj in self.ngcic:
+            max_dist = math.radians(math.sqrt(
+                self.h_fov**2 * (1.0 + (self.height/self.width)**2)))
+            equ_center_rad = [math.radians(self.equ_center[0]),
+                              math.radians(self.equ_center[1])]
+            
+            for obj in self.ngcic_rad:
                 # ignore objects nowhere near the field of view
-                if circle.distance(self.equ_center, obj[1]) > \
-                   math.sqrt(self.h_fov**2 * (1.0+(self.height/self.width)**2)):
+                if circle.distance_rad(equ_center_rad, obj[1]) > max_dist:
                      continue
                 
                 if self.show_equ:
-                    pos = obj[1][:] # -> [ra, de]
+                    # -> [ra, de]
+                    pos = [math.degrees(obj[1][0]), math.degrees(obj[1][1])]
                 else: # convert to horizontal if display is in horizontal
                     az, el = self.converter.radec_to_azel(
-                        math.radians(obj[1][0]), math.radians(obj[1][1]))
+                        obj[1][0], obj[1][1])
                     pos = [math.degrees(az), math.degrees(el)]
                 
                 # get screen position

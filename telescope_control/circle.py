@@ -24,6 +24,12 @@ def distance (pt1, pt2):
         math.cos(pt1_b) * math.cos(pt2_b)
             * math.cos(math.radians(pt2[0] - pt1[0]))))
 
+# distance_rad: same as above but with units in radians
+def distance_rad (pt1, pt2):
+    return math.acos(
+        math.sin(pt1[1]) * math.sin(pt2[1]) +
+        math.cos(pt1[1]) * math.cos(pt2[1])
+            * math.cos(pt2[0] - pt1[0]))
 
 # bearing: direction to go from one point to another
 #
