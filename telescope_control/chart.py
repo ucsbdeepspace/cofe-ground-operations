@@ -490,24 +490,22 @@ class Chart (glcanvas.GLCanvas):
         x, y = self.project_point(curpos)
         
         # draw cross hair
-        glBegin(GL_LINES)
-        
-        # top
-        glVertex(x, y - 10)
-        glVertex(x, y - 3)
-        
-        # right
-        glVertex(x + 10, y)
-        glVertex(x + 3, y)
-        
-        # bottom
-        glVertex(x, y + 10)
-        glVertex(x, y + 3)
-        
-        # left
-        glVertex(x - 10, y)
-        glVertex(x - 3, y)
-        
-        glEnd()
+        crosshair = np.array([
+            # top
+            x, y - 10,
+            x, y - 3,
+            # left
+            x - 10, y,
+            x - 3, y,
+            # bottom
+            x, y + 10,
+            x, y + 3,
+            # right
+            x + 10, y,
+            x + 3, y], dtype=np.float32)
+        crosshair_vbo = VBO(crosshair)
+        crosshair_vbo.bind()
+        glVertexPointer(2, GL_FLOAT, 0, crosshair_vbo)
+        glDrawArrays(GL_LINES, 0, 8)
         
         glFlush()
