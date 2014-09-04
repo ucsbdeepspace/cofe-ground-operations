@@ -260,9 +260,9 @@ class Chart (glcanvas.GLCanvas):
         # draw NGC/IC objects
         ##
         
-        if self.h_fov <= 20.0: # only show when zoomed in
+        if self.h_fov <= 30.0: # only show when zoomed in
             glLineWidth(2)
-            level = min((20.0 - self.h_fov) * 0.1, 1.0)
+            level = min((30.0 - self.h_fov) * 0.1, 1.0)
             glColor(level, level, level)
             
             max_dist = math.radians(math.sqrt(

@@ -97,6 +97,8 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.Bind(wx.EVT_TEXT, self.change_speed, self.scan_speed_input)
         self.Bind(wx.EVT_TEXT, self.change_accel, self.scan_accel_input)
+        self.Bind(wx.EVT_TEXT, self.change_lon, self.obs_lon_input)
+        self.Bind(wx.EVT_TEXT, self.change_lat, self.obs_lat_input)
         
 
     def move_abs(self, event):
@@ -437,22 +439,52 @@ class MainWindow(gui.TelescopeControlFrame):
         
         event.Skip()
     
-    # write configuration file
+    # write configuration file and update all copies of the configuration
     def write_config (self):
+        self.converter.c = self.config
+        self.controller.config = self.config
+        self.controller.converter = self.converter
+        self.sky_chart.converter = self.converter
         with open("config.ini", "w") as configfile:
             self.config.write(configfile)
     
     # change slew speed
     def change_speed (self, event):
-        self.config.set("slew", "speed",
-            float(self.scan_speed_input.GetValue()) or 1.0)
+        try:
+            speed = float(self.scan_speed_input.GetValue())
+        except ValueError:
+            speed = 10.0
+        self.config.set("slew", "speed", str(speed))
         self.write_config()
         event.Skip()
     
     # change the acceleration
     def change_accel (self, event):
-        self.config.set("slew", "accel",
-            float(self.scan_accel_input.GetValue()) or 1.0)
+        try:
+            accel = float(self.scan_accel_input.GetValue())
+        except ValueError:
+            accel = 10.0
+        self.config.set("slew", "accel", str(accel))
+        self.write_config()
+        event.Skip()
+    
+    # change observer longitude
+    def change_lon (self, event):
+        try:
+            lon = float(self.obs_lon_input.GetValue())
+        except ValueError:
+            lon = 0.0
+        self.config.set("location", "lon", str(lon))
+        self.write_config()
+        event.Skip()
+    
+    # change observer latitude
+    def change_lat (self, event):
+        try:
+            lat = float(self.obs_lat_input.GetValue())
+        except ValueError:
+            lat = 0.0
+        self.config.set("location", "lat", str(lat))
         self.write_config()
         event.Skip()
     

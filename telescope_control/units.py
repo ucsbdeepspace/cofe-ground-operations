@@ -1,12 +1,11 @@
 import ephem
+import math
 from time import gmtime, strftime, time
 
 class Units:
     def __init__(self, config):
         """latitude and longitude need to be strings like 'd:m:s'"""
         self.c = config
-        self.lon = self.c.get("location", "lon")
-        self.lat = self.c.get("location", "LAT")
         
     def az_to_encoder(self, counts, ab=True):
         return self.__to_encoder("az", counts, ab)
@@ -42,15 +41,15 @@ class Units:
         """az and el must be human readable string like 'h:m:s' or  floats
         in radians"""
         o = ephem.Observer()
-        o.lat = self.lat
-        o.lon = self.lon
+        o.lat = math.radians(float(self.c.get("location", "lat")))
+        o.lon = math.radians(float(self.c.get("location", "lon")))
         o.pressure = 0
         return  o.radec_of(az, el)
 
     def radec_to_azel(self, ra, dec, dt=0):
         telescope = ephem.Observer()
-        telescope.lat = self.lat
-        telescope.lon = self.lon
+        telescope.lat = math.radians(float(self.c.get("location", "lat")))
+        telescope.lon = math.radians(float(self.c.get("location", "lon")))
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
         telescope.date = (d+h).format(t = gmtime(time() + dt))
@@ -67,8 +66,8 @@ class Units:
 
     def lst(self):
         o = ephem.Observer()
-        o.lat = self.lat
-        o.lon = self.lon
+        o.lat = math.radians(float(self.c.get("location", "lat")))
+        o.lon = math.radians(float(self.c.get("location", "lon")))
         return o.sidereal_time()
 
     def lct(self):
@@ -80,8 +79,8 @@ class Units:
     # get ephem.Observer object
     def get_obs (self):
         obs = ephem.Observer()
-        obs.lat = self.lat
-        obs.lon = self.lon
+        obs.lat = math.radians(float(self.c.get("location", "lat")))
+        obs.lon = math.radians(float(self.c.get("location", "lon")))
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
         obs.date = (d+h).format(t = gmtime(time()))
