@@ -23,15 +23,16 @@ def go():
 	ipCheckWin = ipCheck.IpChecker(0)
 	ipCheckWin.MainLoop()
 
-	print("Startup check complete. IP = \"", globalConf.galilIP, "\"")
+	print("Startup check complete. IP = \"" + str(globalConf.galilIP) + "\"")
 
 	#def __init__(self, ip, port = 23, fakeGalil = False, poll = False, resetGalil = False):
 
 	import PyGalil.galilInterface
 
-	globalConf.gInt = PyGalil.galilInterface.GalilInterface(ip=globalConf.galilIP, poll=False, resetGalil=False)
+	globalConf.gInt = PyGalil.galilInterface.GalilInterface(ip=globalConf.galilIP,
+        poll=False, resetGalil=False)
 
-	print("opened galil. Connection:", globalConf.gInt)
+	print("opened galil. Connection:" + str(globalConf.gInt))
 	#import time
 	#time.sleep(1)
 
