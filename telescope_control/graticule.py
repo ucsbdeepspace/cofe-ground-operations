@@ -36,6 +36,10 @@ class Scan:
         else: # repeat for <repeat> times
             self.scan_queue = repeat
         
+        # set speed and acceleration
+        self.sendOnly("SPA=" + self.config.get("slew", "speed"))
+        self.sendOnly("ACA=" + self.config.get("slew", "accel"))
+        
         # TODO: slew to left_az, low_el and pause
         
         # queue and process scan

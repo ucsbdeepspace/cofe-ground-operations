@@ -441,9 +441,15 @@ class MainWindow(gui.TelescopeControlFrame):
     # write configuration file and update all copies of the configuration
     def write_config (self):
         self.converter.c = self.config
+        self.sky_chart.converter = self.converter
+        
         self.controller.config = self.config
         self.controller.converter = self.converter
-        self.sky_chart.converter = self.converter
+        self.hg_scan.config = self.config
+        self.hg_scan.converter = self.converter
+        self.zs_scan.config = self.config
+        self.zs_scan.converter = self.converter
+        
         with open("config.ini", "w") as configfile:
             self.config.write(configfile)
     
