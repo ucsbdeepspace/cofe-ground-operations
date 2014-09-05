@@ -50,9 +50,10 @@ class MainWindow(gui.TelescopeControlFrame):
             self.galil, self.converter, self.config)
 
         #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
+        print("Setting up event handlers...")
         self.bind_events()
         self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
-        print("Starting Display Update Poll")
+        print("Starting display update poll...")
         self.poll_update.Start(100)
         print('')
 

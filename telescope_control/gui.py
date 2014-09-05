@@ -772,32 +772,45 @@ class TelescopeControlFrame(wx.Frame):
         return self.sky_panel
 
     def __create_layout(self):
-                
+        
+        print("Building header...")
         headerSizer = wx.BoxSizer(wx.HORIZONTAL)
 
+        print("Building readout panel...")
         headerSizer.Add(self.__create_readoutPanel(), proportion=1, flag=wx.EXPAND)
+        print("Building OpenGL sky chart display...")
         headerSizer.Add(self.__create_chart(), proportion=2, flag=wx.EXPAND)
+        print("Building top-right controls...")
         headerSizer.Add(self.__create_controls_sizer(), proportion=1, flag=wx.EXPAND)
         
+        print("Building footer...")
         footerSizer = wx.BoxSizer(wx.HORIZONTAL)
     
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
+        print("Building joy stick...")
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
+        print("Building RA/DE controls...")
         self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
+        print("Building targets panel...")
         self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
+        print("Building simple scans panel...")
         self.controlNotebook.AddPage(self.__create_simple_scans(), "Simple Scans")
+        print("Building standard scans panel...")
         self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning")
+        print("Building options panel...")
         self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
-        
+        print("Building graph of output...")
         footerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
         footerSizer.Add(self.controlNotebook, proportion=2, flag=wx.EXPAND)
         
+        print("Collecting all UI elements together...")
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(headerSizer, proportion=1, flag=wx.EXPAND)
         mainSizer.Add(footerSizer, proportion=1, flag=wx.EXPAND)
         self.SetSizer(mainSizer)
         mainSizer.Fit(self)
         
+        print("Finalizing layout...")
         self.Layout()
         
 
