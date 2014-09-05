@@ -37,10 +37,20 @@ class Scan:
             self.scan_queue = repeat
         
         # set speed and acceleration
-        self.sendOnly("SPA=" + self.config.get("slew", "speed"))
-        self.sendOnly("ACA=" + self.config.get("slew", "accel"))
+        self.galil.sendOnly("SP " +
+            str(int(float(self.config.get("encoders", "az")) / 360.0 *
+                    float(self.config.get("slew", "speed")))) + "," + \
+            str(int(float(self.config.get("encoders", "el")) / 360.0 *
+                    float(self.config.get("slew", "speed")))))
+        accel_str = \
+            str(int(float(self.config.get("encoders", "az")) / 360.0 *
+                    float(self.config.get("slew", "accel")))) + "," + \
+            str(int(float(self.config.get("encoders", "el")) / 360.0 *
+                    float(self.config.get("slew", "accel"))))
+        self.galil.sendOnly("AC " + accel_str)
+        self.galil.sendOnly("DC " + accel_str)
         
-        # TODO: slew to left_az, low_el and pause
+        # TODO: slew to left_az, low_el
         
         # queue and process scan
         while self.scan_queue > 0 and not self.stop.is_set():
