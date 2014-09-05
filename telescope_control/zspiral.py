@@ -19,8 +19,6 @@ class Scan:
     #      when positive => move in ccw spiral towards zenith
     #      when negative => move in cw spiral towards zenith
     #   repeat: number of complete in and out cycles to run
-    #
-    # -> (returns once scan is complete)
     def scan (self, start_pt, increment, repeat):
         self.stop = threading.Event()
         

@@ -18,8 +18,6 @@ class Scan:
     #      (note: starts at left_az, low_el and proceeds to right_az, high_el)
     #   num_turns: number of back and forth turns to do -- 1 turn = 2 switchbacks
     #   repeat: number of complete in and out cycles to run
-    #
-    # -> (returns once scan is complete)
     def scan (self, left_az, right_az, low_el, high_el, num_turns, repeat):
         self.stop = threading.Event()
         
@@ -47,14 +45,14 @@ class Scan:
                     float(self.config.get("slew", "accel")))) + "," + \
             str(int(float(self.config.get("encoders", "el")) / 360.0 *
                     float(self.config.get("slew", "accel"))))
-        self.galil.sendOnly("AC " + accel_str) # acceleration
-        self.galil.sendOnly("DC " + accel_str) # deceleration
+        self.galil.sendOnly("AC " + accel_str)
+        self.galil.sendOnly("DC " + accel_str)
         
         # slew to left_az, low_el
         self.galil.moveAbsolute(0, self.converter.az_to_encoder(left_az))
         self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
         self.galil.beginMotion()
-        self.galil.sendOnly("MC") # stall until slew finishes
+        # TODO: stall until slew finishes
         
         # queue and process scan
         while self.scan_queue > 0 and not self.stop.is_set():
@@ -67,34 +65,34 @@ class Scan:
                 # increase altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 # increase azimuth until right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*low_el \
                             + (i+0.5)/num_turns*high_el
                 # increase altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 # decrease azimuth until we're back at left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
             
-            # increase altitude to high_el
+            # TODO: increase altitude to high_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(high_el))
             self.galil.beginMotion()
-            self.galil.sendOnly("MC") # stall until slew finishes
+            # TODO: stall until slew finishes
             
             # increase azimuth to right_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
             self.galil.beginMotion()
-            self.galil.sendOnly("MC") # stall until slew finishes
+            # TODO: stall until slew finishes
             
             # check if we should do downward part
             if self.scan_queue <= 0.5 or self.stop.is_set():
@@ -109,34 +107,34 @@ class Scan:
                 # decrease altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 # decrease azimuth until left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*high_el \
                             + (i+0.5)/num_turns * low_el
                 # decrease altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
                 
                 # increase azimuth until we're back at right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("MC") # stall until slew finishes
+                # TODO: stall until slew finishes
             
             # decrease altitude to low_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
             self.galil.beginMotion()
-            self.galil.sendOnly("MC") # stall until slew finishes
+            # TODO: stall until slew finishes
             
             # decrease azimuth to left_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
             self.galil.beginMotion()
-            self.galil.sendOnly("MC") # stall until slew finishes
+            # TODO: stall until slew finishes
             
             if str(repeat) != str(True):
                 self.scan_queue -= 1

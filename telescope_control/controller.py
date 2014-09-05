@@ -36,8 +36,6 @@ class Controller:
     #   process_func: function to process list of points
     #     (optionally, use "process_hor" and "process_equ" below)
     #   repeat: number of times to repeat (use "True" for indefinite repetition)
-    #   
-    # -> (returns once scan is complete)
     def scan (self, crd_list, process_func, repeat = 1):
         
         # unset any previously set stop events
@@ -67,10 +65,7 @@ class Controller:
         return 0
         
     # process_hor: process a list of horizontal coordinates to slew to
-    #
     #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
-    #
-    # -> (returns once scan is complete)
     def process_hor (self, crd_list):
         
         i = 0
@@ -84,10 +79,7 @@ class Controller:
     
     
     # process_equ: process a list of equatorial coordinates to slew to
-    #
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
-    #
-    # -> (returns once scan is complete)
     def process_equ (self, crd_list):
         
         i = 0
@@ -146,10 +138,7 @@ class Controller:
     
     
     # goto: slew to a particular coordinate from current position
-    #
     #   hor_pos -> [azimuth, altitude]: new position to slew to
-    #
-    # -> (returns once slew has reached destination point)
     def goto (self, hor_pos):
         self.logger.info("slew to " + str(hor_pos[0]) + ", " + str(hor_pos[1]))
         
@@ -167,7 +156,7 @@ class Controller:
                 i * ang_dist / num_int)
             point_list.append([a, b])
         
-        # TODO: slew to all points in point_list; stall until slew is finished
+        # TODO: slew to all points in point_list
         return 0
     
     
@@ -177,7 +166,11 @@ class Controller:
     #
     # -> (returns once tracking ends)
     def track (self, equ_pos):
-        # TODO: slew to equatorial coordinate and continue to track
+        
+        # unset any previously set stop events
+        self.stop = threading.Event()
+        
+        # TODO: slew to equatorial coordinate and loop until self.stop is set
         None
 
     
