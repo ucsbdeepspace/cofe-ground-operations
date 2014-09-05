@@ -205,55 +205,6 @@ class MainWindow(gui.TelescopeControlFrame):
                     self.galil.beginMotion(axis)
                 break
         return
-
-    # show selected scan on sky chart
-    def show_scan (self):
-        
-        # load some settings
-        pt1 = [float(self.corner1_crda_box.GetValue()) % 360,
-               float(self.corner1_crdb_box.GetValue())]
-        pt2 = [float(self.corner2_crda_box.GetValue()) % 360,
-               float(self.corner2_crdb_box.GetValue())]
-        pt3 = [float(self.corner3_crda_box.GetValue()) % 360,
-               float(self.corner3_crdb_box.GetValue())]
-        pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
-               float(self.corner4_crdb_box.GetValue())]
-        
-        num_turns = int(self.num_turns_input.GetValue())
-        scan_id = self.comboBoxScanOptions.GetSelection()
-        
-        # compute a list of points to scan to and update sky chart
-        points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
-        self.sky_chart.path = points[:] # show path on chart
-        self.sky_chart.given_equ = (self.coordsys_selector.GetSelection() == 1)
-        
-        # center sky chart in the middle of the scan region
-        if len(points) > 0:
-            
-            # trig functions in degrees
-            def cos (x):
-                return math.cos(math.radians(x))
-            def sin (x):
-                return math.sin(math.radians(x))
-            def atan2 (y, x):
-                return math.degrees(math.atan2(y, x))
-            
-            # convert the corner points to rectangular vectors and sum
-            x = cos(pt1[0])*cos(pt1[1]) + cos(pt2[0])*cos(pt2[1]) + \
-                cos(pt3[0])*cos(pt3[1]) + cos(pt4[0])*cos(pt4[1])
-            y = sin(pt1[0])*cos(pt1[1]) + sin(pt2[0])*cos(pt2[1]) + \
-                sin(pt3[0])*cos(pt3[1]) + sin(pt4[0])*cos(pt4[1])
-            z = sin(pt1[1]) + sin(pt2[1]) + sin(pt3[1]) + sin(pt4[1])
-            
-            # convert the resulting vector into spherical coordinates
-            crd_a = atan2(y, x)
-            crd_b = atan2(z, math.sqrt(x*x + y*y))
-            
-            self.sky_chart.scan_center = [crd_a, crd_b]
-            self.sky_chart.Refresh()
-            
-        return points
-
     
     # slew to a solar system object
     def sso_goto (self, event):
@@ -322,10 +273,66 @@ class MainWindow(gui.TelescopeControlFrame):
         # sync to object position
         self.controller.sync(hor_pos)
         event.Skip()
+
+    # show selected scan on sky chart
+    def show_scan (self):
+        
+        # load some settings
+        pt1 = [float(self.corner1_crda_box.GetValue()) % 360,
+               float(self.corner1_crdb_box.GetValue())]
+        pt2 = [float(self.corner2_crda_box.GetValue()) % 360,
+               float(self.corner2_crdb_box.GetValue())]
+        pt3 = [float(self.corner3_crda_box.GetValue()) % 360,
+               float(self.corner3_crdb_box.GetValue())]
+        pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
+               float(self.corner4_crdb_box.GetValue())]
+        
+        num_turns = int(self.num_turns_input.GetValue())
+        scan_id = self.comboBoxScanOptions.GetSelection()
+        
+        # compute a list of points to scan to and update sky chart
+        points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
+        self.sky_chart.path = points[:] # show path on chart
+        self.sky_chart.given_equ = (self.coordsys_selector.GetSelection() == 1)
+        
+        # center sky chart in the middle of the scan region
+        if len(points) > 0:
+            
+            # trig functions in degrees
+            def cos (x):
+                return math.cos(math.radians(x))
+            def sin (x):
+                return math.sin(math.radians(x))
+            def atan2 (y, x):
+                return math.degrees(math.atan2(y, x))
+            
+            # convert the corner points to rectangular vectors and sum
+            x = cos(pt1[0])*cos(pt1[1]) + cos(pt2[0])*cos(pt2[1]) + \
+                cos(pt3[0])*cos(pt3[1]) + cos(pt4[0])*cos(pt4[1])
+            y = sin(pt1[0])*cos(pt1[1]) + sin(pt2[0])*cos(pt2[1]) + \
+                sin(pt3[0])*cos(pt3[1]) + sin(pt4[0])*cos(pt4[1])
+            z = sin(pt1[1]) + sin(pt2[1]) + sin(pt3[1]) + sin(pt4[1])
+            
+            # convert the resulting vector into spherical coordinates
+            crd_a = atan2(y, x)
+            crd_b = atan2(z, math.sqrt(x*x + y*y))
+            
+            self.sky_chart.scan_center = [crd_a, crd_b]
+            self.sky_chart.Refresh()
+            
+        return points
+    
+    # show preview of scan
+    def set_preview (self, event):
+        points = self.show_scan()
+        self.cur_center_input.SetSelection(1) # center on scan
+        self.change_cen(event)
+        
+        return points
     
     # scan button clicked
     def scan (self, event):
-        points = self.show_scan()
+        points = self.set_preview(event)
         
         # run scan in new thread
         self.scan_thread = threading.Thread(target=lambda:
@@ -336,14 +343,6 @@ class MainWindow(gui.TelescopeControlFrame):
                     float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()
-        event.Skip()
-    
-    # show preview of scan
-    def set_preview (self, event):
-        self.show_scan()
-        self.cur_center_input.SetSelection(1) # center on scan
-        self.change_cen(event)
-        
         event.Skip()
     
     # execute a horizontal graticule scan
