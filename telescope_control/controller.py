@@ -106,14 +106,9 @@ class Controller:
                 
                 # compute estimate of distance to the next point
                 azi, alt = self.converter.radec_to_azel(
-                    math.radians(crd_list[i][0]), math.radians(crd_list[i][1]),
-                    dt0)
-                d_azi = math.degrees(azi) - prev_azi
-                d_alt = math.degrees(alt) - prev_alt
-                cosAlt = math.cos(ephem.degree * 0.5 * (alt + prev_alt))
-                
-                # approximate angular distance to move (in degrees)
-                delta = math.sqrt(d_azi ** 2 + (d_alt * cosAlt) ** 2)
+                    math.radians(crd_list[i][0]), math.radians(crd_list[i][1]), dt0)
+                delta = circle.distance(
+                    [math.degrees(azi), math.degrees(alt)], [prev_azi, prev_alt])
                 
                 # estimate of time needed to get to next point
                 dt = delta / float(self.config.get("slew", "speed"))
