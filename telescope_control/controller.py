@@ -177,5 +177,8 @@ class Controller:
     # sync: set current position of motors
     #   hor_pos -> [az, el]: position to set motor position to
     def sync (self, hor_pos):
-        # TODO: set position of motors to given position
-        None
+        
+        # define current position as the given position
+        self.galil.sendOnly("DP " +
+            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+            str(self.converter.el_to_encoder(hor_pos[1])))
