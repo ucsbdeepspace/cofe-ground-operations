@@ -7,29 +7,23 @@ class Units:
         """latitude and longitude need to be strings like 'd:m:s'"""
         self.c = config
         
-    def az_to_encoder(self, counts, ab=True):
-        return self.__to_encoder("az", counts, ab)
+    def az_to_encoder(self, counts):
+        return self.__to_encoder("az", counts)
         
-    def el_to_encoder(self, counts, ab=True):
-        return self.__to_encoder("el", counts, ab)
+    def el_to_encoder(self, counts):
+        return self.__to_encoder("el", counts)
 
-    def __to_encoder(self, flag, counts, ab):
-        if flag == "az":
-            offset = float(self.c.get("skypos", "az"))
-        else: 
-            offset = float(self.c.get("skypos", "el"))
-        return int(float(self.c.get("encoders", flag))/360.0*(counts + (offset if ab else 0)))
+    def __to_encoder(self, flag, counts):
+        return int(float(self.c.get("encoders", flag))/360.0 * counts)
     
-    def encoder_to_az(self, counts, ab=True):
-        return self.__from_encoder("az", counts, ab)
+    def encoder_to_az(self, counts):
+        return self.__from_encoder("az", counts)
 
-    def encoder_to_el(self, counts,ab=True):
-        return self.__from_encoder("el", counts, ab)
+    def encoder_to_el(self, counts):
+        return self.__from_encoder("el", counts)
 
-    def __from_encoder(self, flag, counts, ab):
-        offset = self.az_to_encoder(float(self.c.get("skypos", "az")), False) if flag == "az" else None
-        offset = self.el_to_encoder(float(self.c.get("skypos", "el")), False) if offset is None else offset
-        return self.__str_degrees(360.0/float(self.c.get("encoders", flag))*(counts - (offset if ab else 0)))
+    def __from_encoder(self, flag, counts):
+        return self.__str_degrees(360.0/float(self.c.get("encoders", flag)) * counts)
 
     def __str_degrees(self, val):
         d = int(val)
@@ -86,10 +80,4 @@ class Units:
         obs.date = (d+h).format(t = gmtime(time()))
         
         return obs
-
-if __name__=="__main__":
-    from config import Config
-    config = Config("config.txt")
-    un = Units(config)
-    print "360 deg in encoder:", un.az_to_encoder(360)
     
