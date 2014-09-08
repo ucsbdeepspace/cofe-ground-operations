@@ -13,6 +13,7 @@ class Controller:
         self.logger = logger
         self.galil = galil
         self.converter = converter
+        self.config = config
         
         self.scan_queue = 0 # number of scans left to do
     
@@ -138,20 +139,62 @@ class Controller:
         self.logger.info("slew to " + str(hor_pos[0]) + ", " + str(hor_pos[1]))
         
         # angular distance and bearing to new point
-        cur_a, cur_b = self.current_pos()
-        ang_dist = circle.distance([cur_a, cur_b], hor_pos)
-        bearing = circle.bearing([cur_a, cur_b], hor_pos)
+        cur_pt = self.current_pos()
+        ang_dist = circle.distance(cur_pt, hor_pos)
+        bearing = circle.bearing(cur_pt, hor_pos)
         
         # generate list of intermediate points to slew to
         num_int = int(ang_dist) # one intermediate point per degree
         point_list = []
         
-        for i in range(1, num_int + 1):
-            a, b = circle.waypoint([cur_a, cur_b], bearing,
+        for i in range(1, num_int):
+            a, b = circle.waypoint(cur_pt, bearing,
                 i * ang_dist / num_int)
             point_list.append([a, b])
         
-        # TODO: slew to all points in point_list
+        # interval between intermediate points
+        speed = float(self.config.get("slew", "speed"))
+        delta = ang_dist / num_int # angular separation between points
+        tm_step = delta / speed # time step in seconds
+        
+        # sample time (convert seconds->samples)
+        samp_per_sec = 1024000.0 / 1000.0 # TODO: compute from actual sample time
+        tm_st_samp = tm_step * samp_per_sec # time step in samples
+        tm_st_even = 2 * int(0.5 * tm_st_samp) # convert to even number
+        # constrain to range 2 <= tm_st <= 2048
+        tm_st = (tm_st_even > 2048 and 2048) or (tm_st_even < 2 and 2) or tm_st_even
+        
+        # slew to all intermediate points
+        prev_pt = cur_pt
+        
+        for pt in point_list:
+            d_az = pt[0] - prev_pt[0]
+            d_el = pt[1] - prev_pt[1]
+            sp_az = d_az * math.cos(math.radians(pt[1])) / delta * speed
+            sp_el = d_el / delta * speed
+            
+            # smoothly transition to new state
+            self.galil.sendOnly("PVA=" + # azimuth
+                str(self.converter.az_to_encoder(d_az)) + "," +
+                str(self.converter.az_to_encoder(sp_az)) + "," +
+                str(int(tm_st)))
+            self.galil.sendOnly("PVB=" + # altitude
+                str(self.converter.el_to_encoder(d_el)) + "," +
+                str(self.converter.el_to_encoder(sp_el)) + "," +
+                str(int(tm_st)))
+            
+            prev_pt = pt
+        
+        self.galil.sendOnly("BT") # begin slewing to intermediate points
+        self.galil.sendOnly("AM") # stall until motion is complete
+        
+        # move to final position
+        self.galil.sendOnly("PA " +
+            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+            str(self.converter.el_to_encoder(hor_pos[1])))
+        self.galil.beginMotion()
+        self.galil.sendOnly("AM") # stall until motion is complete
+        
         return 0
     
     
