@@ -36,15 +36,11 @@ class Scan:
         
         # set speed and acceleration
         self.galil.sendOnly("SP " +
-            str(int(float(self.config.get("encoders", "az")) / 360.0 *
-                    float(self.config.get("slew", "speed")))) + "," + \
-            str(int(float(self.config.get("encoders", "el")) / 360.0 *
-                    float(self.config.get("slew", "speed")))))
+            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))) + "," + \
+            str(self.converter.el_to_encoder(float(self.config.get("slew", "speed")))))
         accel_str = \
-            str(int(float(self.config.get("encoders", "az")) / 360.0 *
-                    float(self.config.get("slew", "accel")))) + "," + \
-            str(int(float(self.config.get("encoders", "el")) / 360.0 *
-                    float(self.config.get("slew", "accel"))))
+            str(self.converter.az_to_encoder(float(self.config.get("slew", "accel")))) + "," + \
+            str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
         self.galil.sendOnly("AC " + accel_str)
         self.galil.sendOnly("DC " + accel_str)
         
@@ -52,7 +48,7 @@ class Scan:
         self.galil.moveAbsolute(0, self.converter.az_to_encoder(left_az))
         self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
         self.galil.beginMotion()
-        self.galil.sendOnly("AM") # stall motion
+        self.galil.sendOnly("AM") # stall until motion is complete
         
         # queue and process scan
         while self.scan_queue > 0 and not self.stop.is_set():
@@ -65,34 +61,34 @@ class Scan:
                 # increase altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # increase azimuth until right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*low_el \
                             + (i+0.5)/num_turns*high_el
                 # increase altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # decrease azimuth until we're back at left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
             
             # increase altitude to high_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(high_el))
             self.galil.beginMotion()
-            self.galil.sendOnly("AM") # stall motion
+            self.galil.sendOnly("AM") # stall until motion is complete
             
             # increase azimuth to right_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
             self.galil.beginMotion()
-            self.galil.sendOnly("AM") # stall motion
+            self.galil.sendOnly("AM") # stall until motion is complete
             
             # check if we should do downward part
             if self.scan_queue <= 0.5 or self.stop.is_set():
@@ -107,34 +103,34 @@ class Scan:
                 # decrease altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # decrease azimuth until left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*high_el \
                             + (i+0.5)/num_turns * low_el
                 # decrease altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # increase azimuth until we're back at right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                self.galil.sendOnly("AM") # stall motion
+                self.galil.sendOnly("AM") # stall until motion is complete
             
             # decrease altitude to low_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
             self.galil.beginMotion()
-            self.galil.sendOnly("AM") # stall motion
+            self.galil.sendOnly("AM") # stall until motion is complete
             
             # decrease azimuth to left_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
             self.galil.beginMotion()
-            self.galil.sendOnly("AM") # stall motion
+            self.galil.sendOnly("AM") # stall until motion is complete
             
             if str(repeat) != str(True):
                 self.scan_queue -= 1

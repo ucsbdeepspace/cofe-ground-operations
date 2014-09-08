@@ -170,9 +170,59 @@ class Controller:
         # unset any previously set stop events
         self.stop = threading.Event()
         
-        # TODO: slew to equatorial coordinate and loop until self.stop is set
-        None
-
+        # move to initial position quickly
+        self.galil.sendOnly("SP " +
+            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))) + "," + \
+            str(self.converter.el_to_encoder(float(self.config.get("slew", "speed")))))
+        accel_str = \
+            str(self.converter.az_to_encoder(float(self.config.get("slew", "accel")))) + "," + \
+            str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
+        self.galil.sendOnly("AC " + accel_str)
+        self.galil.sendOnly("DC " + accel_str)
+        
+        azi, alt = self.converter.radec_to_azel(
+            math.radians(equ_pos[0]), math.radians(equ_pos[1]))
+        hor_pos = [math.degrees(azi), math.degrees(alt)]
+        
+        self.galil.sendOnly("PA " +
+            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+            str(self.converter.el_to_encoder(hor_pos[1])))
+        self.galil.beginMotion()
+        self.galil.sendOnly("AM") # stall until motion is complete
+        
+        # enable tracking mode
+        self.galil.sendOnly("PT 1,1")
+        
+        # slew to equatorial coordinate and loop until self.stop is set
+        while not self.stop.is_set():
+            
+            # compute new position
+            old_pos = hor_pos
+            azi, alt = self.converter.radec_to_azel(
+                math.radians(equ_pos[0]), math.radians(equ_pos[1]))
+            hor_pos = [math.degrees(azi), math.degrees(alt)]
+            
+            # compute motor velocities
+            speed = circle.distance(old_pos, hor_pos) / 0.100
+            bearing = circle.bearing(old_pos, hor_pos)
+            speed_az = math.fabs(speed * math.cos(math.radians(bearing)))
+            speed_el = math.fabs(speed * math.sin(math.radians(bearing)))
+            
+            # adjust motor speed
+            self.galil.sendOnly("SP " +
+                str(self.converter.az_to_encoder(speed_az)) + "," + \
+                str(self.converter.el_to_encoder(speed_el)))
+            
+            # move to new position
+            self.galil.sendOnly("PA " +
+                str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+                str(self.converter.el_to_encoder(hor_pos[1])))
+            
+            time.sleep(100) # wait 100 milliseconds to update again
+        
+        # exit tracking mode
+        self.galil.sendOnly("ST")
+    
     
     # sync: set current position of motors
     #   hor_pos -> [az, el]: position to set motor position to
