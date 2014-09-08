@@ -205,7 +205,8 @@ class Controller:
             # compute motor velocities
             speed = circle.distance(old_pos, hor_pos) / 0.100
             bearing = circle.bearing(old_pos, hor_pos)
-            speed_az = math.fabs(speed * math.cos(math.radians(bearing)))
+            speed_az = math.fabs(speed * math.cos(math.radians(bearing))) \
+                / (math.cos(math.radians(hor_pos[1])) + 0.01)
             speed_el = math.fabs(speed * math.sin(math.radians(bearing)))
             
             # adjust motor speed
