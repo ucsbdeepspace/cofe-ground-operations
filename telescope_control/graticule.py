@@ -52,7 +52,7 @@ class Scan:
         self.galil.moveAbsolute(0, self.converter.az_to_encoder(left_az))
         self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
         self.galil.beginMotion()
-        # TODO: stall until slew finishes
+        self.galil.sendOnly("AM") # stall motion
         
         # queue and process scan
         while self.scan_queue > 0 and not self.stop.is_set():
@@ -65,34 +65,34 @@ class Scan:
                 # increase altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 # increase azimuth until right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*low_el \
                             + (i+0.5)/num_turns*high_el
                 # increase altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 # decrease azimuth until we're back at left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
             
-            # TODO: increase altitude to high_el
+            # increase altitude to high_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(high_el))
             self.galil.beginMotion()
-            # TODO: stall until slew finishes
+            self.galil.sendOnly("AM") # stall motion
             
             # increase azimuth to right_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
             self.galil.beginMotion()
-            # TODO: stall until slew finishes
+            self.galil.sendOnly("AM") # stall motion
             
             # check if we should do downward part
             if self.scan_queue <= 0.5 or self.stop.is_set():
@@ -107,34 +107,34 @@ class Scan:
                 # decrease altitude to alt1 if needed
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt1))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 # decrease azimuth until left_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 alt2 = (1.0 - (i+0.5)/num_turns)*high_el \
                             + (i+0.5)/num_turns * low_el
                 # decrease altitude to alt2
                 self.galil.moveAbsolute(1, self.converter.el_to_encoder(alt2))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
                 
                 # increase azimuth until we're back at right_az
                 self.galil.moveAbsolute(0, self.converter.el_to_encoder(right_az))
                 self.galil.beginMotion()
-                # TODO: stall until slew finishes
+                self.galil.sendOnly("AM") # stall motion
             
             # decrease altitude to low_el
             self.galil.moveAbsolute(1, self.converter.el_to_encoder(low_el))
             self.galil.beginMotion()
-            # TODO: stall until slew finishes
+            self.galil.sendOnly("AM") # stall motion
             
             # decrease azimuth to left_az
             self.galil.moveAbsolute(0, self.converter.el_to_encoder(left_az))
             self.galil.beginMotion()
-            # TODO: stall until slew finishes
+            self.galil.sendOnly("AM") # stall motion
             
             if str(repeat) != str(True):
                 self.scan_queue -= 1
