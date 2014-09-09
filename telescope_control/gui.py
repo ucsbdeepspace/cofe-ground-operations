@@ -1,549 +1,827 @@
-
+import logging
 import wx
 
+from chart import *
+import planets
+import scans
 
 class TelescopeControlFrame(wx.Frame):
-	def __init__(self, *args, **kwds):
-		kwds["style"] = wx.DEFAULT_FRAME_STYLE
-		wx.Frame.__init__(self, *args, **kwds)
-
-		print "Building UI"
-		# Common flags for adding things to sizers
-		# Huzzah for {sizer}.AddF(item, SizerFlags)
-		self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)
-
-		self.__create_layout()
-		self.__set_properties()
-
-		
-	def __set_properties(self):
-		self.SetTitle("Telescope Control Code")
-		self.comboBoxScanOptions.SetSelection(0)
-		
-	def __create_readoutPanel(self):
+    def __init__(self, converter, config, *args, **kwds):
+        kwds["style"] = wx.DEFAULT_FRAME_STYLE
+        wx.Frame.__init__(self, *args, **kwds)
+        
+        self.config = config
+        
+        # set logging output
+        print("Setting up logging...")
+        self.logger = logging.getLogger()
+        debug = logging.StreamHandler(sys.stdout)
+        debug.setFormatter(logging.Formatter('%(message)s'))
+        debug.setLevel(logging.DEBUG)
+        self.logger.addHandler(debug)
+        self.logger.setLevel(logging.DEBUG)
+        
+        # unit converter (needed for sky chart)
+        self.converter = converter
+        
+        # positions of solar system objects (for sky chart)
+        self.planets = planets.Planets(self.logger, self.converter)
+
+        # Common flags for adding things to sizers
+        # Huzzah for {sizer}.AddF(item, SizerFlags)
+        self.sizerFlags = wx.SizerFlags().Expand().Border(wx.ALL, 5).Align(
+            wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER)
+
+        print("Building UI...")
+        self.__create_layout()
+        self.__set_properties()
+
+        
+    def __set_properties(self):
+        self.SetTitle("Telescope Control")
+        self.coordsys_selector.SetSelection(0)
+        self.comboBoxScanOptions.SetSelection(0)
+        
+    def __create_readoutPanel(self):
+
+        self.statusReadoutPanel                   = wx.Panel(self)
+        
+        self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
+
+        self.label_az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
+        self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
+        self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
+        self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
+        self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra:")
+        self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec:")
+        self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc:")
+        self.label_lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst:")
+        self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+
+        self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+        self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+        self.az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
+        self.el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
+        self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+        self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
+        self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+        self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+        self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+
+        self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
+
+        textItems = [self.label_az_status,     self.az_status,
+                    self.label_el_status,      self.el_status,
+                    self.label_az_raw_status,  self.az_raw_status,
+                    self.label_el_raw_status,  self.el_raw_status,
+                    self.label_ra_status,      self.ra_status,
+                    self.label_dec_status,     self.dec_status,
+                    self.label_utc_status,     self.utc_status,
+                    self.label_lst_status,     self.lst_status,
+                    self.label_local_status,   self.local_status]
+
+
+        for item in textItems:
+            if isinstance(item, wx.StaticText):
+                item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
+
+        
+        itemSizer = wx.FlexGridSizer(rows=9, cols=2)
+        itemSizer.AddMany(textItems)
+        itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
+        itemSizer.AddGrowableCol(1, proportion=1)		# available space
+
+        self.statusSizerStaticbox = wx.StaticBox(self.statusReadoutPanel, wx.ID_ANY, "Status")
+        sizer = wx.StaticBoxSizer(self.statusSizerStaticbox, wx.VERTICAL)
+        sizer.AddF(itemSizer, self.sizerFlags)
+        sizer.AddF([1,1], self.sizerFlags)
+        sizer.AddF([1,1], self.sizerFlags)
+        sizer.AddF(self.packet_num, self.sizerFlags)
+
+        self.statusReadoutPanel.SetSizer(sizer)
+
+        return self.statusReadoutPanel
+
+    def __create_motor_power_ctrl_StaticBox(self, parent):
+
+        gridSizer = wx.FlexGridSizer(rows=2, cols=2)
+
+        self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "AZ Motor Power")
+        self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "EL Motor Power")
 
-		self.statusReadoutPanel                   = wx.Panel(self)
-		
-		self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
+        self.azMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
+        self.elMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
 
-		self.label_az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
-		self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
-		self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
-		self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
-		self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra:")
-		self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec:")
-		self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc:")
-		self.label_lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst:")
-		self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+        gridSizer.AddF(self.buttton_az_motor, self.sizerFlags)
+        gridSizer.AddF(self.azMotorPowerStateLabel, self.sizerFlags)
+        gridSizer.AddF(self.button_el_motor, self.sizerFlags)
+        gridSizer.AddF(self.elMotorPowerStateLabel, self.sizerFlags)
 
-		self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
-		self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
-		self.az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
-		self.el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0 Counts")
-		self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
-		self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
-		self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
-		self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
-		self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+        controlButtonsStaticBox     = wx.StaticBox(parent, wx.ID_ANY, "Motor Power")
+        controlButtonsStaticBox.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
+        sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+        sizer.Add(gridSizer, flag=wx.EXPAND)
 
-		self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
+        return sizer
 
-		textItems = [self.label_az_status,     self.az_status,
-					self.label_el_status,      self.el_status,
-					self.label_az_raw_status,  self.az_raw_status,
-					self.label_el_raw_status,  self.el_raw_status,
-					self.label_ra_status,      self.ra_status,
-					self.label_dec_status,     self.dec_status,
-					self.label_utc_status,     self.utc_status,
-					self.label_lst_status,     self.lst_status,
-					self.label_local_status,   self.local_status]
+    def __create_motion_control_StaticBox(self, parent):
 
 
-		for item in textItems:
-			if isinstance(item, wx.StaticText):
-				item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
+        verticalSizer = wx.BoxSizer(wx.VERTICAL)
+        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-		
-		itemSizer = wx.FlexGridSizer(rows=9, cols=2)
-		itemSizer.AddMany(textItems)
-		itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
-		itemSizer.AddGrowableCol(1, proportion=1)		# available space
+        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop All")
+        self.button_stop_az  = wx.Button(parent, wx.ID_ANY, "Stop AZ")
+        self.button_stop_el  = wx.Button(parent, wx.ID_ANY, "Stop EL")
 
-		self.statusSizerStaticbox = wx.StaticBox(self.statusReadoutPanel, wx.ID_ANY, "Status")
-		sizer = wx.StaticBoxSizer(self.statusSizerStaticbox, wx.VERTICAL)
-		sizer.AddF(itemSizer, self.sizerFlags)
-		sizer.AddF([1,1], self.sizerFlags)
-		sizer.AddF([1,1], self.sizerFlags)
-		sizer.AddF(self.packet_num, self.sizerFlags)
 
-		self.statusReadoutPanel.SetSizer(sizer)
+        verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
+        
+        horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
+        horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
+        verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
 
-		return self.statusReadoutPanel
+        controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
+        sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
+        sizer.Add(verticalSizer)
 
-	def __create_motor_power_ctrl_StaticBox(self, parent):
+        return sizer
+    
+    def __create_chart_options(self, parent):
+        chart_options_box = wx.StaticBox(parent, wx.ID_ANY, "Chart Options")
+        options_box_sizer = wx.StaticBoxSizer(chart_options_box, wx.VERTICAL)
+        list_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        list_sizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Center on:"), self.sizerFlags)
+        
+        self.cur_center_input = wx.ComboBox(parent, wx.ID_ANY,
+            choices=["Current Position", "Current Scan"],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        list_sizer.AddF(self.cur_center_input, self.sizerFlags)
+        self.cur_center_input.SetSelection(0)
+        options_box_sizer.Add(list_sizer)
+        
+        return options_box_sizer
 
-		gridSizer = wx.FlexGridSizer(rows=2, cols=2)
+    def __create_controls_sizer(self):
+
+        controlButtonPanel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+        sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+        sizer.Add(self.__create_chart_options(controlButtonPanel), flag=wx.EXPAND)
+
 
-		self.buttton_az_motor         = wx.Button(parent, wx.ID_ANY, "AZ Motor Power")
-		self.button_el_motor          = wx.Button(parent, wx.ID_ANY, "EL Motor Power")
+        controlButtonPanel.SetSizer(sizer)
+        return controlButtonPanel
 
-		self.azMotorPowerStateLabel   = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
-		self.elMotorPowerStateLabel   = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
 
-		gridSizer.AddF(self.buttton_az_motor, self.sizerFlags)
-		gridSizer.AddF(self.azMotorPowerStateLabel, self.sizerFlags)
-		gridSizer.AddF(self.button_el_motor, self.sizerFlags)
-		gridSizer.AddF(self.elMotorPowerStateLabel, self.sizerFlags)
+    def __create_goto_ra_dec_staticbox(self, parentNotebook):
+        staticBoxGotoRaDec               = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
+        staticTextRaLabel                = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+        staticTextDecLabel               = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
 
-		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motor Power")
-		controlButtonsStaticBox.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
-		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(gridSizer, flag=wx.EXPAND)
+        self.textCtrlGotoRightAscension  = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.textCtrlGotoDeclination     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.buttonGotoPosition          = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
 
-		return sizer
-
-	def __create_pointing_ctrl_StaticBox(self, parent):
-
-		gridSizer = wx.FlexGridSizer(rows=1, cols=2)
-
-		self.button_goto_balloon      = wx.Button(parent, wx.ID_ANY, "Goto Balloon")
-
-		gridSizer.AddF(self.button_goto_balloon, self.sizerFlags)
-		gridSizer.Add([1,1])
-
-		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Pointing Control")
-		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(gridSizer, flag=wx.EXPAND)
-
-		return sizer
-
-	def __create_motion_control_StaticBox(self, parent):
-
-
-		verticalSizer = wx.BoxSizer(wx.VERTICAL)
-		horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-		self.button_stop_all          = wx.Button(parent, wx.ID_ANY, "Stop All")
-		self.button_stop_az           = wx.Button(parent, wx.ID_ANY, "Stop AZ")
-		self.button_stop_el           = wx.Button(parent, wx.ID_ANY, "Stop EL")
-
-
-		verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
-		
-		horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
-		horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
-		verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
-
-		controlButtonsStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
-		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-		sizer.Add(verticalSizer)
-
-		return sizer
-
-
-	def __create_controls_sizer(self):
-
-		controlButtonPanel                   = wx.Panel(self)
-		
-
-		controlButtonsStaticBox        = wx.StaticBox(controlButtonPanel, wx.ID_ANY, "Universal Controls")
-		sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-
-		sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-		sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-		sizer.Add(self.__create_pointing_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
-		sizer.Add([1,1], proportion=1, flag=wx.EXPAND)
-
-
-		controlButtonPanel.SetSizer(sizer)
-
-		return controlButtonPanel
-
-
-	def __create_goto_ra_dec_staticbox(self, parentNotebook):
-		staticBoxGotoRaDec               = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
-		staticTextRaLabel                = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-		staticTextDecLabel               = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-
-		self.textCtrlGotoRightAscension  = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-		self.textCtrlGotoDeclination     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-		self.buttonGotoPosition          = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
-
-		gridSizer = wx.FlexGridSizer(3, 2)
-		gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlGotoRightAscension, self.sizerFlags)
-
-		gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlGotoDeclination, self.sizerFlags)
-		
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.buttonGotoPosition, flag=wx.EXPAND)
-
-		baseSizer = wx.StaticBoxSizer(staticBoxGotoRaDec, wx.VERTICAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-
-		return baseSizer
-
-
-	def __create_ra_dec_tracking_staticbox(self, parentNotebook):
-		staticBoxRaDecTracking                  = wx.StaticBox(parentNotebook, wx.ID_ANY, "Ra/Dec Tracking")
-		staticTextDecLabel                      = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-		staticTextRaLabel                       = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-
-		self.textCtrlTrackingRightAscension     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-		self.textCtrlTrackingDeclination        = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-
-		gridSizer = wx.FlexGridSizer(3, 4)
-		gridSizer.AddGrowableCol(2, proportion=1)
-
-		gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlTrackingRightAscension, self.sizerFlags)
-		gridSizer.Add([1,1])
-		gridSizer.Add([1,1])
-
-		gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlTrackingDeclination, self.sizerFlags)
-		gridSizer.Add([1,1])
-		gridSizer.Add([1,1])
-
-		# This is a bit hacky
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.buttonTrackPosition, flag=wx.EXPAND)
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.buttonTrackingToggle)
-
-
-		baseSizer = wx.StaticBoxSizer(staticBoxRaDecTracking, wx.VERTICAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-		return baseSizer
-
-	def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
-		staticBoxRaDecCal                       = wx.StaticBox(parentNotebook, wx.ID_ANY, "Calibrate Ra/Dec")
-		staticTextDecLabel                      = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-		staticTextRaLabel                       = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-
-		self.textCtrlRightAscensionCalInput     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-		self.textCtrlDeclinationCalInput        = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-
-		gridSizer = wx.FlexGridSizer(3, 2)
-
-		gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlRightAscensionCalInput, self.sizerFlags)
-
-		gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-		gridSizer.AddF(self.textCtrlDeclinationCalInput, self.sizerFlags)
-		
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.buttonDoRaDecCalibrate, flag=wx.EXPAND)
-		
-		baseSizer = wx.StaticBoxSizer(staticBoxRaDecCal, wx.VERTICAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-		return baseSizer
-
-	def __create_ra_dec_pane(self):
-		notebookRaDecPane                         = wx.Panel(self.controlNotebook)
-		self.buttonDoRaDecCalibrate               = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
-		self.buttonTrackPosition                  = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
-		self.buttonTrackingToggle                 = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
-		
-		sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
-		sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-		sizerRaDecPanelUpper.Add(self.__create_ra_dec_calibrate_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
-		sizerRaDecPane = wx.BoxSizer(wx.VERTICAL)
-		sizerRaDecPane.Add(sizerRaDecPanelUpper, 1, wx.EXPAND)
-		sizerRaDecPane.Add(self.__create_ra_dec_tracking_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
-
-		notebookRaDecPane.SetSizer(sizerRaDecPane)
-		return notebookRaDecPane
-
-	def __create_joystick_panel(self, parent):
-		staticBoxRelativeMoveCtrl                 = wx.StaticBox(parent, wx.ID_ANY, "Relative Move")
-
-		self.button_up                            = wx.Button(parent, wx.ID_ANY, "^")
-		self.button_left                          = wx.Button(parent, wx.ID_ANY, "<")
-		self.button_right                         = wx.Button(parent, wx.ID_ANY, ">")
-		self.button_down                          = wx.Button(parent, wx.ID_ANY, "v")
-
-		self.step_size_input                      = wx.TextCtrl(parent, wx.ID_ANY, "10", style=wx.TE_PROCESS_ENTER)
-		self.staticTextStepSize                   = wx.StaticText(parent, wx.ID_ANY, "Degrees")
-		
-		stepSizeSizer = wx.BoxSizer(wx.HORIZONTAL)
-		stepSizeSizer.AddF(self.step_size_input, self.sizerFlags)
-		stepSizeSizer.AddF(self.staticTextStepSize, self.sizerFlags)
-
-		joystickSizer = wx.GridSizer(3, 3)
-		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_up, flag=wx.EXPAND)
-		joystickSizer.Add([1,1])
-
-		joystickSizer.Add(self.button_left, flag=wx.EXPAND)
-		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_right, flag=wx.EXPAND)
-		
-		joystickSizer.Add([1,1])
-		joystickSizer.Add(self.button_down, flag=wx.EXPAND)
-		joystickSizer.Add([1,1])
-
-		joystickPaneSizer = wx.StaticBoxSizer(staticBoxRelativeMoveCtrl, wx.VERTICAL)
-		joystickPaneSizer.Add(stepSizeSizer, 0, wx.EXPAND)
-		joystickPaneSizer.Add(joystickSizer, 1, wx.EXPAND)
-
-		return joystickPaneSizer
-
-	def __create_az_el_calibrate_panel(self, parent):
-		calibrateStaticBox              = wx.StaticBox(parent, wx.ID_ANY, "Calibrate")
-		azLabel                         = wx.StaticText(parent, wx.ID_ANY, "Az:")
-		elLabel                         = wx.StaticText(parent, wx.ID_ANY, "El:")
-		self.calibrate_az_input         = wx.TextCtrl(parent, wx.ID_ANY, "")
-		self.calibrate_el_input         = wx.TextCtrl(parent, wx.ID_ANY, "")
-
-		self.button_calibrate           = wx.Button(parent, wx.ID_ANY, "Calibrate")
-		
-		gridSizer = wx.FlexGridSizer(3,2)
-		gridSizer.AddF(azLabel, self.sizerFlags)
-		gridSizer.AddF(self.calibrate_az_input, self.sizerFlags)
-		gridSizer.AddF(elLabel, self.sizerFlags)
-		gridSizer.AddF(self.calibrate_el_input, self.sizerFlags)
-		gridSizer.Add([1,1])
-		gridSizer.AddF(self.button_calibrate, self.sizerFlags)
-
-		baseSizer = wx.StaticBoxSizer(calibrateStaticBox, wx.VERTICAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-
-		return baseSizer
-
-	def __create_absolute_move_pane(self, parent):
-
-		absoluteMoveStaticBox        = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
-		azLabel                      = wx.StaticText(parent, wx.ID_ANY, "Az:")
-		elLabel                      = wx.StaticText(parent, wx.ID_ANY, "El:")
-		self.absolute_move_ctrl_az   = wx.TextCtrl(parent, wx.ID_ANY, "0")
-		self.absolute_move_ctrl_el   = wx.TextCtrl(parent, wx.ID_ANY, "0")
-		self.button_start_move       = wx.Button(parent, wx.ID_ANY, "Start Move")
-
-		gridSizer = wx.FlexGridSizer(3,2)
-		gridSizer.AddF(azLabel, self.sizerFlags)
-		gridSizer.AddF(self.absolute_move_ctrl_az, self.sizerFlags)
-		gridSizer.AddF(elLabel, self.sizerFlags)
-		gridSizer.AddF(self.absolute_move_ctrl_el, self.sizerFlags)
-		gridSizer.Add([1,1])
-		gridSizer.AddF(self.button_start_move, self.sizerFlags)
-
-
-		baseSizer = wx.StaticBoxSizer(absoluteMoveStaticBox, wx.VERTICAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-
-		return baseSizer
-
-	def __create_index_button_pane(self, parent):
-		axesIndexButtonsStaticBox                   = wx.StaticBox(parent, wx.ID_ANY, "Index")
-		self.button_index_az                      = wx.Button(parent, wx.ID_ANY, "Azimuth Axis")
-		self.button_index_el                      = wx.Button(parent, wx.ID_ANY, "Elivation Axis")
-
-		baseSizer = wx.StaticBoxSizer(axesIndexButtonsStaticBox, wx.VERTICAL)
-		baseSizer.Add(self.button_index_az, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-		baseSizer.Add(self.button_index_el, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-
-		return baseSizer
-
-
-	def __create_joystick_pane(self):
-		notebookJoystickPane                 = wx.Panel(self.controlNotebook)
-
-		# The FlexGridSizer seems to have better rezise behavour when compressed then the 
-		# plain GridSizer. Not sure why. 
-		# Anyways, As such, I'm using a FlexGridSizer with all cells set to growable
-		gridSizer = wx.FlexGridSizer(2,2)
-		gridSizer.AddGrowableCol(0)
-		gridSizer.AddGrowableCol(1)
-		gridSizer.AddGrowableRow(0)
-		gridSizer.AddGrowableRow(1)
-
-		gridSizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
-		gridSizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
-		
-		gridSizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
-		gridSizer.Add(self.__create_index_button_pane(notebookJoystickPane), 1, wx.EXPAND)
-		
-		notebookJoystickPane.SetSizer(gridSizer)
-
-		return notebookJoystickPane
-
-
-	def __create_scanning_pane(self):	
-		# TODO: CLEANUP, name sizers sanely
-		notebookScanningPane                 = wx.Panel(self.controlNotebook)
-		self.label_1_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-		self.textCtrlScanMinAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-		self.label_2_copy_2                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-		self.textCtrlScanMaxAz                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "190")
-		self.sizer_44_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Az")
-		self.label_1_copy_3                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Min: ")
-		self.textCtrlScanMinEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-		self.label_2_copy_3                       = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Max:")
-		self.textCtrlScanMaxEl                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
-		self.sizer_45_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "El")
-		self.label_scan_period                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Period:")
-		self.scan_period_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "3")
-		self.label_scan_cycles                    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles:")
-		self.scan_cycles_input                    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-		self.scan_continuous_input                = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Continuous")
-		self.checkbox_radec                       = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Ra/Dec")
-		self.buttonScanStart                      = wx.Button(notebookScanningPane, wx.ID_ANY, "Scan")
-
-		scanOptionsList = ["Azimuth", "Elevation", "Square", "Serpentine", "Spin"]
-		self.comboBoxScanOptions                  = wx.ComboBox(notebookScanningPane, wx.ID_ANY, choices=scanOptionsList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
-		
-		self.sizer_49_staticbox                   = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Scan Options")
-
-
-
-
-		sizer_13_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_13_copy_2.Add(self.label_1_copy_2)
-		sizer_13_copy_2.Add(self.textCtrlScanMinAz)
-
-		sizer_14_copy_2 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_14_copy_2.Add(self.label_2_copy_2)
-		sizer_14_copy_2.Add(self.textCtrlScanMaxAz)
-		
-		sizer_44 = wx.StaticBoxSizer(self.sizer_44_staticbox, wx.VERTICAL)
-		sizer_44.Add(sizer_13_copy_2, 1, wx.EXPAND)
-		sizer_44.Add(sizer_14_copy_2, 1, wx.EXPAND)
-		
-		sizer_13_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_13_copy_3.Add(self.label_1_copy_3)
-		sizer_13_copy_3.Add(self.textCtrlScanMinEl)
-				
-		sizer_14_copy_3 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_14_copy_3.Add(self.label_2_copy_3)
-		sizer_14_copy_3.Add(self.textCtrlScanMaxEl)
-		
-		sizer_45 = wx.StaticBoxSizer(self.sizer_45_staticbox, wx.VERTICAL)
-		sizer_45.Add(sizer_13_copy_3, 1, wx.EXPAND)
-		sizer_45.Add(sizer_14_copy_3, 1, wx.EXPAND)
-		
-		sizer_43 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_43.Add(sizer_44, 1, wx.EXPAND)
-		sizer_43.Add(sizer_45, 1, wx.EXPAND)
-		
-		sizer_13_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_13_copy_4.Add(self.label_scan_period)
-		sizer_13_copy_4.Add(self.scan_period_input)
-		
-		sizer_14_copy_4 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_14_copy_4.Add(self.label_scan_cycles)
-		sizer_14_copy_4.Add(self.scan_cycles_input)
-		
-		sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
-		sizer_7_copy_4.Add(sizer_13_copy_4, 1, wx.EXPAND)
-		sizer_7_copy_4.Add(sizer_14_copy_4, 1, wx.EXPAND)
-		sizer_7_copy_4.Add(self.scan_continuous_input)
-		sizer_7_copy_4.Add(self.checkbox_radec)
-		
-		sizer_51 = wx.BoxSizer(wx.HORIZONTAL)
-		sizer_51.Add(self.buttonScanStart)
-		sizer_51.Add(self.comboBoxScanOptions)
-				
-		sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
-		sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
-		sizer_49.Add(sizer_51, 1, wx.EXPAND)
-
-		sizer_42 = wx.BoxSizer(wx.VERTICAL)
-		sizer_42.Add(sizer_43, 1, wx.EXPAND)
-		sizer_42.Add(sizer_49, 1, wx.EXPAND)
-		
-		notebookScanningPane.SetSizer(sizer_42)
-
-
-		
-		return notebookScanningPane
-
-	def __create_options_pane(self):
-		notebookOptionsPane                     = wx.Panel(self.controlNotebook)
-		
-		staticTextVelocityLabel                 = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Velocity:")
-		staticTextAccelerationLabel             = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Acceleration:")
-		optionRadioButtonsForSomething          = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "(I have no idea what these do)\nDO THE THING:")
-
-		self.ctrl_velocity                      = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "")
-		self.ctrl_acceleration                  = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY, "")
-		self.button_set_accel_vel               = wx.Button(notebookOptionsPane, wx.ID_ANY, "Set Accel/Vel")
-		self.radio_btn_az                       = wx.RadioButton(notebookOptionsPane, wx.ID_ANY, "AZ")
-		self.radio_btn_el                       = wx.RadioButton(notebookOptionsPane, wx.ID_ANY, "EL")
-		self.button_open_config                 = wx.Button(notebookOptionsPane, wx.ID_ANY, "Open Config File")
-		self.sizer_52_staticbox                 = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Move Options")
-
-
-		gridSizer = wx.FlexGridSizer(4,2)
-		gridSizer.AddF(staticTextVelocityLabel, self.sizerFlags)
-		gridSizer.AddF(self.ctrl_velocity, self.sizerFlags)
-
-		
-		gridSizer.AddF(staticTextAccelerationLabel, self.sizerFlags)
-		gridSizer.AddF(self.ctrl_acceleration, self.sizerFlags)
-		
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.button_set_accel_vel, flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=5)
-		
-		gridSizer.Add([1,1])
-		gridSizer.Add(self.button_open_config, flag=wx.ALL|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, border=5)
-		
-		radioButtonSizer = wx.BoxSizer(wx.VERTICAL)
-		radioButtonSizer.Add(optionRadioButtonsForSomething)
-		radioButtonSizer.Add(self.radio_btn_az)
-		radioButtonSizer.Add(self.radio_btn_el)
-
-		baseSizer = wx.StaticBoxSizer(self.sizer_52_staticbox, wx.HORIZONTAL)
-		baseSizer.Add(gridSizer, 1, wx.EXPAND)
-		baseSizer.Add(radioButtonSizer, 1, wx.EXPAND)
-
-		notebookOptionsPane.SetSizer(baseSizer)
-
-		return notebookOptionsPane
-
-	def __create_graphPanel(self):
-		self.graphDisplayPanel                    = wx.Panel(self)
-		self.graphPanelStaticbox                  = wx.StaticBox(self.graphDisplayPanel, wx.ID_ANY, "Graph")
-
-		graphPanelSizer = wx.StaticBoxSizer(self.graphPanelStaticbox, wx.HORIZONTAL)
-		self.graphDisplayPanel.SetSizer(graphPanelSizer)
-		
-		return self.graphDisplayPanel
-
-	def __create_layout(self):
-				
-		headerSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-		headerSizer.Add(self.__create_readoutPanel(), proportion=1, flag=wx.EXPAND)
-		headerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
-		headerSizer.Add(self.__create_controls_sizer(), proportion=1, flag=wx.EXPAND)
-	
-		self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
-		self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
-		self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
-		self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning ")
-		self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
-		
-		mainSizer = wx.BoxSizer(wx.VERTICAL)
-		mainSizer.Add(headerSizer, proportion=1, flag=wx.EXPAND)
-		mainSizer.Add(self.controlNotebook, proportion=1, flag=wx.EXPAND)
-		self.SetSizer(mainSizer)
-		mainSizer.Fit(self)
-		
-		self.Layout()
-		
+        gridSizer = wx.FlexGridSizer(3, 2)
+        gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlGotoRightAscension, self.sizerFlags)
+
+        gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlGotoDeclination, self.sizerFlags)
+        
+        gridSizer.Add([1,1])
+        gridSizer.Add(self.buttonGotoPosition, flag=wx.EXPAND)
+
+        baseSizer = wx.StaticBoxSizer(staticBoxGotoRaDec, wx.VERTICAL)
+        baseSizer.Add(gridSizer, 1, wx.EXPAND)
+
+        return baseSizer
+
+
+    def __create_ra_dec_tracking_staticbox(self, parentNotebook):
+        staticBoxRaDecTracking              = wx.StaticBox(parentNotebook, wx.ID_ANY, "Ra/Dec Tracking")
+        staticTextDecLabel                  = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
+        staticTextRaLabel                   = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+
+        self.textCtrlTrackingRightAscension = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.textCtrlTrackingDeclination    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+
+        gridSizer = wx.FlexGridSizer(3, 4)
+        gridSizer.AddGrowableCol(2, proportion=1)
+
+        gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlTrackingRightAscension, self.sizerFlags)
+        gridSizer.Add([1,1])
+        gridSizer.Add([1,1])
+
+        gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlTrackingDeclination, self.sizerFlags)
+        gridSizer.Add([1,1])
+        gridSizer.Add([1,1])
+
+        # This is a bit hacky
+        gridSizer.Add([1,1])
+        gridSizer.Add(self.buttonTrackPosition, flag=wx.EXPAND)
+        gridSizer.Add([1,1])
+        gridSizer.Add(self.buttonTrackingToggle)
+
+
+        baseSizer = wx.StaticBoxSizer(staticBoxRaDecTracking, wx.VERTICAL)
+        baseSizer.Add(gridSizer, 1, wx.EXPAND)
+        return baseSizer
+
+    def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
+        staticBoxRaDecCal = wx.StaticBox(parentNotebook, wx.ID_ANY, "Sync to Position")
+        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
+        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+
+        self.textCtrlRightAscensionCalInput = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.textCtrlDeclinationCalInput    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+
+        gridSizer = wx.FlexGridSizer(3, 2)
+
+        gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlRightAscensionCalInput, self.sizerFlags)
+
+        gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
+        gridSizer.AddF(self.textCtrlDeclinationCalInput, self.sizerFlags)
+        
+        gridSizer.Add([1,1])
+        gridSizer.Add(self.buttonDoRaDecCalibrate, flag=wx.EXPAND)
+        
+        baseSizer = wx.StaticBoxSizer(staticBoxRaDecCal, wx.VERTICAL)
+        baseSizer.Add(gridSizer, 1, wx.EXPAND)
+        return baseSizer
+
+    def __create_ra_dec_pane(self):
+        notebookRaDecPane           = wx.Panel(self.controlNotebook)
+        self.buttonDoRaDecCalibrate = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
+        self.buttonTrackPosition    = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
+        self.buttonTrackingToggle   = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
+        
+        sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
+        sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
+        sizerRaDecPanelUpper.Add(self.__create_ra_dec_calibrate_staticbox(notebookRaDecPane), 1, wx.EXPAND)
+
+        sizerRaDecPane = wx.BoxSizer(wx.VERTICAL)
+        sizerRaDecPane.Add(sizerRaDecPanelUpper, 1, wx.EXPAND)
+        sizerRaDecPane.Add(self.__create_ra_dec_tracking_staticbox(notebookRaDecPane), 1, wx.EXPAND)
+
+
+        notebookRaDecPane.SetSizer(sizerRaDecPane)
+        return notebookRaDecPane
+
+    def __create_joystick_panel(self, parent):
+        staticBoxRelativeMoveCtrl = wx.StaticBox(parent, wx.ID_ANY, "Relative Move")
+
+        self.button_up            = wx.Button(parent, wx.ID_ANY, "^")
+        self.button_left          = wx.Button(parent, wx.ID_ANY, "<")
+        self.button_right         = wx.Button(parent, wx.ID_ANY, ">")
+        self.button_down          = wx.Button(parent, wx.ID_ANY, "v")
+
+        self.step_size_input      = wx.TextCtrl(parent, wx.ID_ANY, "10", style=wx.TE_PROCESS_ENTER)
+        self.staticTextStepSize   = wx.StaticText(parent, wx.ID_ANY, "Degrees")
+        
+        stepSizeSizer = wx.BoxSizer(wx.HORIZONTAL)
+        stepSizeSizer.AddF(self.step_size_input, self.sizerFlags)
+        stepSizeSizer.AddF(self.staticTextStepSize, self.sizerFlags)
+
+        joystickSizer = wx.GridSizer(3, 3)
+        joystickSizer.Add([1,1])
+        joystickSizer.Add(self.button_up, flag=wx.EXPAND)
+        joystickSizer.Add([1,1])
+
+        joystickSizer.Add(self.button_left, flag=wx.EXPAND)
+        joystickSizer.Add([1,1])
+        joystickSizer.Add(self.button_right, flag=wx.EXPAND)
+        
+        joystickSizer.Add([1,1])
+        joystickSizer.Add(self.button_down, flag=wx.EXPAND)
+        joystickSizer.Add([1,1])
+
+        joystickPaneSizer = wx.StaticBoxSizer(staticBoxRelativeMoveCtrl, wx.VERTICAL)
+        joystickPaneSizer.Add(stepSizeSizer, 0, wx.EXPAND)
+        joystickPaneSizer.Add(joystickSizer, 1, wx.EXPAND)
+
+        return joystickPaneSizer
+
+    def __create_az_el_calibrate_panel(self, parent):
+        calibrateStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
+        azLabel                 = wx.StaticText(parent, wx.ID_ANY, "Azimuth:")
+        elLabel                 = wx.StaticText(parent, wx.ID_ANY, "Altitude:")
+        self.calibrate_az_input = wx.TextCtrl(parent, wx.ID_ANY, "")
+        self.calibrate_el_input = wx.TextCtrl(parent, wx.ID_ANY, "")
+
+        self.button_calibrate           = wx.Button(parent, wx.ID_ANY, "Calibrate")
+        
+        gridSizer = wx.FlexGridSizer(3,2)
+        gridSizer.AddF(azLabel, self.sizerFlags)
+        gridSizer.AddF(self.calibrate_az_input, self.sizerFlags)
+        gridSizer.AddF(elLabel, self.sizerFlags)
+        gridSizer.AddF(self.calibrate_el_input, self.sizerFlags)
+        gridSizer.Add([1,1])
+        gridSizer.AddF(self.button_calibrate, self.sizerFlags)
+
+        baseSizer = wx.StaticBoxSizer(calibrateStaticBox, wx.VERTICAL)
+        baseSizer.Add(gridSizer, 1, wx.EXPAND)
+
+        return baseSizer
+
+    def __create_absolute_move_pane(self, parent):
+
+        absoluteMoveStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
+        azLabel                    = wx.StaticText(parent, wx.ID_ANY, "Az:")
+        elLabel                    = wx.StaticText(parent, wx.ID_ANY, "El:")
+        self.absolute_move_ctrl_az = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.absolute_move_ctrl_el = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.button_start_move     = wx.Button(parent, wx.ID_ANY, "Start Move")
+
+        gridSizer = wx.FlexGridSizer(3,2)
+        gridSizer.AddF(azLabel, self.sizerFlags)
+        gridSizer.AddF(self.absolute_move_ctrl_az, self.sizerFlags)
+        gridSizer.AddF(elLabel, self.sizerFlags)
+        gridSizer.AddF(self.absolute_move_ctrl_el, self.sizerFlags)
+        gridSizer.Add([1,1])
+        gridSizer.AddF(self.button_start_move, self.sizerFlags)
+
+
+        baseSizer = wx.StaticBoxSizer(absoluteMoveStaticBox, wx.VERTICAL)
+        baseSizer.Add(gridSizer, 1, wx.EXPAND)
+
+        return baseSizer
+
+    def __create_index_button_pane(self, parent):
+        axesIndexButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Index")
+        self.button_index_az      = wx.Button(parent, wx.ID_ANY, "Azimuth Axis")
+        self.button_index_el      = wx.Button(parent, wx.ID_ANY, "Elevation Axis")
+
+        baseSizer = wx.StaticBoxSizer(axesIndexButtonsStaticBox, wx.VERTICAL)
+        baseSizer.Add(self.button_index_az, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
+        baseSizer.Add(self.button_index_el, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
+
+        return baseSizer
+
+
+    def __create_joystick_pane(self):
+        notebookJoystickPane = wx.Panel(self.controlNotebook)
+
+        # The FlexGridSizer seems to have better rezise behavour when compressed then the 
+        # plain GridSizer. Not sure why. 
+        # Anyways, As such, I'm using a FlexGridSizer with all cells set to growable
+        gridSizer = wx.FlexGridSizer(2,2)
+        gridSizer.AddGrowableCol(0)
+        gridSizer.AddGrowableCol(1)
+        gridSizer.AddGrowableRow(0)
+        gridSizer.AddGrowableRow(1)
+
+        gridSizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
+        gridSizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
+        
+        gridSizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
+        gridSizer.Add(self.__create_index_button_pane(notebookJoystickPane), 1, wx.EXPAND)
+        
+        notebookJoystickPane.SetSizer(gridSizer)
+
+        return notebookJoystickPane
+
+    # list of targets to slew and sync to
+    def __create_targets_pane (self):
+        targets_panel = wx.Panel(self.controlNotebook)
+        targets_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        # box for solar system objects
+        sso_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Solar System Objects")
+        sso_box_sizer = wx.StaticBoxSizer(sso_box, wx.VERTICAL)
+        
+        sso_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sso_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Object: "),
+            self.sizerFlags)
+        self.sso_input = wx.ComboBox(targets_panel, wx.ID_ANY,
+            choices=planets.objects, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.sso_input.SetSelection(0)
+        sso_sizer.AddF(self.sso_input, self.sizerFlags)
+        sso_box_sizer.Add(sso_sizer)
+        
+        sso_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        sso_buttons_sizer.Add(self.sso_goto_input)
+        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        sso_buttons_sizer.Add(self.sso_sync_input)
+        sso_box_sizer.Add(sso_buttons_sizer)
+        
+        targets_sizer.Add(sso_box_sizer, 1, wx.EXPAND)
+        
+        # box for other objects
+        ngcic_box = wx.StaticBox(targets_panel, wx.ID_ANY, "NGC/IC Objects")
+        ngcic_box_sizer = wx.StaticBoxSizer(ngcic_box, wx.VERTICAL)
+        
+        ngcic_sizer = wx.FlexGridSizer(2, 2)
+        ngcic_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Catalog: "),
+            self.sizerFlags)
+        self.ngcic_catalog = wx.ComboBox(targets_panel, wx.ID_ANY,
+            choices=["NGC", "IC"], style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.ngcic_catalog.SetSelection(0)
+        ngcic_sizer.AddF(self.ngcic_catalog, self.sizerFlags)
+        
+        ngcic_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Number: "),
+            self.sizerFlags)
+        self.ngcic_input = wx.SpinCtrl(targets_panel, wx.ID_ANY,
+            value="1", min=1, max=7840)
+        ngcic_sizer.AddF(self.ngcic_input, self.sizerFlags)
+        ngcic_box_sizer.Add(ngcic_sizer)
+        
+        ngcic_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        ngcic_buttons_sizer.Add(self.ngcic_goto_input)
+        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        ngcic_buttons_sizer.Add(self.ngcic_sync_input)
+        ngcic_box_sizer.Add(ngcic_buttons_sizer)
+        
+        targets_sizer.Add(ngcic_box_sizer, 1, wx.EXPAND)
+        
+        targets_panel.SetSizer(targets_sizer)
+        return targets_panel
+    
+    # simple scans: use the least motor movements between points
+    def __create_simple_scans (self):
+        simple_panel = wx.Panel(self.controlNotebook)
+        simple_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        # box for zenith spiral scan
+        zenith_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Zenith Spiral Scan")
+        zenith_box_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
+        
+        zs_sizer = wx.FlexGridSizer(4, 2)
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
+            self.sizerFlags)
+        self.zst_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        zs_sizer.AddF(self.zst_azimuth_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
+            self.sizerFlags)
+        self.zst_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        zs_sizer.AddF(self.zst_altitude_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Altitude Increment: "),
+            self.sizerFlags)
+        self.zs_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        zs_sizer.AddF(self.zs_inc_input, self.sizerFlags)
+        
+        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
+            self.sizerFlags)
+        self.zs_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        zs_sizer.AddF(self.zs_cycles_input, self.sizerFlags)
+        
+        zenith_box_sizer.Add(zs_sizer)
+        
+        zs_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.zs_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        zs_buttons_sizer.Add(self.zs_preview_input)
+        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        zs_buttons_sizer.Add(self.zs_begin_input)
+        
+        zenith_box_sizer.Add(zs_buttons_sizer)
+        
+        simple_sizer.Add(zenith_box_sizer, 1, wx.EXPAND)
+        
+        # box for horizontal graticule scans
+        horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")
+        horiz_box_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
+        
+        hg_sizer = wx.FlexGridSizer(4, 2)
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "),
+            self.sizerFlags)
+        self.left_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        hg_sizer.AddF(self.left_azimuth_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Right Azimuth: "),
+            self.sizerFlags)
+        self.right_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "190")
+        hg_sizer.AddF(self.right_azimuth_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Low Altitude: "),
+            self.sizerFlags)
+        self.low_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        hg_sizer.AddF(self.low_altitude_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "High Altitude: "),
+            self.sizerFlags)
+        self.high_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "80")
+        hg_sizer.AddF(self.high_altitude_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Num of Turns: "),
+            self.sizerFlags)
+        self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "5")
+        hg_sizer.AddF(self.hg_turns_input, self.sizerFlags)
+        
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
+            self.sizerFlags)
+        self.hg_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        hg_sizer.AddF(self.hg_cycles_input, self.sizerFlags)
+        
+        horiz_box_sizer.Add(hg_sizer)
+        
+        hg_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.hg_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        hg_buttons_sizer.Add(self.hg_preview_input)
+        self.hg_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        hg_buttons_sizer.Add(self.hg_begin_input)
+        
+        horiz_box_sizer.Add(hg_buttons_sizer)
+        simple_sizer.Add(horiz_box_sizer, 1, wx.EXPAND)
+        
+        simple_panel.SetSizer(simple_sizer)
+        return simple_panel
+
+    # short scans: take the shortest angular distance between points
+    def __create_scanning_pane(self):	
+        # TODO: CLEANUP, name sizers sanely
+        notebookScanningPane    = wx.Panel(self.controlNotebook)
+        
+        self.corner1_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 1")
+        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
+        
+        self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
+        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
+        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
+        
+        self.corner3_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 3")
+        self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
+        self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        
+        self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
+        self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
+        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
+        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
+        
+        self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
+        self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
+        self.scan_cycles_label  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
+        self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
+        self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
+        self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
+        self.preview_scan       = wx.Button(notebookScanningPane, wx.ID_ANY, "Preview")
+
+        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=DE)"]
+        self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+            choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        
+        scanOptionsList = [func.__name__.capitalize() for func in scans.scan_list]
+        self.comboBoxScanOptions = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+            choices=scanOptionsList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        
+        self.sizer_49_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Scan Options")
+
+
+        corner1_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner1_crda_sizer.Add(self.corner1_crda_label)
+        corner1_crda_sizer.Add(self.corner1_crda_box)
+
+        corner1_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner1_crdb_sizer.Add(self.corner1_crdb_label)
+        corner1_crdb_sizer.Add(self.corner1_crdb_box)
+        
+        corner1_sizer = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
+        corner1_sizer.Add(corner1_crda_sizer, 1, wx.EXPAND)
+        corner1_sizer.Add(corner1_crdb_sizer, 1, wx.EXPAND)
+        
+        corner2_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner2_crda_sizer.Add(self.corner2_crda_label)
+        corner2_crda_sizer.Add(self.corner2_crda_box)
+                
+        corner2_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner2_crdb_sizer.Add(self.corner2_crdb_label)
+        corner2_crdb_sizer.Add(self.corner2_crdb_box)
+        
+        corner2_sizer = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
+        corner2_sizer.Add(corner2_crda_sizer, 1, wx.EXPAND)
+        corner2_sizer.Add(corner2_crdb_sizer, 1, wx.EXPAND)
+        
+        corner3_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner3_crda_sizer.Add(self.corner3_crda_label)
+        corner3_crda_sizer.Add(self.corner3_crda_box)
+                
+        corner3_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner3_crdb_sizer.Add(self.corner3_crdb_label)
+        corner3_crdb_sizer.Add(self.corner3_crdb_box)
+        
+        corner3_sizer = wx.StaticBoxSizer(self.corner3_box, wx.VERTICAL)
+        corner3_sizer.Add(corner3_crda_sizer, 1, wx.EXPAND)
+        corner3_sizer.Add(corner3_crdb_sizer, 1, wx.EXPAND)
+        
+        corner4_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner4_crda_sizer.Add(self.corner4_crda_label)
+        corner4_crda_sizer.Add(self.corner4_crda_box)
+                
+        corner4_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corner4_crdb_sizer.Add(self.corner4_crdb_label)
+        corner4_crdb_sizer.Add(self.corner4_crdb_box)
+        
+        corner4_sizer = wx.StaticBoxSizer(self.corner4_box, wx.VERTICAL)
+        corner4_sizer.Add(corner4_crda_sizer, 1, wx.EXPAND)
+        corner4_sizer.Add(corner4_crdb_sizer, 1, wx.EXPAND)
+        
+        corners_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        corners_sizer.Add(corner1_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner2_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner3_sizer, 1, wx.EXPAND)
+        corners_sizer.Add(corner4_sizer, 1, wx.EXPAND)
+        
+        turns_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        turns_sizer.Add(self.num_turns_label)
+        turns_sizer.Add(self.num_turns_input)
+        
+        cycles_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        cycles_sizer.Add(self.scan_cycles_label)
+        cycles_sizer.Add(self.scan_cycles_input)
+        
+        sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
+        sizer_7_copy_4.Add(turns_sizer, 1, wx.EXPAND)
+        sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
+        sizer_7_copy_4.Add(self.scan_repeat_input)
+        
+        scan_select_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_select_sizer.Add(self.coordsys_selector, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
+        
+        scan_button_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        scan_button_sizer.Add(self.preview_scan, 1, wx.EXPAND)
+        scan_button_sizer.Add(self.buttonScanStart, 1, wx.EXPAND)
+        scan_select_sizer.Add(scan_button_sizer, 1, wx.EXPAND)
+                
+        sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
+        sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
+        sizer_49.Add(scan_select_sizer, 1, wx.EXPAND)
+
+        sizer_42 = wx.BoxSizer(wx.VERTICAL)
+        sizer_42.Add(corners_sizer, 1, wx.EXPAND)
+        sizer_42.Add(sizer_49, 1, wx.EXPAND)
+        
+        notebookScanningPane.SetSizer(sizer_42)
+
+        return notebookScanningPane
+
+    def __create_options_pane(self):
+        notebookOptionsPane = wx.Panel(self.controlNotebook)
+        options_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        ##
+        # slew box
+        ##
+        
+        slew_box = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Slew Options")
+        slew_box_sizer = wx.StaticBoxSizer(slew_box, wx.VERTICAL)
+        
+        scan_speed_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Speed (deg/s): ")
+        self.scan_speed_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("slew", "speed"))
+        
+        scan_accel_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Accel (deg/s^2):")
+        self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("slew", "accel"))
+
+        slew_grid = wx.FlexGridSizer(4,2)
+        slew_grid.AddF(scan_speed_label, self.sizerFlags)
+        slew_grid.AddF(self.scan_speed_input, self.sizerFlags)
+
+        slew_grid.AddF(scan_accel_label, self.sizerFlags)
+        slew_grid.AddF(self.scan_accel_input, self.sizerFlags)
+
+        slew_box_sizer.Add(slew_grid)
+        options_sizer.Add(slew_box_sizer, 1, wx.EXPAND)
+        
+        ##
+        # observer box
+        ##
+        
+        obs_box = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Observer Options")
+        obs_box_sizer = wx.StaticBoxSizer(obs_box, wx.VERTICAL)
+        
+        obs_lon_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Longitude (deg): ")
+        self.obs_lon_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("location", "lon"))
+        
+        obs_lat_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Latitude (deg):")
+        self.obs_lat_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("location", "lat"))
+
+        obs_grid = wx.FlexGridSizer(4,2)
+        obs_grid.AddF(obs_lon_label, self.sizerFlags)
+        obs_grid.AddF(self.obs_lon_input, self.sizerFlags)
+
+        obs_grid.AddF(obs_lat_label, self.sizerFlags)
+        obs_grid.AddF(self.obs_lat_input, self.sizerFlags)
+
+        obs_box_sizer.Add(obs_grid)
+        options_sizer.Add(obs_box_sizer, 1, wx.EXPAND)
+        
+        notebookOptionsPane.SetSizer(options_sizer)
+
+        return notebookOptionsPane
+
+    def __create_graphPanel(self):
+        self.graphDisplayPanel   = wx.Panel(self)
+        self.graphPanelStaticbox = wx.StaticBox(self.graphDisplayPanel, wx.ID_ANY, "Graph")
+
+        graphPanelSizer = wx.StaticBoxSizer(self.graphPanelStaticbox, wx.HORIZONTAL)
+        self.graphDisplayPanel.SetSizer(graphPanelSizer)
+        
+        return self.graphDisplayPanel
+        
+    def __create_chart(self):
+        self.sky_panel = wx.Panel(self)
+        sky_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        # control bar
+        ctrl_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        self.chart_crdsys = wx.ComboBox(self.sky_panel, wx.ID_ANY,
+            choices=["Horizontal (Azimuth, Altitude)",
+                     "Equatorial (Right Asc, Declination)"],
+            style=wx.CB_DROPDOWN | wx.CB_READONLY)
+        self.chart_crdsys.SetSelection(0)
+        ctrl_sizer.Add(self.chart_crdsys, 1, wx.EXPAND)
+        
+        # create field of view display
+        fov_label = wx.StaticText(self.sky_panel, label="   Field of View: ")
+        ctrl_sizer.Add(fov_label)
+        self.chart_fov = wx.SpinCtrl(self.sky_panel, value="100", min=1, max=340)
+        ctrl_sizer.Add(self.chart_fov)
+        
+        # create OpenGL canvas
+        self.sky_chart = Chart(self.sky_panel, self.chart_fov,
+            self.converter, self.planets)
+        sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
+        sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
+        
+        self.sky_panel.SetSizer(sky_sizer)
+        return self.sky_panel
+
+    def __create_layout(self):
+        
+        print("Building header...")
+        headerSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        print("Building readout panel...")
+        headerSizer.Add(self.__create_readoutPanel(), proportion=1, flag=wx.EXPAND)
+        print("Building OpenGL sky chart display...")
+        headerSizer.Add(self.__create_chart(), proportion=2, flag=wx.EXPAND)
+        print("Building top-right controls...")
+        headerSizer.Add(self.__create_controls_sizer(), proportion=1, flag=wx.EXPAND)
+        
+        print("Building footer...")
+        footerSizer = wx.BoxSizer(wx.HORIZONTAL)
+    
+        self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
+        print("Building joy stick...")
+        self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
+        print("Building RA/DE controls...")
+        self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
+        print("Building targets panel...")
+        self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
+        print("Building simple scans panel...")
+        self.controlNotebook.AddPage(self.__create_simple_scans(), "Simple Scans")
+        print("Building standard scans panel...")
+        self.controlNotebook.AddPage(self.__create_scanning_pane(), "Scanning")
+        print("Building options panel...")
+        self.controlNotebook.AddPage(self.__create_options_pane(), "Options")
+        print("Building graph of output...")
+        footerSizer.Add(self.__create_graphPanel(), proportion=1, flag=wx.EXPAND)
+        footerSizer.Add(self.controlNotebook, proportion=2, flag=wx.EXPAND)
+        
+        print("Collecting all UI elements together...")
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        mainSizer.Add(headerSizer, proportion=1, flag=wx.EXPAND)
+        mainSizer.Add(footerSizer, proportion=1, flag=wx.EXPAND)
+        self.SetSizer(mainSizer)
+        mainSizer.Fit(self)
+        
+        print("Finalizing layout...")
+        self.Layout()
+        
 
 def main():		# Shut up pylinter
-	app = wx.App()
-	mainFrame = TelescopeControlFrame(None, -1, "")
-	app.SetTopWindow(mainFrame)
-	mainFrame.Show()
-	app.MainLoop()
+    app = wx.App()
+    mainFrame = TelescopeControlFrame(None, -1, "")
+    app.SetTopWindow(mainFrame)
+    mainFrame.Show()
+    app.MainLoop()
 
 
 if __name__ == "__main__":
-	main()
+    main()
 

@@ -57,6 +57,7 @@ class MyFrame(wx.Frame):
 		ipEntrySizer.Add(self.ipTextCtrl, 1, wx.ALL | wx.EXPAND, 3)
 
 		self.selectIpButton = wx.Button(self, -1, "Ok")
+		self.selectIpButton.SetDefault()
 		ipEntrySizer.Add(self.selectIpButton, 0, wx.ALL, 3)
 		self.selectIpButton.Bind(wx.EVT_BUTTON, self.evtIpEnter)
 
@@ -70,6 +71,8 @@ class MyFrame(wx.Frame):
 		statusSizer.Add(self.noticeText, 1, wx.ALL|wx.EXPAND, 5)
 
 		self.fakeGalilCheckbox = wx.CheckBox(self, style = wx.ALIGN_CENTRE, label = "Fake Galil")
+		self.fakeGalilCheckbox.SetValue(True)
+		globalConf.fakeGalil = self.fakeGalilCheckbox.IsChecked()
 		self.fakeGalilCheckbox.Bind(wx.EVT_CHECKBOX, self.changeFakeGalilState)
 		statusSizer.Add(self.fakeGalilCheckbox, 0, wx.ALL, 5)
 
