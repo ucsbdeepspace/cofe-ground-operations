@@ -64,6 +64,8 @@ class MainWindow(gui.TelescopeControlFrame):
     def bind_events(self):
         # By putting the event bindings here, it means I can clear out the event handlers from the parent class (gui.py)
         # without breaking it
+        self.Bind(wx.EVT_CLOSE, self.stop)
+        
         self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_all)
         self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_az)
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.buttton_az_motor)
@@ -130,11 +132,11 @@ class MainWindow(gui.TelescopeControlFrame):
     def stop(self, event):
         """This function is called whenever one of the stop
         buttons is pressed."""
-        if self.controller.stop:
+        if hasattr(self.controller, "stop"):
             self.controller.stop.set()
-        if self.hg_scan.stop:
+        if hasattr(self.hg_scan, "stop"):
             self.hg_scan.stop.set()
-        if self.zs_scan.stop:
+        if hasattr(self.zs_scan, "stop"):
             self.zs_scan.stop.set()
         stops = [(self.button_stop_all, None),
                 (self.button_stop_az, 0),
@@ -211,7 +213,7 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # run slew to object in new thread
         self.scan_thread = threading.Thread(target=lambda:
-            self.controller.goto(self.planets.hor_pos(
+            self.controller.track(self.planets.equ_pos(
                 self.planets.get_obj(self.sso_input.GetValue()))))
         self.scan_thread.start()
         
@@ -237,25 +239,20 @@ class MainWindow(gui.TelescopeControlFrame):
             self.logger.error("object does not exist: " + name)
             return
         
-        # convert to horizontal
-        az, el = self.converter.radec_to_azel(
-            math.radians(equ_pos[0]), math.radians(equ_pos[1]))
-        hor_pos = [math.degrees(az), math.degrees(el)]
-        
-        return hor_pos
+        return equ_pos
     
     # slew to an NGC/IC object
     def ngcic_goto (self, event):
         
         # get coordinates
-        hor_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+        equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
             + " " + str(self.ngcic_input.GetValue()))
-        if not hor_pos:
+        if not equ_pos:
             return # object not found
         
         # run slew to object in new thread
         self.scan_thread = threading.Thread(target=lambda:
-            self.controller.goto(hor_pos))
+            self.controller.track(equ_pos))
         self.scan_thread.start()
         
         self.cur_center_input.SetSelection(0) # center on current position
@@ -265,10 +262,15 @@ class MainWindow(gui.TelescopeControlFrame):
     def ngcic_sync (self, event):
         
         # get coordinates
-        hor_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+        equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
             + " " + str(self.ngcic_input.GetValue()))
-        if not hor_pos:
+        if not equ_pos:
             return # object not found
+        
+        # convert to horizontal
+        az, el = self.converter.radec_to_azel(
+            math.radians(equ_pos[0]), math.radians(equ_pos[1]))
+        hor_pos = [math.degrees(az), math.degrees(el)]
         
         # sync to object position
         self.controller.sync(hor_pos)

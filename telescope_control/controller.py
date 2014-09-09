@@ -241,7 +241,7 @@ class Controller:
             hor_pos = [math.degrees(azi), math.degrees(alt)]
             
             # compute motor velocities
-            speed = circle.distance(old_pos, hor_pos) / 0.100
+            speed = circle.distance(old_pos, hor_pos) # per 1 second
             bearing = circle.bearing(old_pos, hor_pos)
             speed_az = math.fabs(speed * math.cos(math.radians(bearing))) \
                 / (math.cos(math.radians(hor_pos[1])) + 0.01)
@@ -257,7 +257,7 @@ class Controller:
                 str(self.converter.az_to_encoder(hor_pos[0])) + "," +
                 str(self.converter.el_to_encoder(hor_pos[1])))
             
-            time.sleep(100) # wait 100 milliseconds to update again
+            time.sleep(1) # wait 1 second to update again
         
         # exit tracking mode
         self.galil.sendOnly("ST")
