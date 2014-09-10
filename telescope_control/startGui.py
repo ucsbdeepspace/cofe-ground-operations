@@ -195,10 +195,9 @@ class MainWindow(gui.TelescopeControlFrame):
         except:
             raise ValueError("Invalid step size.")
 
-        self.step_size = [self.converter.az_to_encoder(self.step_deg),
-                          self.converter.el_to_encoder(self.step_deg)]
-        print("Setting joystick step size to {} degrees, {} encoder counts.".
-            format(self.step_deg, self.step_size[0]))
+        self.step_size = \
+            {self.galil.axis_az : self.converter.az_to_encoder(self.step_deg),
+             self.galil.axis_el : self.converter.el_to_encoder(self.step_deg)}
         
 
     def move_rel(self, event):
@@ -206,26 +205,25 @@ class MainWindow(gui.TelescopeControlFrame):
 
         # This is caled when you click one of the arrow buttons
 
-        b_s_a = [(self.button_up, 1, string.uppercase.index(self.galil.axis_el)),
-                (self.button_down, -1, string.uppercase.index(self.galil.axis_el)),
-                (self.button_right, 1, string.uppercase.index(self.galil.axis_az)),
-                (self.button_left, -1, string.uppercase.index(self.galil.axis_az))]
+        b_s_a = [(self.button_up, 1, self.galil.axis_el),
+                (self.button_down, -1, self.galil.axis_el),
+                (self.button_right, 1, self.galil.axis_az),
+                (self.button_left, -1, self.galil.axis_az)]
 
         for button, sign, axis in b_s_a:
             if event.GetId() == button.GetId():
                 try:
                     self.logger.info("moving {} degrees on axis {}.".format(
                         sign * self.step_deg, axis))
-                    self.galil.moveRelative(axis, sign*self.step_size[axis])
+                    self.galil.sendOnly("PR" + axis + "=" +
+                        str(sign * self.step_size[axis]))
                 except AttributeError:
                     print("Can't move! No step size entered!")
                     print("To enter a step size, type a number of degrees in")
                     print("the box near the arrows, and press enter.")
                     traceback.print_exc()
-                except (Exception, error):
-                    print(error)
                 else:
-                    self.galil.beginMotion(axis)
+                    self.galil.sendOnly("BG " + axis)
                 break
         return
     
