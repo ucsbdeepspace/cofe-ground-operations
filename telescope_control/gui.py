@@ -177,7 +177,7 @@ class TelescopeControlFrame(wx.Frame):
         return controlButtonPanel
 
 
-    def __create_goto_ra_dec_staticbox(self, parentNotebook):
+    def __create_equ_goto (self, parentNotebook):
         staticBoxGotoRaDec = wx.StaticBox(parentNotebook, wx.ID_ANY, "Track Position")
         staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
         staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
@@ -201,13 +201,13 @@ class TelescopeControlFrame(wx.Frame):
 
         return baseSizer
 
-    def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
-        staticBoxRaDecCal = wx.StaticBox(parentNotebook, wx.ID_ANY, "Sync to Position")
-        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+    def __create_equ_sync (self, parent):
+        staticBoxRaDecCal = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
+        staticTextDecLabel = wx.StaticText(parent, wx.ID_ANY, "Dec:")
+        staticTextRaLabel = wx.StaticText(parent, wx.ID_ANY, "Ra: ")
 
-        self.sync_ra_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
-        self.sync_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.sync_ra_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.sync_de_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
 
         gridSizer = wx.FlexGridSizer(3, 2)
 
@@ -218,25 +218,12 @@ class TelescopeControlFrame(wx.Frame):
         gridSizer.AddF(self.sync_de_input, self.sizerFlags)
         
         gridSizer.Add([1,1])
+        self.sync_equ_input = wx.Button(parent, wx.ID_ANY, "Calibrate")
         gridSizer.Add(self.sync_equ_input, flag=wx.EXPAND)
         
         baseSizer = wx.StaticBoxSizer(staticBoxRaDecCal, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
         return baseSizer
-
-    def __create_ra_dec_pane(self):
-        notebookRaDecPane           = wx.Panel(self.controlNotebook)
-        self.sync_equ_input = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
-        
-        sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
-        sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-        sizerRaDecPanelUpper.Add(self.__create_ra_dec_calibrate_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
-        sizerRaDecPane = wx.BoxSizer(wx.VERTICAL)
-        sizerRaDecPane.Add(sizerRaDecPanelUpper, 1, wx.EXPAND)
-
-        notebookRaDecPane.SetSizer(sizerRaDecPane)
-        return notebookRaDecPane
 
     def __create_joystick_panel(self, parent):
         staticBoxRelativeMoveCtrl = wx.StaticBox(parent, wx.ID_ANY, "Relative Move")
@@ -330,6 +317,13 @@ class TelescopeControlFrame(wx.Frame):
     # list of targets to slew and sync to
     def __create_targets_pane (self):
         targets_panel = wx.Panel(self.controlNotebook)
+        overall_sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        equ_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        equ_sizer.Add(self.__create_equ_goto(targets_panel), 1, wx.EXPAND)
+        equ_sizer.Add(self.__create_equ_sync(targets_panel), 1, wx.EXPAND)
+        overall_sizer.Add(equ_sizer, 1, wx.EXPAND)
+        
         targets_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
         # box for solar system objects
@@ -381,8 +375,9 @@ class TelescopeControlFrame(wx.Frame):
         ngcic_box_sizer.Add(ngcic_buttons_sizer)
         
         targets_sizer.Add(ngcic_box_sizer, 1, wx.EXPAND)
+        overall_sizer.Add(targets_sizer, 1, wx.EXPAND)
         
-        targets_panel.SetSizer(targets_sizer)
+        targets_panel.SetSizer(overall_sizer)
         return targets_panel
     
     # simple scans: use the least motor movements between points
@@ -728,8 +723,6 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
         print("Building joy stick...")
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
-        print("Building RA/DE controls...")
-        self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "Equatorial")
         print("Building targets panel...")
         self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
         print("Building simple scans panel...")
