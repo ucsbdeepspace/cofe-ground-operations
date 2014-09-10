@@ -369,7 +369,7 @@ class MainWindow(gui.TelescopeControlFrame):
             self.controller.scan(points,
                 self.coordsys_selector.GetSelection() == 0 and
                     self.controller.process_hor or self.controller.process_equ,
-                self.scan_repeat_input.GetValue() and 1 or
+                self.scan_repeat_input.GetValue() or
                     float(self.scan_cycles_input.GetValue())))
                     
         self.scan_thread.start()

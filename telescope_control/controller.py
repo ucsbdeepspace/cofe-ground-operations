@@ -56,37 +56,56 @@ class Controller:
         while self.scan_queue > 0 and not self.stop.is_set():
             
             # process forward scan and wait until scan is complete
-            process_func(crd_list)
+            dist = process_func(crd_list)
             
-            # reverse direction and repeat, waiting until scan is complete
+            # quit if we only need to process one direction
+            if self.scan_queue <= 0.5 or self.stop.is_set():
+                break
+            
+            # reverse direction and repeat
             crd_list.reverse()
-            process_func(crd_list)
+            dist += process_func(crd_list)
             
-            # reset direction and prepare for next time
+            # reset direction again and prepare for next time
             crd_list.reverse()
             if str(repeat) != str(True):
                 self.scan_queue = self.scan_queue - 1
+            
+            # wait before repeating
+            time.sleep(dist / float(self.config.get("slew", "speed")))
         
         return 0
         
     # process_hor: process a list of horizontal coordinates to slew to
+    #
     #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
+    #
+    # -> length of scan (degrees)
     def process_hor (self, crd_list):
         
+        length = 0.0 # angular distance to move
         i = 0
+        
+        prev_pos = self.current_pos()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
-            self.goto(crd_list[i - 1])
+            length += circle.distance(prev_pos, crd_list[i])
+            self.goto(crd_list[i])
+            prev_pos = crd_list[i]
             i = i + 1
         
-        return 0
+        return length
     
     
     # process_equ: process a list of equatorial coordinates to slew to
+    #
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
+    #
+    # -> length of scan (degrees)
     def process_equ (self, crd_list):
         
+        length = 0.0 # angular distance to move
         i = 0
         
         # start with current motor position
@@ -122,7 +141,9 @@ class Controller:
                 
                 # not accurate enough, continue looping
                 dt0 = dt
-                
+            
+            length += delta # add current segment to scan length
+            
             # compute horizontal coordinates of equatorial coordinates after
             #  time dt has passed (the point where we should slew to)
             azi, alt = self.converter.radec_to_azel(
@@ -134,7 +155,7 @@ class Controller:
             prev_azi, prev_alt = azi, alt
             i = i + 1
         
-        return 0
+        return length
     
     
     # goto: slew to a particular coordinate from current position
