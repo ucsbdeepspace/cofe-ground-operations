@@ -4,6 +4,7 @@ except:
     import ConfigParser as configparser
 
 import math
+import string
 import sys
 import time
 import traceback
@@ -116,10 +117,9 @@ class MainWindow(gui.TelescopeControlFrame):
         azVal = self.converter.az_to_encoder(azPos)
         elVal = self.converter.el_to_encoder(elPos)
 
-        self.galil.moveAbsolute(0, azVal)
-        self.galil.moveAbsolute(1, elVal)
-
-        self.galil.beginMotion()
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" + azVal)
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" + elVal)
+        self.galil.sendOnly("BG")
 
     def goto(self, event):
         print("Event goto not implemented!")
@@ -174,32 +174,33 @@ class MainWindow(gui.TelescopeControlFrame):
         """This is called after you type a number nad press enter
         on the step size box next to the arrow buttons."""
         try:
-            degrees = float(self.step_size_input.GetValue())
+            self.step_deg = float(self.step_size_input.GetValue())
+            if math.isnan(self.step_deg):
+                raise Exception()
         except:
-            raise ValueError("You need to enter a step-size first!")
-        if math.isnan(degrees):
-            raise ValueError("NaN is not a valid step size. Nice try, though.")
+            raise ValueError("Invalid step size.")
 
-        self.step_size = [self.converter.az_to_encoder(degrees),
-                          self.converter.el_to_encoder(degrees)]
+        self.step_size = [self.converter.az_to_encoder(self.step_deg),
+                          self.converter.el_to_encoder(self.step_deg)]
         print("Setting joystick step size to {} degrees, {} encoder counts.".
-            format(degrees, self.step_size[0]))
+            format(self.step_deg, self.step_size[0]))
         
 
     def move_rel(self, event):
-        self.set_step_size(None)  # Force the GUI to read the input, so the user doesn't have to hit enter.
+        self.set_step_size(None)  # read step size
 
         # This is caled when you click one of the arrow buttons
 
-        b_s_a = [(self.button_up, 1, 1),
-                (self.button_down, -1, 1),
-                (self.button_right, 1, 0),
-                (self.button_left, -1, 0)]
+        b_s_a = [(self.button_up, 1, string.uppercase.index(self.galil.axis_el)),
+                (self.button_down, -1, string.uppercase.index(self.galil.axis_el)),
+                (self.button_right, 1, string.uppercase.index(self.galil.axis_az)),
+                (self.button_left, -1, string.uppercase.index(self.galil.axis_az))]
 
         for button, sign, axis in b_s_a:
             if event.GetId() == button.GetId():
                 try:
-                    print("Starting move of {} steps on axis {}.".format(sign*self.step_size[axis], axis))
+                    self.logger.info("moving {} degrees on axis {}.".format(
+                        sign * self.step_deg, axis))
                     self.galil.moveRelative(axis, sign*self.step_size[axis])
                 except AttributeError:
                     print("Can't move! No step size entered!")
