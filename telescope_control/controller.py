@@ -259,9 +259,9 @@ class Controller:
             
             # adjust motor speed
             self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                str(self.converter.az_to_encoder(speed_az)))
+                str(max(1, self.converter.az_to_encoder(speed_az))))
             self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
-                str(self.converter.el_to_encoder(speed_el)))
+                str(max(1, self.converter.el_to_encoder(speed_el))))
             
             # move to new position
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
