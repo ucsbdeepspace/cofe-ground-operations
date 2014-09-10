@@ -68,7 +68,7 @@ class TelescopeControlFrame(wx.Frame):
         self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
         self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
 
-        self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
+        self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (no data received)")
 
         textItems = [self.label_az_status,     self.az_status,
                     self.label_el_status,      self.el_status,
@@ -317,14 +317,14 @@ class TelescopeControlFrame(wx.Frame):
     # list of targets to slew and sync to
     def __create_targets_pane (self):
         targets_panel = wx.Panel(self.controlNotebook)
-        overall_sizer = wx.BoxSizer(wx.VERTICAL)
+        overall_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        equ_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        equ_sizer = wx.BoxSizer(wx.VERTICAL)
         equ_sizer.Add(self.__create_equ_goto(targets_panel), 1, wx.EXPAND)
         equ_sizer.Add(self.__create_equ_sync(targets_panel), 1, wx.EXPAND)
         overall_sizer.Add(equ_sizer, 1, wx.EXPAND)
         
-        targets_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        targets_sizer = wx.BoxSizer(wx.VERTICAL)
         
         # box for solar system objects
         sso_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Solar System Objects")
