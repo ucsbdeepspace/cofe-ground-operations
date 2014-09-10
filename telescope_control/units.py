@@ -31,10 +31,8 @@ class Units:
         s = ((val - d)*60.0 - m)*60.0
         return "{}:{}:{:2.1f}".format(d, m, abs(s))
 
-    def azel_to_radec(self, az, el):
-        """az and el must be human readable string like 'h:m:s' or  floats
-        in radians"""
-        o = self.get_obs()
+    def azel_to_radec(self, az, el, dt=0):
+        o = self.get_obs(dt)
         
         return  o.radec_of(az, el)
 
@@ -71,6 +69,7 @@ class Units:
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
         obs.date = (d+h).format(t = gmtime(time() + dt))
+        obs.pressure = 0
         
         return obs
     
