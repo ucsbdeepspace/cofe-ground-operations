@@ -14,7 +14,17 @@ class Units:
         return self.__to_encoder("el", counts)
 
     def __to_encoder(self, flag, counts):
-        return int(float(self.c.get("encoders", flag))/360.0 * counts)
+        enc = float(self.c.get("encoders", flag))/360.0 * counts
+        
+        # rounding
+        if enc - int(enc) >= 0.5:
+            enc = int(enc) + 1 # round up for positive numbers
+        elif enc - int(enc) <= -0.5:
+            enc = int(enc) - 1 # round down for negative numbers
+        else: # no rounding
+            enc = int(enc)
+        
+        return enc
     
     def encoder_to_az(self, counts):
         return self.__from_encoder("az", counts)
