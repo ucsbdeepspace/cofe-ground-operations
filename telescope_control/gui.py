@@ -178,13 +178,13 @@ class TelescopeControlFrame(wx.Frame):
 
 
     def __create_goto_ra_dec_staticbox(self, parentNotebook):
-        staticBoxGotoRaDec = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
+        staticBoxGotoRaDec = wx.StaticBox(parentNotebook, wx.ID_ANY, "Track Position")
         staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
         staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
 
         self.goto_ra_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
         self.goto_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
-        self.goto_equ_input = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
+        self.goto_equ_input = wx.Button(parentNotebook, wx.ID_ANY, "Start Tracking")
 
         gridSizer = wx.FlexGridSizer(3, 2)
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
@@ -313,38 +313,18 @@ class TelescopeControlFrame(wx.Frame):
 
         return baseSizer
 
-    def __create_index_button_pane(self, parent):
-        axesIndexButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Index")
-        self.button_index_az      = wx.Button(parent, wx.ID_ANY, "Azimuth Axis")
-        self.button_index_el      = wx.Button(parent, wx.ID_ANY, "Elevation Axis")
-
-        baseSizer = wx.StaticBoxSizer(axesIndexButtonsStaticBox, wx.VERTICAL)
-        baseSizer.Add(self.button_index_az, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-        baseSizer.Add(self.button_index_el, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-
-        return baseSizer
-
-
     def __create_joystick_pane(self):
         notebookJoystickPane = wx.Panel(self.controlNotebook)
-
-        # The FlexGridSizer seems to have better rezise behavour when compressed then the 
-        # plain GridSizer. Not sure why. 
-        # Anyways, As such, I'm using a FlexGridSizer with all cells set to growable
-        gridSizer = wx.FlexGridSizer(2,2)
-        gridSizer.AddGrowableCol(0)
-        gridSizer.AddGrowableCol(1)
-        gridSizer.AddGrowableRow(0)
-        gridSizer.AddGrowableRow(1)
-
-        gridSizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
-        gridSizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
         
-        gridSizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
-        gridSizer.Add(self.__create_index_button_pane(notebookJoystickPane), 1, wx.EXPAND)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
         
-        notebookJoystickPane.SetSizer(gridSizer)
-
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+        v_sizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
+        v_sizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
+        h_sizer.Add(v_sizer, 1, wx.EXPAND)
+        
+        notebookJoystickPane.SetSizer(h_sizer)
         return notebookJoystickPane
 
     # list of targets to slew and sync to
@@ -749,7 +729,7 @@ class TelescopeControlFrame(wx.Frame):
         print("Building joy stick...")
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
         print("Building RA/DE controls...")
-        self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
+        self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "Equatorial")
         print("Building targets panel...")
         self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
         print("Building simple scans panel...")
