@@ -178,60 +178,27 @@ class TelescopeControlFrame(wx.Frame):
 
 
     def __create_goto_ra_dec_staticbox(self, parentNotebook):
-        staticBoxGotoRaDec               = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
-        staticTextRaLabel                = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-        staticTextDecLabel               = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
+        staticBoxGotoRaDec = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
+        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
 
-        self.textCtrlGotoRightAscension  = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlGotoDeclination     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.buttonGotoPosition          = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
+        self.goto_ra_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.goto_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.goto_equ_input = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
 
         gridSizer = wx.FlexGridSizer(3, 2)
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlGotoRightAscension, self.sizerFlags)
+        gridSizer.AddF(self.goto_ra_input, self.sizerFlags)
 
         gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlGotoDeclination, self.sizerFlags)
+        gridSizer.AddF(self.goto_de_input, self.sizerFlags)
         
         gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonGotoPosition, flag=wx.EXPAND)
+        gridSizer.Add(self.goto_equ_input, flag=wx.EXPAND)
 
         baseSizer = wx.StaticBoxSizer(staticBoxGotoRaDec, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
 
-        return baseSizer
-
-
-    def __create_ra_dec_tracking_staticbox(self, parentNotebook):
-        staticBoxRaDecTracking              = wx.StaticBox(parentNotebook, wx.ID_ANY, "Ra/Dec Tracking")
-        staticTextDecLabel                  = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-        staticTextRaLabel                   = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-
-        self.textCtrlTrackingRightAscension = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlTrackingDeclination    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-
-        gridSizer = wx.FlexGridSizer(3, 4)
-        gridSizer.AddGrowableCol(2, proportion=1)
-
-        gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlTrackingRightAscension, self.sizerFlags)
-        gridSizer.Add([1,1])
-        gridSizer.Add([1,1])
-
-        gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlTrackingDeclination, self.sizerFlags)
-        gridSizer.Add([1,1])
-        gridSizer.Add([1,1])
-
-        # This is a bit hacky
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonTrackPosition, flag=wx.EXPAND)
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonTrackingToggle)
-
-
-        baseSizer = wx.StaticBoxSizer(staticBoxRaDecTracking, wx.VERTICAL)
-        baseSizer.Add(gridSizer, 1, wx.EXPAND)
         return baseSizer
 
     def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
@@ -239,19 +206,19 @@ class TelescopeControlFrame(wx.Frame):
         staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
         staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
 
-        self.textCtrlRightAscensionCalInput = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlDeclinationCalInput    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.sync_ra_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.sync_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
 
         gridSizer = wx.FlexGridSizer(3, 2)
 
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlRightAscensionCalInput, self.sizerFlags)
+        gridSizer.AddF(self.sync_ra_input, self.sizerFlags)
 
         gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlDeclinationCalInput, self.sizerFlags)
+        gridSizer.AddF(self.sync_de_input, self.sizerFlags)
         
         gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonDoRaDecCalibrate, flag=wx.EXPAND)
+        gridSizer.Add(self.sync_equ_input, flag=wx.EXPAND)
         
         baseSizer = wx.StaticBoxSizer(staticBoxRaDecCal, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
@@ -259,9 +226,7 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_ra_dec_pane(self):
         notebookRaDecPane           = wx.Panel(self.controlNotebook)
-        self.buttonDoRaDecCalibrate = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
-        self.buttonTrackPosition    = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
-        self.buttonTrackingToggle   = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
+        self.sync_equ_input = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
         
         sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
         sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
@@ -269,8 +234,6 @@ class TelescopeControlFrame(wx.Frame):
 
         sizerRaDecPane = wx.BoxSizer(wx.VERTICAL)
         sizerRaDecPane.Add(sizerRaDecPanelUpper, 1, wx.EXPAND)
-        sizerRaDecPane.Add(self.__create_ra_dec_tracking_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
 
         notebookRaDecPane.SetSizer(sizerRaDecPane)
         return notebookRaDecPane
@@ -311,20 +274,18 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_az_el_calibrate_panel(self, parent):
         calibrateStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
-        azLabel                 = wx.StaticText(parent, wx.ID_ANY, "Azimuth:")
-        elLabel                 = wx.StaticText(parent, wx.ID_ANY, "Altitude:")
-        self.calibrate_az_input = wx.TextCtrl(parent, wx.ID_ANY, "")
-        self.calibrate_el_input = wx.TextCtrl(parent, wx.ID_ANY, "")
+        self.sync_az_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.sync_el_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
 
-        self.button_calibrate           = wx.Button(parent, wx.ID_ANY, "Calibrate")
+        self.sync_hor_input = wx.Button(parent, wx.ID_ANY, "Calibrate")
         
         gridSizer = wx.FlexGridSizer(3,2)
-        gridSizer.AddF(azLabel, self.sizerFlags)
-        gridSizer.AddF(self.calibrate_az_input, self.sizerFlags)
-        gridSizer.AddF(elLabel, self.sizerFlags)
-        gridSizer.AddF(self.calibrate_el_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth:"), self.sizerFlags)
+        gridSizer.AddF(self.sync_az_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude:"), self.sizerFlags)
+        gridSizer.AddF(self.sync_el_input, self.sizerFlags)
         gridSizer.Add([1,1])
-        gridSizer.AddF(self.button_calibrate, self.sizerFlags)
+        gridSizer.AddF(self.sync_hor_input, self.sizerFlags)
 
         baseSizer = wx.StaticBoxSizer(calibrateStaticBox, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
@@ -333,20 +294,18 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_absolute_move_pane(self, parent):
 
-        absoluteMoveStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
-        azLabel                    = wx.StaticText(parent, wx.ID_ANY, "Az:")
-        elLabel                    = wx.StaticText(parent, wx.ID_ANY, "El:")
-        self.absolute_move_ctrl_az = wx.TextCtrl(parent, wx.ID_ANY, "0")
-        self.absolute_move_ctrl_el = wx.TextCtrl(parent, wx.ID_ANY, "0")
-        self.button_start_move     = wx.Button(parent, wx.ID_ANY, "Start Move")
+        absoluteMoveStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Move to Position")
+        self.goto_az_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.goto_el_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.goto_hor_input = wx.Button(parent, wx.ID_ANY, "Start Move")
 
         gridSizer = wx.FlexGridSizer(3,2)
-        gridSizer.AddF(azLabel, self.sizerFlags)
-        gridSizer.AddF(self.absolute_move_ctrl_az, self.sizerFlags)
-        gridSizer.AddF(elLabel, self.sizerFlags)
-        gridSizer.AddF(self.absolute_move_ctrl_el, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth: "), self.sizerFlags)
+        gridSizer.AddF(self.goto_az_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude: "), self.sizerFlags)
+        gridSizer.AddF(self.goto_el_input, self.sizerFlags)
         gridSizer.Add([1,1])
-        gridSizer.AddF(self.button_start_move, self.sizerFlags)
+        gridSizer.AddF(self.goto_hor_input, self.sizerFlags)
 
 
         baseSizer = wx.StaticBoxSizer(absoluteMoveStaticBox, wx.VERTICAL)

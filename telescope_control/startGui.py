@@ -82,11 +82,11 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_right)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_down)
-        self.Bind(wx.EVT_BUTTON, self.move_abs, self.button_start_move)
         
-        self.Bind(wx.EVT_BUTTON, self.goto, self.buttonGotoPosition)
-        self.Bind(wx.EVT_BUTTON, self.calibrate, self.buttonDoRaDecCalibrate)
-        self.Bind(wx.EVT_BUTTON, self.track_radec, self.buttonTrackPosition)
+        self.Bind(wx.EVT_BUTTON, self.goto_hor, self.goto_hor_input)
+        self.Bind(wx.EVT_BUTTON, self.sync_hor, self.sync_hor_input)
+        self.Bind(wx.EVT_BUTTON, self.goto_equ, self.goto_equ_input)
+        self.Bind(wx.EVT_BUTTON, self.sync_equ, self.sync_equ_input)
         
         self.Bind(wx.EVT_BUTTON, self.sso_goto, self.sso_goto_input)
         self.Bind(wx.EVT_BUTTON, self.sso_sync, self.sso_sync_input)
@@ -111,27 +111,38 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_TEXT, self.change_lat, self.obs_lat_input)
         
 
-    def move_abs(self, event):
-        azPos = float(self.absolute_move_ctrl_az.GetValue())
-        elPos = float(self.absolute_move_ctrl_el.GetValue())
+    def goto_hor (self, event):
+        azPos = float(self.goto_az_input.GetValue())
+        elPos = float(self.goto_el_input.GetValue())
         azVal = self.converter.az_to_encoder(azPos)
         elVal = self.converter.el_to_encoder(elPos)
 
-        self.galil.sendOnly("PA" + self.galil.axis_az + "=" + azVal)
-        self.galil.sendOnly("PA" + self.galil.axis_el + "=" + elVal)
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" + str(azVal))
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" + str(elVal))
         self.galil.sendOnly("BG")
-
-    def goto(self, event):
-        print("Event goto not implemented!")
-
-    def calibrate (self, event):
-        self.controller.sync(float(self.calibrate_az_input.GetValue()),
-                             float(self.calibrate_el_input.GetValue()))
+        
+        event.Skip()
+        
+    def sync_hor (self, event):
+        self.controller.sync([float(self.sync_az_input.GetValue()),
+                              float(self.sync_el_input.GetValue())])
         event.Skip()
 
-    def track_radec(self, event):
-        print("Event track_radec not implemented!")
+    def goto_equ(self, event):
+        # track given equatorial position
+        self.controller.track([float(self.goto_ra_input.GetValue()),
+                               float(self.goto_de_input.GetValue())])
+        event.Skip()
 
+    def sync_equ (self, event):
+        # convert to horizontal
+        az, el = self.converter.radec_to_azel(
+            math.radians(float(self.sync_ra_input.GetValue())),
+            math.radians(float(self.sync_de_input.GetValue())))
+        hor_pos = [math.degrees(az), math.degrees(el)]
+        
+        self.controller.sync(hor_pos)
+        event.Skip()
 
     def stop(self, event):
         """This function is called whenever one of the stop
