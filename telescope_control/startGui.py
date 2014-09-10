@@ -146,6 +146,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 print("Stopping motor for axis {}".format("ALL" if axis is None else axis))
                 self.galil.endMotion(axis)
                 break
+        time.sleep(1.01) # provide enough time for any scan loops to exit
         event.Skip()
 
     def toggle_motor_state(self, event):
@@ -210,6 +211,7 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # slew to a solar system object
     def sso_goto (self, event):
+        self.stop(event)
         
         # run slew to object in new thread
         self.scan_thread = threading.Thread(target=lambda:
@@ -243,6 +245,7 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # slew to an NGC/IC object
     def ngcic_goto (self, event):
+        self.stop(event)
         
         # get coordinates
         equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
