@@ -174,11 +174,11 @@ class Controller:
             sp_el = d_el / delta * speed
             
             # smoothly transition to new state
-            self.galil.sendOnly("PVA=" + # azimuth
+            self.galil.sendOnly("PV" + self.galil.axis_az + "=" + # azimuth
                 str(self.converter.az_to_encoder(d_az)) + "," +
                 str(self.converter.az_to_encoder(sp_az)) + "," +
                 str(int(tm_st)))
-            self.galil.sendOnly("PVB=" + # altitude
+            self.galil.sendOnly("PV" + self.galil.axis_el + "=" + # altitude
                 str(self.converter.el_to_encoder(d_el)) + "," +
                 str(self.converter.el_to_encoder(sp_el)) + "," +
                 str(int(tm_st)))
@@ -189,10 +189,11 @@ class Controller:
         self.galil.sendOnly("AM") # stall until motion is complete
         
         # move to final position
-        self.galil.sendOnly("PA " +
-            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(hor_pos[0])))
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
-        self.galil.beginMotion()
+        self.galil.sendOnly("BG")
         self.galil.sendOnly("AM") # stall until motion is complete
         
         return 0
@@ -209,23 +210,28 @@ class Controller:
         self.stop = threading.Event()
         
         # move to initial position quickly
-        self.galil.sendOnly("SP " +
-            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))) + "," + \
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(float(self.config.get("slew", "speed")))))
-        accel_str = \
-            str(self.converter.az_to_encoder(float(self.config.get("slew", "accel")))) + "," + \
-            str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
-        self.galil.sendOnly("AC " + accel_str)
-        self.galil.sendOnly("DC " + accel_str)
+        # TODO: set speed as combined speed of both axes
+        
+        accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
+        accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
+        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + accel_el)
+        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + accel_el)
         
         azi, alt = self.converter.radec_to_azel(
             math.radians(equ_pos[0]), math.radians(equ_pos[1]))
         hor_pos = [math.degrees(azi), math.degrees(alt)]
         
-        self.galil.sendOnly("PA " +
-            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(hor_pos[0])))
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
-        self.galil.beginMotion()
+        self.galil.sendOnly("BG")
         self.galil.sendOnly("AM") # stall until motion is complete
         
         # enable tracking mode
@@ -248,13 +254,15 @@ class Controller:
             speed_el = math.fabs(speed * math.sin(math.radians(bearing)))
             
             # adjust motor speed
-            self.galil.sendOnly("SP " +
-                str(self.converter.az_to_encoder(speed_az)) + "," + \
+            self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                str(self.converter.az_to_encoder(speed_az)))
+            self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
                 str(self.converter.el_to_encoder(speed_el)))
             
             # move to new position
-            self.galil.sendOnly("PA " +
-                str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+            self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+                str(self.converter.az_to_encoder(hor_pos[0])))
+            self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
                 str(self.converter.el_to_encoder(hor_pos[1])))
             
             time.sleep(1) # wait 1 second to update again
@@ -268,6 +276,7 @@ class Controller:
     def sync (self, hor_pos):
         
         # define current position as the given position
-        self.galil.sendOnly("DP " +
-            str(self.converter.az_to_encoder(hor_pos[0])) + "," +
+        self.galil.sendOnly("DP" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(hor_pos[0])))
+        self.galil.sendOnly("DP" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))

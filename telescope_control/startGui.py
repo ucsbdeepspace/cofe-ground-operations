@@ -27,6 +27,11 @@ class MainWindow(gui.TelescopeControlFrame):
         print("Loading configuration...")
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
+        self.galil = galilInterface
+        
+        # axes
+        self.galil.axis_az = self.config.get("axes", "az")
+        self.galil.axis_el = self.config.get("axes", "el")
         
         print("Setting up units converter...")
         self.converter = units.Units(self.config) # ...and the converter...
@@ -35,7 +40,6 @@ class MainWindow(gui.TelescopeControlFrame):
             *args, **kwargs)
         
         self.poll_update = wx.Timer(self)
-        self.galil = galilInterface
         self.scan_thread = None
         self.step_size = 0
         
