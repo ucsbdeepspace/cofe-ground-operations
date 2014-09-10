@@ -338,6 +338,7 @@ class MainWindow(gui.TelescopeControlFrame):
     # scan button clicked
     def scan (self, event):
         points = self.set_preview(event)
+        self.stop(event)
         
         # run scan in new thread
         self.scan_thread = threading.Thread(target=lambda:
@@ -353,6 +354,7 @@ class MainWindow(gui.TelescopeControlFrame):
     # execute a horizontal graticule scan
     def horiz_scan (self, event):
         self.hg_preview(event)
+        self.stop(event)
         
         self.scan_thread = threading.Thread(target=lambda:
             self.hg_scan.scan(
@@ -395,6 +397,7 @@ class MainWindow(gui.TelescopeControlFrame):
     # execute a zenith spiral scan
     def zenith_scan (self, event):
         self.zs_preview(event)
+        self.stop(event)
         
         self.scan_thread = threading.Thread(target=lambda:
             self.zs_scan.scan(
