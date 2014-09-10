@@ -25,7 +25,7 @@ class Controller:
         azimuth = ephem.degrees(self.converter.encoder_to_az(pos_enc[0]))
         altitude = ephem.degrees(self.converter.encoder_to_el(pos_enc[1]))
         
-        return azimuth, altitude
+        return math.degrees(azimuth), math.degrees(altitude)
     
     
     # scan: generic scan function
