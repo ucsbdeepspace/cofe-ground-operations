@@ -224,6 +224,9 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # set current position as position of solar system object
     def sso_sync (self, event):
+        self.stop(event)
+        
+        # get coordinates
         hor_pos = self.planets.hor_pos(
             self.planets.get_obj(self.sso_input.GetValue()))
         self.controller.sync(hor_pos)
@@ -263,6 +266,7 @@ class MainWindow(gui.TelescopeControlFrame):
     
     # set current position as position of NGC/IC object
     def ngcic_sync (self, event):
+        self.stop(event)
         
         # get coordinates
         equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()

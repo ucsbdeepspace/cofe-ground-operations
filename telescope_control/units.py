@@ -27,26 +27,19 @@ class Units:
 
     def __str_degrees(self, val):
         d = int(val)
-        m = int((val - d)/60.)
-        s = ((val - d)/60. - m)/60.
-        return "{}:{}:{:2.2f}".format(d, m, abs(s))
+        m = int((val - d)*60.0)
+        s = ((val - d)*60.0 - m)*60.0
+        return "{}:{}:{:2.1f}".format(d, m, abs(s))
 
     def azel_to_radec(self, az, el):
         """az and el must be human readable string like 'h:m:s' or  floats
         in radians"""
-        o = ephem.Observer()
-        o.lat = math.radians(float(self.c.get("location", "lat")))
-        o.lon = math.radians(float(self.c.get("location", "lon")))
-        o.pressure = 0
+        o = self.get_obs()
+        
         return  o.radec_of(az, el)
 
     def radec_to_azel(self, ra, dec, dt=0):
-        telescope = ephem.Observer()
-        telescope.lat = math.radians(float(self.c.get("location", "lat")))
-        telescope.lon = math.radians(float(self.c.get("location", "lon")))
-        d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
-        h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-        telescope.date = (d+h).format(t = gmtime(time() + dt))
+        telescope = self.get_obs(dt)
 
         star = ephem.FixedBody()
         star._ra = ephem.hours(ra)
@@ -71,13 +64,13 @@ class Units:
         return "{t.tm_hour}:{t.tm_min}:{t.tm_sec}".format(t=gmtime())
     
     # get ephem.Observer object
-    def get_obs (self):
+    def get_obs (self, dt=0):
         obs = ephem.Observer()
         obs.lat = math.radians(float(self.c.get("location", "lat")))
         obs.lon = math.radians(float(self.c.get("location", "lon")))
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-        obs.date = (d+h).format(t = gmtime(time()))
+        obs.date = (d+h).format(t = gmtime(time() + dt))
         
         return obs
     
