@@ -130,8 +130,12 @@ class MainWindow(gui.TelescopeControlFrame):
 
     def goto_equ(self, event):
         # track given equatorial position
-        self.controller.track([float(self.goto_ra_input.GetValue()),
-                               float(self.goto_de_input.GetValue())])
+        equ_pos = [float(self.goto_ra_input.GetValue()),
+                   float(self.goto_de_input.GetValue())]
+        self.scan_thread = threading.Thread(target=lambda:
+            self.controller.track(equ_pos))
+        self.scan_thread.start() # run in new thread
+        
         event.Skip()
 
     def sync_equ (self, event):
