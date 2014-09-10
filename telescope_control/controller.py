@@ -4,6 +4,7 @@
 import circle
 import ephem
 import math
+import string
 import time
 import threading
 
@@ -22,8 +23,11 @@ class Controller:
     # -> azimuth, altitude
     def current_pos (self):
         pos_enc = list(self.galil.pos)
-        azimuth = ephem.degrees(self.converter.encoder_to_az(pos_enc[0]))
-        altitude = ephem.degrees(self.converter.encoder_to_el(pos_enc[1]))
+        
+        azimuth = ephem.degrees(self.converter.encoder_to_az(
+            pos_enc[string.uppercase.index(self.galil.axis_az)]))
+        altitude = ephem.degrees(self.converter.encoder_to_el(
+            pos_enc[string.uppercase.index(self.galil.axis_el)]))
         
         return math.degrees(azimuth), math.degrees(altitude)
     
