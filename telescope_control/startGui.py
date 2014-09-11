@@ -440,9 +440,18 @@ class MainWindow(gui.TelescopeControlFrame):
             float(self.zs_inc_input.GetValue()))
         
         self.sky_chart.given_equ = False
-        self.sky_chart.scan_center = \
-            [float(self.zst_azimuth_input.GetValue()),
-             0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
+        
+        # center circular scan at the starting point
+        if -1e-5 <= float(self.zs_inc_input.GetValue()) <= 1e-5:
+            self.sky_chart.scan_center = \
+                [float(self.zst_azimuth_input.GetValue()),
+                 float(self.zst_altitude_input.GetValue())]
+        
+        # center spiral scans halfway between starting point and zenith
+        else:
+            self.sky_chart.scan_center = \
+                [float(self.zst_azimuth_input.GetValue()),
+                0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
         
         self.cur_center_input.SetSelection(1) # center on scan
         self.change_cen(event)
