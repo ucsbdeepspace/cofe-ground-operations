@@ -73,8 +73,9 @@ class Scan:
             
             while self.scan_queue > 0 and not self.stop.is_set():
                 # move azimuth motor 360 degrees
-                self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
-                    str(self.converter.az_to_encoder(start_pt[0] + angle)))
+                self.galil.sendOnly("PR" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(angle)))
+                self.galil.sendOnly("BG " + self.galil.axis_az)
                     
                 # reset position
                 self.galil.sendOnly("AM")
@@ -122,7 +123,7 @@ class Scan:
         # no increment, stay on same level
         if math.fabs(increment) <= 1e-5:
             for i in range (0, 361):
-                point_list.append([float(i), start_pt[0]])
+                point_list.append([float(i), start_pt[1]])
             return point_list
         
         # positive increment: approach zenith in ccw spiral
