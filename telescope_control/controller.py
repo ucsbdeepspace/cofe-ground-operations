@@ -260,7 +260,7 @@ class Controller:
         self.galil.sendOnly("AM") # stall until motion is complete
         
         # enable tracking mode
-        self.galil.sendOnly("PT 1,1")
+        self.galil.sendOnly("PT 1,1,1,1")
         
         # slew to equatorial coordinate and loop until self.stop is set
         while not self.stop.is_set():
@@ -280,9 +280,9 @@ class Controller:
             
             # adjust motor speed
             self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                str(max(1, self.converter.az_to_encoder(speed_az))))
+                str(max(10, self.converter.az_to_encoder(speed_az))))
             self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
-                str(max(1, self.converter.el_to_encoder(speed_el))))
+                str(max(10, self.converter.el_to_encoder(speed_el))))
             
             # move to new position
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +

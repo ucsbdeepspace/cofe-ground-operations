@@ -173,15 +173,15 @@ class MainWindow(gui.TelescopeControlFrame):
         motor on/motor off buttons. I think it would be nifty
         to add something to change the size/color/font of the 
         button text here. It would help alot."""
-        axis = 0
+        axis = self.galil.axis_az
         if event.GetId() == self.button_el_motor.GetId():
-            axis = 1
-        if self.galil.checkMotorPower(axis):
+            axis = self.galil.axis_el
+        if self.galil.checkMotorPower(string.uppercase.index(axis)):
             print("Turning off motor for axis {}.".format(axis))
-            self.galil.motorOff(axis)
+            self.galil.sendOnly("MO " + axis)
         else:
             print("Turning on motor for axis {}.".format(axis))
-            self.galil.motorOn(axis)
+            self.galil.sendOnly("SH " + axis)
         print('')
         event.Skip()
 
@@ -531,7 +531,9 @@ class MainWindow(gui.TelescopeControlFrame):
         if not self.galil:  # Short circuit in test-mode
             return
 
-        data = list(self.galil.pos)
+        raw_data = list(self.galil.pos)
+        data = [raw_data[string.uppercase.index(self.galil.axis_az)],
+                raw_data[string.uppercase.index(self.galil.axis_el)]]
         
         az = self.converter.encoder_to_az(data[0])
         el = self.converter.encoder_to_el(data[1])
@@ -550,20 +552,23 @@ class MainWindow(gui.TelescopeControlFrame):
                 (self.lst_status,    "",    self.converter.lst() ),
                 (self.utc_status,    "",    self.converter.utc() )]
 
-
         for widget, prefix, datum in data:
             widget.SetLabel(prefix + str(datum))
-
 
         if self.galil.udpPackets:
             self.packet_num.SetLabel("Received Galil\nData-Records: %d" % self.galil.udpPackets)
 
-        motStateLabels = [self.azMotorPowerStateLabel, self.elMotorPowerStateLabel]
-        for x in range(2):
-            if self.galil.motOn[x]:
-                motStateLabels[x].SetLabel("Motor On")
-            else:
-                motStateLabels[x].SetLabel("Motor Off")
+        # azimuth motor
+        if self.galil.motOn[string.uppercase.index(self.galil.axis_az)]:
+            self.azMotorPowerStateLabel.SetLabel("Motor On")
+        else:
+            self.azMotorPowerStateLabel.SetLabel("Motor Off")
+            
+        # altitude motor
+        if self.galil.motOn[string.uppercase.index(self.galil.axis_el)]:
+            self.elMotorPowerStateLabel.SetLabel("Motor On")
+        else:
+            self.elMotorPowerStateLabel.SetLabel("Motor Off")
 
         event.Skip()
         return
