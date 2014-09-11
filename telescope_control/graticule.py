@@ -35,10 +35,9 @@ class Scan:
             self.scan_queue = repeat
         
         # set speed and acceleration
-        self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))))
-        self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
-            str(self.converter.el_to_encoder(float(self.config.get("slew", "speed")))))
+        speed = self.converter.az_to_encoder(float(self.config.get("slew", "speed")))
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed))
         
         accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
         accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
@@ -70,6 +69,8 @@ class Scan:
                 self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # increase azimuth until right_az
+                self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                    str(speed / (0.01 + math.cos(math.radians(alt1)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(right_az)))
                 self.galil.sendOnly("BG")
@@ -84,6 +85,8 @@ class Scan:
                 self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # decrease azimuth until we're back at left_az
+                self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                    str(speed / (0.01 + math.cos(math.radians(alt2)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(left_az)))
                 self.galil.sendOnly("BG")
@@ -96,6 +99,8 @@ class Scan:
             self.galil.sendOnly("AM") # stall until motion is complete
             
             # increase azimuth to right_az
+            self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                str(speed / (0.01 + math.cos(math.radians(high_el)))))
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                 str(self.converter.el_to_encoder(right_az)))
             self.galil.sendOnly("BG")
@@ -118,6 +123,8 @@ class Scan:
                 self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # decrease azimuth until left_az
+                self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                    str(speed / (0.01 + math.cos(math.radians(alt1)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(left_az)))
                 self.galil.sendOnly("BG")
@@ -132,6 +139,8 @@ class Scan:
                 self.galil.sendOnly("AM") # stall until motion is complete
                 
                 # increase azimuth until we're back at right_az
+                self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                    str(speed / (0.01 + math.cos(math.radians(alt2)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(right_az)))
                 self.galil.sendOnly("BG")
@@ -144,6 +153,8 @@ class Scan:
             self.galil.sendOnly("AM") # stall until motion is complete
             
             # decrease azimuth to left_az
+            self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
+                str(speed / (0.01 + math.cos(math.radians(low_el)))))
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                 str(self.converter.el_to_encoder(left_az)))
             self.galil.sendOnly("BG")
