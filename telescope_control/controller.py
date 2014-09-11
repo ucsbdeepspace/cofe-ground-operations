@@ -86,13 +86,13 @@ class Controller:
         length = 0.0 # angular distance to move
         i = 0
         
-        prev_pos = self.current_pos()
+        prev_pt = self.current_pos()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
-            length += circle.distance(prev_pos, crd_list[i])
-            self.goto(crd_list[i])
-            prev_pos = crd_list[i]
+            length += circle.distance(prev_pt, crd_list[i])
+            self.goto(crd_list[i], begin=prev_pt)
+            prev_pt = crd_list[i]
             i = i + 1
         
         return length
@@ -109,7 +109,7 @@ class Controller:
         i = 0
         
         # start with current motor position
-        prev_azi, prev_alt = self.current_pos()
+        prev_pt = self.current_pos()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
@@ -132,7 +132,7 @@ class Controller:
                 azi, alt = self.converter.radec_to_azel(
                     math.radians(crd_list[i][0]), math.radians(crd_list[i][1]), dt0)
                 delta = circle.distance(
-                    [math.degrees(azi), math.degrees(alt)], [prev_azi, prev_alt])
+                    [math.degrees(azi), math.degrees(alt)], prev_pt)
                 
                 # estimate of time needed to get to next point
                 dt = delta / float(self.config.get("slew", "speed"))
@@ -151,8 +151,8 @@ class Controller:
             new_crd_h = [math.degrees(azi), math.degrees(alt)]
             
             # move to new position and reset for the next iteration
-            self.goto(new_crd_h)
-            prev_azi, prev_alt = azi, alt
+            self.goto(new_crd_h, begin=prev_pt)
+            prev_pt = new_crd_h
             i = i + 1
         
         return length
@@ -160,21 +160,21 @@ class Controller:
     
     # goto: slew to a particular coordinate from current position
     #   hor_pos -> [azimuth, altitude]: new position to slew to
-    def goto (self, hor_pos):
+    #   begin -> [azimuth, altitude]: where to start slewing from
+    def goto (self, hor_pos, begin=None):
         self.logger.info("slew to " + str(hor_pos[0]) + ", " + str(hor_pos[1]))
         
         # angular distance and bearing to new point
-        cur_pt = self.current_pos()
-        ang_dist = circle.distance(cur_pt, hor_pos)
-        bearing = circle.bearing(cur_pt, hor_pos)
+        begin = begin or self.current_pos() # start at current pos if none given
+        ang_dist = circle.distance(begin, hor_pos)
+        bearing = circle.bearing(begin, hor_pos)
         
         # generate list of intermediate points to slew to
         num_int = int(ang_dist) # one intermediate point per degree
         point_list = []
         
         for i in range(1, num_int):
-            a, b = circle.waypoint(cur_pt, bearing,
-                i * ang_dist / num_int)
+            a, b = circle.waypoint(begin, bearing, i * ang_dist / num_int)
             point_list.append([a, b])
         
         # interval between intermediate points
@@ -190,9 +190,17 @@ class Controller:
         tm_st = (tm_st_even > 2048 and 2048) or (tm_st_even < 2 and 2) or tm_st_even
         
         # slew to all intermediate points
-        prev_pt = cur_pt
+        prev_pt = begin
         
         for pt in point_list:
+            
+            # find shortest azimuth direction
+            if abs((pt[0] - 360.0) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
+                pt[0] -= 360.0
+            elif abs((pt[0] + 360) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
+                pt[0] += 360.0
+            
+            # get speed of axes
             d_az = pt[0] - prev_pt[0]
             d_el = pt[1] - prev_pt[1]
             sp_az = d_az * math.cos(math.radians(pt[1])) / delta * speed
@@ -210,16 +218,30 @@ class Controller:
             
             prev_pt = pt
         
+        # exit PVT mode
+        self.galil.sendOnly("PV" + self.galil.axis_az + "=,,0")
+        self.galil.sendOnly("PV" + self.galil.axis_el + "=,,0")
+        
         self.galil.sendOnly("BT") # begin slewing to intermediate points
         self.galil.sendOnly("AM") # stall until motion is complete
         
+        # determine relative azimuth distance to final position
+        d_az = (hor_pos[0] - prev_pt[0]) % 360.0 # [0, 360.0)
+        
+        if d_az > 180.0:
+            d_az -= 360.0 # (-180, 180] 
+        
         # move to final position
-        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(hor_pos[0])))
+        self.galil.sendOnly("PR" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(d_az)))
         self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
+        
         self.galil.sendOnly("BG")
         self.galil.sendOnly("AM") # stall until motion is complete
+        
+        # update the current position in case of wrap-around
+        self.sync(hor_pos)
         
         return 0
     

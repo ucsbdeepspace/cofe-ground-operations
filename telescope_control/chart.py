@@ -262,7 +262,7 @@ class Chart (glcanvas.GLCanvas):
         if self.h_fov <= 20.0: # only show when zoomed in
             glLineWidth(2)
             level = min((20.0 - self.h_fov) * 0.1, 1.0)
-            glColor(level, level, level)
+            glColor(0.8 * level, 0.9 * level, level)
             
             max_dist = math.radians(math.sqrt(
                 self.h_fov**2 * (1.0 + (self.height/self.width)**2)))
