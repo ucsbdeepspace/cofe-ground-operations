@@ -38,26 +38,18 @@ class Units:
     def __str_degrees(self, val):
         d = int(val)
         m = int((val - d)*60.0)
-        s = ((val - d)*60.0 - m)*60.0
+        s = (val - d - m/60.0)*3600.0
         return "{}:{}:{:2.1f}".format(d, m, abs(s))
 
     def azel_to_radec(self, az, el, dt=0):
-        o = self.get_obs(dt)
-        
-        return  o.radec_of(az, el)
+        return self.get_obs(dt).radec_of(az, el)
 
     def radec_to_azel(self, ra, dec, dt=0):
-        telescope = self.get_obs(dt)
-
-        star = ephem.FixedBody()
-        star._ra = ephem.hours(ra)
-        star._dec = ephem.degrees(dec)
-        star.compute(telescope)
-        return star.az, star.alt
-        
-    def set_offset(self, wanted_Az, wanted_El, current_Az, current_El):
-        self.c["skypos"]["az"] = current_Az - wanted_Az
-        self.c["skypos"]["el"] = current_El - wanted_El
+        obj = ephem.FixedBody()
+        obj._ra = ephem.hours(ra)
+        obj._dec = ephem.degrees(dec)
+        obj.compute(self.get_obs(dt))
+        return obj.az, obj.alt
 
     def lst(self):
         o = ephem.Observer()
@@ -74,12 +66,11 @@ class Units:
     # get ephem.Observer object
     def get_obs (self, dt=0):
         obs = ephem.Observer()
-        obs.lat = math.radians(float(self.c.get("location", "lat")))
-        obs.lon = math.radians(float(self.c.get("location", "lon")))
+        obs.lat = self.c.get("location", "lat")
+        obs.lon = self.c.get("location", "lon")
         d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
         h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
         obs.date = (d+h).format(t = gmtime(time() + dt))
         obs.pressure = 0
         
         return obs
-    
