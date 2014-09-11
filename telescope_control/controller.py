@@ -70,42 +70,27 @@ class Controller:
             crd_list.reverse()
             if str(repeat) != str(True):
                 self.scan_queue = self.scan_queue - 1
-            
-            # wait before repeating
-            time.sleep(dist / float(self.config.get("slew", "speed")))
         
+        self.logger.info("scan complete")
         return 0
         
     # process_hor: process a list of horizontal coordinates to slew to
-    #
     #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
-    #
-    # -> length of scan (degrees)
     def process_hor (self, crd_list):
-        
-        length = 0.0 # angular distance to move
         i = 0
         
         prev_pt = self.current_pos()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
-            length += circle.distance(prev_pt, crd_list[i])
             self.goto(crd_list[i], begin=prev_pt)
             prev_pt = crd_list[i]
             i = i + 1
-        
-        return length
     
     
     # process_equ: process a list of equatorial coordinates to slew to
-    #
     #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
-    #
-    # -> length of scan (degrees)
     def process_equ (self, crd_list):
-        
-        length = 0.0 # angular distance to move
         i = 0
         
         # start with current motor position
@@ -142,8 +127,6 @@ class Controller:
                 # not accurate enough, continue looping
                 dt0 = dt
             
-            length += delta # add current segment to scan length
-            
             # compute horizontal coordinates of equatorial coordinates after
             #  time dt has passed (the point where we should slew to)
             azi, alt = self.converter.radec_to_azel(
@@ -154,13 +137,14 @@ class Controller:
             self.goto(new_crd_h, begin=prev_pt)
             prev_pt = new_crd_h
             i = i + 1
-        
-        return length
     
     
     # goto: slew to a particular coordinate from current position
+    #
     #   hor_pos -> [azimuth, altitude]: new position to slew to
     #   begin -> [azimuth, altitude]: where to start slewing from
+    #
+    # -> (returns when tracking ends)
     def goto (self, hor_pos, begin=None):
         self.logger.info("slew to " + str(hor_pos[0]) + ", " + str(hor_pos[1]))
         
@@ -239,6 +223,10 @@ class Controller:
         
         self.galil.sendOnly("BG")
         self.galil.sendOnly("AM") # stall until motion is complete
+        
+        # wait for slew to finish
+        time.sleep(ang_dist / float(self.config.get("slew", "speed")))
+        # TODO: use more accurate time indicator
         
         # update the current position in case of wrap-around
         self.sync(hor_pos)
