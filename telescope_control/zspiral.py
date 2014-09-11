@@ -3,6 +3,7 @@
 
 import math
 import threading
+import time
 
 class Scan:
     
@@ -38,17 +39,53 @@ class Scan:
         else: # repeat for <repeat> times
             self.scan_queue = repeat
         
-        # TODO: slew to starting point and pause
+        # set speed and acceleration
+        speed = self.converter.az_to_encoder(float(self.config.get("slew", "speed")))
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed))
+        
+        accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
+        accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
+        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + accel_el)
+        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + accel_el)
+        
+        # slew to starting point
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(start_pt[0])))
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
+            str(self.converter.el_to_encoder(start_pt[1])))
+        self.galil.sendOnly("BG")
+        self.galil.sendOnly("AM") # stall until motion is complete
         
         # zero increment -- slew in circle
         if -1e-5 <= increment <= 1e-5:
+            # move at speed v_az/cos(alt)
+            circ_speed = int(speed / (math.cos(math.radians(start_pt[1])) + 0.01))
+            self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(circ_speed))
+            
+            # check if cw or ccw
+            if increment >= 0.0:
+                angle = 360.0 # ccw viewing towards zenith
+            else:
+                angle = -360.0 # cw viewing towards zenith
+            
             while self.scan_queue > 0 and not self.stop.is_set():
-                # TODO: move azimuth motor at speed v_az/cos(alt) 360 degrees
-                #       without pausing unless self.scan_queue == 1 and
-                #       str(repeat) != str(True)
+                # move azimuth motor 360 degrees
+                self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(start_pt[0] + angle)))
+                    
+                # reset position
+                self.galil.sendOnly("AM")
+                self.galil.sendOnly("DP" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(start_pt[0])))
                 
                 if str(repeat) != str(True):
                     self.scan_queue -= 1
+                
+                # stall until motion is approximately complete
+                time.sleep(self.converter.az_to_encoder(360.0) / circ_speed)
                 
         # non-zero increment -- slew in ccw spiral to zenith then back
         else: # math.fabs(increment) > 1e-5
