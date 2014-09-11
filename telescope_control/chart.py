@@ -6,7 +6,6 @@
 import OpenGL
 OpenGL.ERROR_CHECKING = False
 
-import ephem
 import FTGL
 import math
 import numpy as np

@@ -3,6 +3,7 @@ try:
 except:
     import ConfigParser as configparser
 
+import ephem
 import math
 import string
 import sys
@@ -536,21 +537,22 @@ class MainWindow(gui.TelescopeControlFrame):
                 raw_data[string.uppercase.index(self.galil.axis_el)]]
         
         az = self.converter.encoder_to_az(data[0])
+        az_dms = ephem.degrees(az)
         el = self.converter.encoder_to_el(data[1])
 
         ra, dec = self.converter.azel_to_radec(az, el)
 
-        data = [(self.az_status,     "",     az                   ),
-                (self.el_status,     "",     el                   ),
+        data = [(self.az_status, "", ephem.degrees(str(math.degrees(az_dms) % 360.0))),
+                (self.el_status, "", el),
 
-                (self.az_raw_status, "", data[0]              ),
-                (self.el_raw_status, "", data[1]              ),
+                (self.az_raw_status, "", data[0]),
+                (self.el_raw_status, "", data[1]),
                 
-                (self.ra_status,     "",     ra                   ),
-                (self.dec_status,    "",    dec                  ),
-                (self.local_status,  "",  self.converter.lct() ),
-                (self.lst_status,    "",    self.converter.lst() ),
-                (self.utc_status,    "",    self.converter.utc() )]
+                (self.ra_status, "", ra),
+                (self.dec_status, "", dec),
+                (self.local_status, "", self.converter.lct()),
+                (self.lst_status, "", self.converter.lst()),
+                (self.utc_status, "", self.converter.utc())]
 
         for widget, prefix, datum in data:
             widget.SetLabel(prefix + str(datum))
