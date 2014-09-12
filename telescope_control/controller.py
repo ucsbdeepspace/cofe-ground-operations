@@ -275,28 +275,11 @@ class Controller:
         self.stop = threading.Event()
         
         # move to initial position quickly
-        self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(float(self.config.get("slew", "speed")))))
-        self.galil.sendOnly("SP" + self.galil.axis_el + "=" +
-            str(self.converter.el_to_encoder(float(self.config.get("slew", "speed")))))
-        # TODO: set speed as combined speed of both axes
-        
-        accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
-        accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
-        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + accel_az)
-        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + accel_el)
-        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + accel_az)
-        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + accel_el)
-        
         azi, alt = self.converter.radec_to_azel(
             math.radians(equ_pos[0]), math.radians(equ_pos[1]))
         hor_pos = [math.degrees(azi), math.degrees(alt)]
         
-        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(hor_pos[0])))
-        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
-            str(self.converter.el_to_encoder(hor_pos[1])))
-        self.galil.sendOnly("BG")
+        self.slew(hor_pos)
         self.galil.sendOnly("AM") # stall until motion is complete
         
         # enable tracking mode
