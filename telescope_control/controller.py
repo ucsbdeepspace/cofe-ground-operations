@@ -64,7 +64,6 @@ class Controller:
             
             # reverse direction and repeat
             crd_list.reverse()
-            dist += process_func(crd_list)
             
             # reset direction again and prepare for next time
             crd_list.reverse()
@@ -155,59 +154,58 @@ class Controller:
         
         # generate list of intermediate points to slew to
         num_int = int(ang_dist) # one intermediate point per degree
-        point_list = []
+        prev_pt = begin # assume we're at the starting point
         
-        for i in range(1, num_int):
-            a, b = circle.waypoint(begin, bearing, i * ang_dist / num_int)
-            point_list.append([a, b])
-        
-        # interval between intermediate points
-        speed = float(self.config.get("slew", "speed"))
-        delta = ang_dist / num_int # angular separation between points
-        tm_step = delta / speed # time step in seconds
-        
-        # sample time (convert seconds->samples)
-        samp_per_sec = 1024000.0 / 1000.0 # TODO: compute from actual sample time
-        tm_st_samp = tm_step * samp_per_sec # time step in samples
-        tm_st_even = 2 * int(0.5 * tm_st_samp) # convert to even number
-        # constrain to range 2 <= tm_st <= 2048
-        tm_st = (tm_st_even > 2048 and 2048) or (tm_st_even < 2 and 2) or tm_st_even
-        
-        # slew to all intermediate points
-        prev_pt = begin
-        
-        for pt in point_list:
+        if num_int > 0:
+            point_list = []
             
-            # find shortest azimuth direction
-            if abs((pt[0] - 360.0) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
-                pt[0] -= 360.0
-            elif abs((pt[0] + 360) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
-                pt[0] += 360.0
+            for i in range(1, num_int):
+                a, b = circle.waypoint(begin, bearing, i * ang_dist / num_int)
+                point_list.append([a, b])
             
-            # get speed of axes
-            d_az = pt[0] - prev_pt[0]
-            d_el = pt[1] - prev_pt[1]
-            sp_az = d_az * math.cos(math.radians(pt[1])) / delta * speed
-            sp_el = d_el / delta * speed
+            # interval between intermediate points
+            speed = float(self.config.get("slew", "speed"))
+            delta = ang_dist / num_int # angular separation between points
+            tm_step = delta / speed # time step in seconds
             
-            # smoothly transition to new state
-            self.galil.sendOnly("PV" + self.galil.axis_az + "=" + # azimuth
-                str(self.converter.az_to_encoder(d_az)) + "," +
-                str(self.converter.az_to_encoder(sp_az)) + "," +
-                str(int(tm_st)))
-            self.galil.sendOnly("PV" + self.galil.axis_el + "=" + # altitude
-                str(self.converter.el_to_encoder(d_el)) + "," +
-                str(self.converter.el_to_encoder(sp_el)) + "," +
-                str(int(tm_st)))
+            # sample time (convert seconds->samples)
+            samp_per_sec = 1024000.0 / 1000.0 # TODO: compute from actual sample time
+            tm_st_samp = tm_step * samp_per_sec # time step in samples
+            tm_st_pow2 = int(math.log(tm_st_samp, 2)) # as a power of 2
+            tm_st = max(0, min(8, tm_st_pow2)) # constrain to range [0, 8]
+            # TODO: use steps that are actually powers of 2 and resize
             
-            prev_pt = pt
-        
-        # exit PVT mode
-        self.galil.sendOnly("PV" + self.galil.axis_az + "=,,0")
-        self.galil.sendOnly("PV" + self.galil.axis_el + "=,,0")
-        
-        self.galil.sendOnly("BT") # begin slewing to intermediate points
-        self.galil.sendOnly("AM") # stall until motion is complete
+            # enter contour mode
+            self.galil.sendOnly("CM " + self.galil.axis_az + self.galil.axis_el)
+            self.galil.sendOnly("DT " + str(tm_st))
+            
+            # slew to all intermediate points
+            for pt in point_list:
+                
+                # find shortest azimuth direction
+                if abs((pt[0] - 360.0) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
+                    pt[0] -= 360.0
+                elif abs((pt[0] + 360) - prev_pt[0]) < abs(pt[0] - prev_pt[0]):
+                    pt[0] += 360.0
+                
+                # get speed of axes
+                d_az = pt[0] - prev_pt[0]
+                d_el = pt[1] - prev_pt[1]
+                sp_az = d_az * math.cos(math.radians(pt[1])) / delta * speed
+                sp_el = d_el / delta * speed
+                
+                # smoothly transition to new state
+                self.galil.sendOnly("CD " + 
+                    str(self.converter.az_to_encoder(d_az)) + "," + # azimuth
+                    str(self.converter.el_to_encoder(d_el)))        # altitude
+                
+                prev_pt = pt
+            
+            # run all items and exit contour mode
+            self.galil.sendOnly("CD 0,0,0,0=0")
+            self.galil.sendOnly("#Wait;JP#Wait,_CM<>511")
+            
+            self.galil.sendOnly("AM") # stall until motion is complete
         
         # determine relative azimuth distance to final position
         d_az = (hor_pos[0] - prev_pt[0]) % 360.0 # [0, 360.0)
