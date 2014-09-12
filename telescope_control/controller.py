@@ -201,21 +201,35 @@ class Controller:
                 
                 prev_pt = pt
             
+                # wait for buffer to have space
+                self.galil.sendOnly("WC")
+            
             # run all items and exit contour mode
             self.galil.sendOnly("CD 0,0,0,0=0")
-            self.galil.sendOnly("#Wait;JP#Wait,_CM<>511")
-            
-            self.galil.sendOnly("AM") # stall until motion is complete
+            self.galil.sendOnly("EN")
         
-        # determine relative azimuth distance to final position
-        d_az = (hor_pos[0] - prev_pt[0]) % 360.0 # [0, 360.0)
+        # set speed & acceleration for final stretch
+        speed = self.converter.az_to_encoder(float(self.config.get("slew", "speed")))
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed))
         
-        if d_az > 180.0:
-            d_az -= 360.0 # (-180, 180] 
+        accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
+        accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
+        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + accel_el)
+        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + accel_az)
+        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + accel_el)
+        
+        # determine nearest final azimuth position
+        az_f = hor_pos[0]
+        if abs(az_f - 360.0 - prev_pt[0]) < abs(az_f - prev_pt[0]):
+            az_f -= 360.0
+        elif abs(az_f + 360.0 - prev_pt[0]) < abs(az_f - prev_pt[0]):
+            az_f += 360.0
         
         # move to final position
-        self.galil.sendOnly("PR" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(d_az)))
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(az_f)))
         self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
         
@@ -227,7 +241,7 @@ class Controller:
         # TODO: use more accurate time indicator
         
         # update the current position in case of wrap-around
-        self.sync(hor_pos)
+        #self.sync(hor_pos)
         
         return 0
     
