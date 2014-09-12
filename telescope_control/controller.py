@@ -139,7 +139,11 @@ class Controller:
     
     
     # slew: basic, linear motion on both axes from one point to another
+    #
     #   hor_pos -> [azimuth, altitude]: position to slew to
+    #   begin -> [azimuth, altitude]: where to start slewing from
+    #
+    # -> time needed for slew (seconds)
     def slew (self, hor_pos, begin=None):
         
         begin = begin or self.current_pos()
@@ -154,13 +158,47 @@ class Controller:
         speed_az = self.converter.az_to_encoder(d_az / delta * speed)
         speed_el = self.converter.el_to_encoder(d_el / delta * speed)
         
+        # find acceleration of each axis
+        accel = float(self.config.get("slew", "accel"))
+        accel_az = self.converter.az_to_encoder(d_az / delta * accel)
+        accel_el = self.converter.el_to_encoder(d_el / delta * accel)
+        
+        ##
+        # compute time needed to perform slew
+        ##
+        
+        # time needed to accelerate in each axis
+        tm_az_ac = speed_az / accel_az
+        tm_el_ac = speed_el / accel_el
+        
+        # distance travelled while accelerating in each axis
+        d_az_ac = accel_az * tm_az_ac
+        d_el_ac = accel_el * tm_el_ac
+        
+        # distance travelled at top speed
+        d_az_constv = d_az - d_az_ac
+        d_el_constv = d_el - d_el_ac
+        
+        # time spent at top speed
+        tm_az_constv = d_az_constv / speed_az
+        tm_el_constv = d_el_constv / speed_el
+        
+        # total time spent
+        tm_az = tm_az_ac + tm_az_constv
+        tm_el = tm_el_ac + tm_el_constv
+        tm_tot = max(tm_az, tm_el)
+        
+        # TODO: account for when max speed is not reached
+        
+        ##
+        # send instructions to motor
+        ##
+        
         # set speed of axes
         self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
         self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))
         
         # set acceleration of axes
-        accel_az = self.converter.az_to_encoder(float(self.config.get("slew", "accel")))
-        accel_el = self.converter.el_to_encoder(float(self.config.get("slew", "accel")))
         self.galil.sendOnly("AC" + self.galil.axis_az + "=" + str(accel_az))
         self.galil.sendOnly("AC" + self.galil.axis_el + "=" + str(accel_el))
         self.galil.sendOnly("DC" + self.galil.axis_az + "=" + str(accel_az))
@@ -179,6 +217,8 @@ class Controller:
         self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
         self.galil.sendOnly("BG")
+        
+        return tm_tot
     
     
     # goto: move to a particular coordinate in a great circle
