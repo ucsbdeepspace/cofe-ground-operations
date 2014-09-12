@@ -113,14 +113,15 @@ class MainWindow(gui.TelescopeControlFrame):
         
 
     def goto_hor (self, event):
+        
+        # read end position
         azPos = float(self.goto_az_input.GetValue())
         elPos = float(self.goto_el_input.GetValue())
         azVal = self.converter.az_to_encoder(azPos)
         elVal = self.converter.el_to_encoder(elPos)
 
-        self.galil.sendOnly("PA" + self.galil.axis_az + "=" + str(azVal))
-        self.galil.sendOnly("PA" + self.galil.axis_el + "=" + str(elVal))
-        self.galil.sendOnly("BG")
+        # move to new position at appropriate speed and acceleration
+        self.controller.slew([azPos, elPos])
         
         event.Skip()
         

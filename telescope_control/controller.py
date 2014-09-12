@@ -138,7 +138,50 @@ class Controller:
             i = i + 1
     
     
-    # goto: slew to a particular coordinate from current position
+    # slew: basic, linear motion on both axes from one point to another
+    #   hor_pos -> [azimuth, altitude]: position to slew to
+    def slew (self, hor_pos, begin=None):
+        
+        begin = begin or self.current_pos()
+        
+        # find speed of each axis
+        alt_av = math.radians(0.5 * (hor_pos[1] + begin[1]))
+        d_az = (hor_pos[0] - begin[0]) * math.cos(alt_av)
+        d_el = hor_pos[1] - begin[1]
+        delta = math.sqrt(d_az ** 2 + d_el ** 2)
+        
+        speed = float(self.config.get("slew", "speed"))
+        speed_az = self.converter.az_to_encoder(d_az / delta * speed)
+        speed_el = self.converter.el_to_encoder(d_el / delta * speed)
+        
+        # set speed of axes
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))
+        
+        # set acceleration of axes
+        accel_az = self.converter.az_to_encoder(float(self.config.get("slew", "accel")))
+        accel_el = self.converter.el_to_encoder(float(self.config.get("slew", "accel")))
+        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + str(accel_az))
+        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + str(accel_el))
+        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + str(accel_az))
+        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + str(accel_el))
+        
+        # determine nearest final azimuth position
+        az_f = hor_pos[0]
+        if abs(az_f - 360.0 - begin[0]) < abs(az_f - begin[0]):
+            az_f -= 360.0
+        elif abs(az_f + 360.0 - begin[0]) < abs(az_f - begin[0]):
+            az_f += 360.0
+        
+        # move to position
+        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+            str(self.converter.az_to_encoder(az_f)))
+        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
+            str(self.converter.el_to_encoder(hor_pos[1])))
+        self.galil.sendOnly("BG")
+    
+    
+    # goto: move to a particular coordinate in a great circle
     #
     #   hor_pos -> [azimuth, altitude]: new position to slew to
     #   begin -> [azimuth, altitude]: where to start slewing from
@@ -206,35 +249,10 @@ class Controller:
             
             # run all items and exit contour mode
             self.galil.sendOnly("CD 0,0,0,0=0")
-            self.galil.sendOnly("EN")
+            self.galil.sendOnly("#Wait;JP#Wait,_CM<>511")
         
-        # set speed & acceleration for final stretch
-        speed = self.converter.az_to_encoder(float(self.config.get("slew", "speed")))
-        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed))
-        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed))
-        
-        accel_az = str(self.converter.az_to_encoder(float(self.config.get("slew", "accel"))))
-        accel_el = str(self.converter.el_to_encoder(float(self.config.get("slew", "accel"))))
-        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + accel_az)
-        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + accel_el)
-        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + accel_az)
-        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + accel_el)
-        
-        # determine nearest final azimuth position
-        az_f = hor_pos[0]
-        if abs(az_f - 360.0 - prev_pt[0]) < abs(az_f - prev_pt[0]):
-            az_f -= 360.0
-        elif abs(az_f + 360.0 - prev_pt[0]) < abs(az_f - prev_pt[0]):
-            az_f += 360.0
-        
-        # move to final position
-        self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
-            str(self.converter.az_to_encoder(az_f)))
-        self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
-            str(self.converter.el_to_encoder(hor_pos[1])))
-        
-        self.galil.sendOnly("BG")
-        self.galil.sendOnly("AM") # stall until motion is complete
+        # move to final point if needed
+        self.slew(hor_pos, begin=prev_pt)
         
         # wait for slew to finish
         time.sleep(ang_dist / float(self.config.get("slew", "speed")))
