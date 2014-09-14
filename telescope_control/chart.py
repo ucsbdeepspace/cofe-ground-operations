@@ -269,6 +269,9 @@ class Chart (glcanvas.GLCanvas):
             equ_center_rad = [math.radians(self.equ_center[0]),
                               math.radians(self.equ_center[1])]
             
+            # create list of NGC/IC objects to draw
+            ngcic_list = []
+            ngcic_num = 0 # number of objects being drawn
             for obj in self.ngcic_rad:
                 # ignore objects nowhere near the field of view
                 if circle.distance_rad(equ_center_rad, obj[1]) > max_dist:
@@ -288,21 +291,24 @@ class Chart (glcanvas.GLCanvas):
                 if 0 < point[0] <= self.width and \
                    0 < point[1] <= self.height:
                     
-                    # draw square diamond shape
-                    diamond = np.array([
-                        point[0], point[1] - 5,
-                        point[0] - 5, point[1],
-                        point[0], point[1] + 5,
-                        point[0] + 5, point[1]
-                    ], dtype=np.float32)
-                    diamond_vbo = VBO(diamond)
-                    diamond_vbo.bind()
-                    glVertexPointer(2, GL_FLOAT, 0, diamond_vbo)
-                    glDrawArrays(GL_LINE_LOOP, 0, 4)
+                    # add square diamond shape
+                    ngcic_list.extend(
+                        (point[0], point[1] - 5,
+                         point[0] - 5, point[1],
+                         point[0], point[1] + 5,
+                         point[0] + 5, point[1])
+                    )
+                    ngcic_num += 1
                     
                     # draw label
                     glRasterPos(point[0] + 10, point[1] + 4)
                     self.font.Render(obj[0]) # obj[0] -> object name
+                
+                ngcic_vbo = VBO(np.array(ngcic_list, dtype=np.float32))
+                ngcic_vbo.bind()
+                glVertexPointer(2, GL_FLOAT, 0, ngcic_vbo)
+                for i in range(0, ngcic_num):
+                    glDrawArrays(GL_LINE_LOOP, 4 * i, 4)
         
         ##
         # draw solar system objects
