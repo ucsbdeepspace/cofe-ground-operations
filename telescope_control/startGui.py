@@ -215,7 +215,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # set speed of axes
         speed = float(self.config.get("slew", "speed"))
         speed_az = self.converter.az_to_encoder( # adjust for altitude
-            speed / (math.cos(math.radians(cur_pos[1])) + 0.01))
+            speed / max(0.01, math.cos(math.radians(cur_pos[1]))))
         speed_el = self.converter.el_to_encoder(speed)
         self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
         self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))

@@ -70,7 +70,7 @@ class Scan:
                 
                 # increase azimuth until right_az
                 self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                    str(speed / (0.01 + math.cos(math.radians(alt1)))))
+                    str(speed / max(0.01, math.cos(math.radians(alt1)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(right_az)))
                 self.galil.sendOnly("BG")
@@ -86,7 +86,7 @@ class Scan:
                 
                 # decrease azimuth until we're back at left_az
                 self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                    str(speed / (0.01 + math.cos(math.radians(alt2)))))
+                    str(speed / max(0.01, math.cos(math.radians(alt2)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(left_az)))
                 self.galil.sendOnly("BG")
@@ -100,7 +100,7 @@ class Scan:
             
             # increase azimuth to right_az
             self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                str(speed / (0.01 + math.cos(math.radians(high_el)))))
+                str(speed / max(0.01, math.cos(math.radians(high_el)))))
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                 str(self.converter.el_to_encoder(right_az)))
             self.galil.sendOnly("BG")
@@ -124,7 +124,7 @@ class Scan:
                 
                 # decrease azimuth until left_az
                 self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                    str(speed / (0.01 + math.cos(math.radians(alt1)))))
+                    str(speed / max(0.01, math.cos(math.radians(alt1)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(left_az)))
                 self.galil.sendOnly("BG")
@@ -140,7 +140,7 @@ class Scan:
                 
                 # increase azimuth until we're back at right_az
                 self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                    str(speed / (0.01 + math.cos(math.radians(alt2)))))
+                    str(speed / max(0.01, math.cos(math.radians(alt2)))))
                 self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                     str(self.converter.el_to_encoder(right_az)))
                 self.galil.sendOnly("BG")
@@ -154,7 +154,7 @@ class Scan:
             
             # decrease azimuth to left_az
             self.galil.sendOnly("SP" + self.galil.axis_az + "=" +
-                str(speed / (0.01 + math.cos(math.radians(low_el)))))
+                str(speed / max(0.01, math.cos(math.radians(low_el)))))
             self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
                 str(self.converter.el_to_encoder(left_az)))
             self.galil.sendOnly("BG")
