@@ -202,15 +202,39 @@ class MainWindow(gui.TelescopeControlFrame):
              self.galil.axis_el : self.converter.el_to_encoder(self.step_deg)}
         
 
+    # arrow button clicked
     def move_rel(self, event):
         self.set_step_size(None)  # read step size
+        
+        # stop any previous motion
+        self.galil.sendOnly("ST")
+        
+        # get current position
+        cur_pos = self.controller.current_pos()
+        
+        # set speed of axes
+        speed = float(self.config.get("slew", "speed"))
+        speed_az = self.converter.az_to_encoder( # adjust for altitude
+            speed / (math.cos(math.radians(cur_pos[1])) + 0.01))
+        speed_el = self.converter.el_to_encoder(speed)
+        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
+        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))
+        
+        # set acceleration of axes
+        accel = float(self.config.get("slew", "accel"))
+        accel_az = self.converter.az_to_encoder( # adjust for altitude
+            accel / (math.cos(math.radians(cur_pos[1])) + 0.01))
+        accel_el = self.converter.el_to_encoder(accel)
+        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + str(accel_az))
+        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + str(accel_el))
+        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + str(accel_az))
+        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + str(accel_el))
 
-        # This is caled when you click one of the arrow buttons
-
-        b_s_a = [(self.button_up, 1, self.galil.axis_el),
-                (self.button_down, -1, self.galil.axis_el),
-                (self.button_right, 1, self.galil.axis_az),
-                (self.button_left, -1, self.galil.axis_az)]
+        # list((button, sign of slew, axis))
+        b_s_a = [(self.button_up,    1, self.galil.axis_el),
+                 (self.button_down, -1, self.galil.axis_el),
+                 (self.button_right, 1, self.galil.axis_az),
+                 (self.button_left, -1, self.galil.axis_az)]
 
         for button, sign, axis in b_s_a:
             if event.GetId() == button.GetId():

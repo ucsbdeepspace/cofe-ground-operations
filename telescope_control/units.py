@@ -37,9 +37,9 @@ class Units:
 
     def __str_degrees(self, val):
         d = int(val)
-        m = int((val - d)*60.0)
-        s = (val - d - m/60.0)*3600.0
-        return "{}:{}:{:2.1f}".format(d, m, abs(s))
+        m = int(abs(val - d)*60.0)
+        s = (abs(val - d) - m/60.0)*3600.0
+        return "{}:{}:{:2.1f}".format(d, m, s)
 
     def azel_to_radec(self, az, el, dt=0):
         return self.get_obs(dt).radec_of(az, el)
