@@ -152,7 +152,7 @@ class Controller:
         alt_av = math.radians(0.5 * (hor_pos[1] + begin[1]))
         d_az = (hor_pos[0] - begin[0]) * math.cos(alt_av)
         d_el = hor_pos[1] - begin[1]
-        delta = math.sqrt(d_az ** 2 + d_el ** 2)
+        delta = math.sqrt(d_az ** 2 + d_el ** 2) or 0.01
         
         speed = float(self.config.get("slew", "speed"))
         speed_az = self.converter.az_to_encoder(d_az / delta * speed)
@@ -168,20 +168,20 @@ class Controller:
         ##
         
         # time needed to accelerate in each axis
-        tm_az_ac = speed_az / accel_az
-        tm_el_ac = speed_el / accel_el
+        tm_az_ac = accel_az and speed_az / accel_az or 0.0
+        tm_el_ac = accel_el and speed_el / accel_el or 0.0
         
         # distance travelled while accelerating in each axis
-        d_az_ac = accel_az * tm_az_ac
-        d_el_ac = accel_el * tm_el_ac
+        d_az_ac = accel_az * tm_az_ac**2
+        d_el_ac = accel_el * tm_el_ac**2
         
         # distance travelled at top speed
         d_az_constv = d_az - d_az_ac
         d_el_constv = d_el - d_el_ac
         
         # time spent at top speed
-        tm_az_constv = d_az_constv / speed_az
-        tm_el_constv = d_el_constv / speed_el
+        tm_az_constv = speed_az and d_az_constv / speed_az or 0.0
+        tm_el_constv = speed_el and d_el_constv / speed_el or 0.0
         
         # total time spent
         tm_az = tm_az_ac + tm_az_constv
