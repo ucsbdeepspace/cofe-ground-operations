@@ -487,7 +487,7 @@ class Chart (glcanvas.GLCanvas):
         if self.given_equ:
             cur_ra, cur_de = \
                 self.converter.azel_to_radec(
-                    math.radians(self.scan_center[0]), math.radians(self.scan_center[1]))
+                    math.radians(self.curpos_h[0]), math.radians(self.curpos_h[1]))
             curpos = [math.degrees(cur_ra), math.degrees(cur_de)]
         else: # already in horizontal coordinates
             curpos = self.curpos_h[:]
