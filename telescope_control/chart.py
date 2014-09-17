@@ -425,8 +425,18 @@ class Chart (glcanvas.GLCanvas):
         prev_x, prev_y = 0, 0 # previous point including intermediate points
         for next_pt in self.path:
             
+            # find horizontal coordinates of next point
+            if self.given_equ:
+                az, el = self.converter.radec_to_azel(
+                    math.radians(next_pt[0]), math.radians(next_pt[1]))
+                next_hor = [math.degrees(az), math.degrees(el)]
+            
+            else: # already in horizontal coordinates
+                next_hor = next_pt
+            
             # intermediate points
             if prev_pt:
+                
                 x, y = self.project_point(prev_pt)
                 
                 # check whether we need to break the list for wrap-around
@@ -441,15 +451,33 @@ class Chart (glcanvas.GLCanvas):
                 
                 prev_x, prev_y = x, y
                 ang_dist = circle.distance(prev_pt, next_pt)
-                bearing = circle.bearing(prev_pt, next_pt)
+                
+                # change in azimuth and altitude to next point
+                d_az = (next_hor[0] - prev_hor[0]) % 360.0
+                d_el = next_hor[1] - prev_hor[1]
+                
+                # adjust for wrap-around
+                if d_az > 180.0:
+                    d_az -= 360.0
                 
                 # generate list of intermediate points to slew to
+                # (linear on each horizontal axis)
                 num_int = int(ang_dist) # one intermediate point per degree
                 
                 for i in range(1, num_int + 1):
-                    a, b = circle.waypoint(prev_pt, bearing,
-                        i * ang_dist / num_int)
-                    x, y = self.project_point([a, b])
+                    int_pt_hor = [prev_hor[0] + d_az * i / num_int,
+                                  prev_hor[1] + d_el * i / num_int]
+                    
+                    if self.given_equ: # convert to equatorial
+                        ra, de = self.converter.azel_to_radec(
+                            math.radians(int_pt_hor[0]),
+                            math.radians(int_pt_hor[1]))
+                        int_pt = [math.degrees(ra), math.degrees(de)]
+                    
+                    else: # keep horizontal
+                        int_pt = int_pt_hor
+                    
+                    x, y = self.project_point(int_pt)
                     
                     # check whether we need to break the list for wrap-around
                     if x < 0 and prev_x > self.width or \
@@ -462,8 +490,9 @@ class Chart (glcanvas.GLCanvas):
                         line.append(y)
                     
                     prev_x, prev_y = x, y
-                
+            
             prev_pt = next_pt
+            prev_hor = next_hor
         
         # add in last point
         if prev_pt:
@@ -476,10 +505,10 @@ class Chart (glcanvas.GLCanvas):
                 line.append(y)
         break_line()
         
-        
         ##
         # show a cross-hair at the current position
         ##
+        
         glColor(1, 1, 1)
         glLineWidth(4)
         
