@@ -40,7 +40,7 @@ class TelescopeControlFrame(wx.Frame):
     def __set_properties(self):
         self.SetTitle("Telescope Control")
         self.coordsys_selector.SetSelection(0)
-        self.comboBoxScanOptions.SetSelection(0)
+        self.scan_type_input.SetSelection(0)
         
     def __create_readoutPanel(self):
 
@@ -474,140 +474,82 @@ class TelescopeControlFrame(wx.Frame):
         return simple_panel
 
     # short scans: take the shortest angular distance between points
-    def __create_scanning_pane(self):	
-        # TODO: CLEANUP, name sizers sanely
-        notebookScanningPane    = wx.Panel(self.controlNotebook)
+    def __create_scanning_pane(self):
+        scan_panel = wx.Panel(self.controlNotebook)
         
-        self.corner1_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 1")
-        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
+        center_crda_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd A: ")
+        self.center_crda_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
+        center_crdb_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd B: ")
+        self.center_crdb_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "40")
         
-        self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
-        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
-        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
-        
-        self.corner3_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 3")
-        self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
-        self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        
-        self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
-        self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        
-        self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
-        self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
-        self.scan_cycles_label  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
-        self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
-        self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
-        self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
-        self.preview_scan       = wx.Button(notebookScanningPane, wx.ID_ANY, "Preview")
+        size_edge_label = wx.StaticText(scan_panel, wx.ID_ANY, "Size (degrees): ")
+        self.size_edge_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
+        num_turns_label = wx.StaticText(scan_panel, wx.ID_ANY, "Num of Turns: ")
+        self.num_turns_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "5")
+        scan_cycles_label = wx.StaticText(scan_panel, wx.ID_ANY, "Cycles to Run: ")
+        self.scan_cycles_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "1")
+        self.scan_repeat_input = wx.CheckBox(scan_panel, wx.ID_ANY, "Repeat indefinitely")
+        self.buttonScanStart = wx.Button(scan_panel, wx.ID_ANY, "Begin Scan")
+        self.preview_scan = wx.Button(scan_panel, wx.ID_ANY, "Preview")
 
         coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=DE)"]
-        self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+        self.coordsys_selector = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
         scanOptionsList = [func.__name__.capitalize() for func in scans.scan_list]
-        self.comboBoxScanOptions = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+        self.scan_type_input = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=scanOptionsList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
-        self.sizer_49_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Scan Options")
-
-
-        corner1_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner1_crda_sizer.Add(self.corner1_crda_label)
-        corner1_crda_sizer.Add(self.corner1_crda_box)
-
-        corner1_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner1_crdb_sizer.Add(self.corner1_crdb_label)
-        corner1_crdb_sizer.Add(self.corner1_crdb_box)
+        scan_param_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Parameters")
+        param_box_sizer = wx.StaticBoxSizer(scan_param_box)
+        scan_param_sizer = wx.FlexGridSizer(3, 2)
+        scan_param_sizer.AddF(size_edge_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.size_edge_input, self.sizerFlags)
+        scan_param_sizer.AddF(num_turns_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.num_turns_input, self.sizerFlags)
+        scan_param_sizer.AddF(scan_cycles_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.scan_cycles_input, self.sizerFlags)
+        scan_param_sizer.AddF(self.scan_repeat_input, self.sizerFlags)
+        param_box_sizer.AddF(scan_param_sizer, self.sizerFlags)
         
-        corner1_sizer = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
-        corner1_sizer.Add(corner1_crda_sizer, 1, wx.EXPAND)
-        corner1_sizer.Add(corner1_crdb_sizer, 1, wx.EXPAND)
+        scan_left_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_left_sizer.Add(param_box_sizer, 1, wx.EXPAND)
         
-        corner2_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner2_crda_sizer.Add(self.corner2_crda_label)
-        corner2_crda_sizer.Add(self.corner2_crda_box)
-                
-        corner2_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner2_crdb_sizer.Add(self.corner2_crdb_label)
-        corner2_crdb_sizer.Add(self.corner2_crdb_box)
+        # --
         
-        corner2_sizer = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
-        corner2_sizer.Add(corner2_crda_sizer, 1, wx.EXPAND)
-        corner2_sizer.Add(corner2_crdb_sizer, 1, wx.EXPAND)
-        
-        corner3_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner3_crda_sizer.Add(self.corner3_crda_label)
-        corner3_crda_sizer.Add(self.corner3_crda_box)
-                
-        corner3_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner3_crdb_sizer.Add(self.corner3_crdb_label)
-        corner3_crdb_sizer.Add(self.corner3_crdb_box)
-        
-        corner3_sizer = wx.StaticBoxSizer(self.corner3_box, wx.VERTICAL)
-        corner3_sizer.Add(corner3_crda_sizer, 1, wx.EXPAND)
-        corner3_sizer.Add(corner3_crdb_sizer, 1, wx.EXPAND)
-        
-        corner4_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner4_crda_sizer.Add(self.corner4_crda_label)
-        corner4_crda_sizer.Add(self.corner4_crda_box)
-                
-        corner4_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner4_crdb_sizer.Add(self.corner4_crdb_label)
-        corner4_crdb_sizer.Add(self.corner4_crdb_box)
-        
-        corner4_sizer = wx.StaticBoxSizer(self.corner4_box, wx.VERTICAL)
-        corner4_sizer.Add(corner4_crda_sizer, 1, wx.EXPAND)
-        corner4_sizer.Add(corner4_crdb_sizer, 1, wx.EXPAND)
-        
-        corners_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corners_sizer.Add(corner1_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner2_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner3_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner4_sizer, 1, wx.EXPAND)
-        
-        turns_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        turns_sizer.Add(self.num_turns_label)
-        turns_sizer.Add(self.num_turns_input)
-        
-        cycles_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        cycles_sizer.Add(self.scan_cycles_label)
-        cycles_sizer.Add(self.scan_cycles_input)
-        
-        sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
-        sizer_7_copy_4.Add(turns_sizer, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(self.scan_repeat_input)
+        scan_center_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Center")
+        center_box_sizer = wx.StaticBoxSizer(scan_center_box)
+        scan_center_sizer = wx.FlexGridSizer(2, 2)
+        scan_center_sizer.AddF(center_crda_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crda_input, self.sizerFlags)
+        scan_center_sizer.AddF(center_crdb_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crdb_input, self.sizerFlags)
+        center_box_sizer.AddF(scan_center_sizer, self.sizerFlags)
         
         scan_select_sizer = wx.BoxSizer(wx.VERTICAL)
         scan_select_sizer.Add(self.coordsys_selector, 1, wx.EXPAND)
-        scan_select_sizer.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.scan_type_input, 1, wx.EXPAND)
         
         scan_button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         scan_button_sizer.Add(self.preview_scan, 1, wx.EXPAND)
         scan_button_sizer.Add(self.buttonScanStart, 1, wx.EXPAND)
         scan_select_sizer.Add(scan_button_sizer, 1, wx.EXPAND)
-                
-        sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
-        sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
-        sizer_49.Add(scan_select_sizer, 1, wx.EXPAND)
-
-        sizer_42 = wx.BoxSizer(wx.VERTICAL)
-        sizer_42.Add(corners_sizer, 1, wx.EXPAND)
-        sizer_42.Add(sizer_49, 1, wx.EXPAND)
         
-        notebookScanningPane.SetSizer(sizer_42)
+        scan_type_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Type")
+        type_box_sizer = wx.StaticBoxSizer(scan_type_box, wx.VERTICAL)
+        type_box_sizer.Add(scan_select_sizer, 1, wx.EXPAND)
+        
+        scan_right_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_right_sizer.Add(center_box_sizer, 1, wx.EXPAND)
+        scan_right_sizer.Add(type_box_sizer, 1, wx.EXPAND)
 
-        return notebookScanningPane
+        scan_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        scan_sizer.Add(scan_left_sizer, 1, wx.EXPAND)
+        scan_sizer.Add(scan_right_sizer, 1, wx.EXPAND)
+        
+        scan_panel.SetSizer(scan_sizer)
+
+        return scan_panel
 
     def __create_options_pane(self):
         notebookOptionsPane = wx.Panel(self.controlNotebook)

@@ -145,4 +145,4 @@ def zigzag (pt1, pt2, pt3, pt4, num_turns):
 
 # list: scans implemented
 # => list(functions)
-scan_list = [serpentine, zigzag]
+scan_list = [rectangular]
