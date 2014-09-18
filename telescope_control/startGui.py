@@ -331,46 +331,20 @@ class MainWindow(gui.TelescopeControlFrame):
     def show_scan (self):
         
         # load some settings
-        pt1 = [float(self.corner1_crda_box.GetValue()) % 360,
-               float(self.corner1_crdb_box.GetValue())]
-        pt2 = [float(self.corner2_crda_box.GetValue()) % 360,
-               float(self.corner2_crdb_box.GetValue())]
-        pt3 = [float(self.corner3_crda_box.GetValue()) % 360,
-               float(self.corner3_crdb_box.GetValue())]
-        pt4 = [float(self.corner4_crda_box.GetValue()) % 360,
-               float(self.corner4_crdb_box.GetValue())]
-        
+        center = [float(self.center_crda_input.GetValue()) % 360,
+                  float(self.center_crdb_input.GetValue())]
+        size = float(self.size_edge_input.GetValue())
         num_turns = int(self.num_turns_input.GetValue())
-        scan_id = self.comboBoxScanOptions.GetSelection()
+        scan_id = self.scan_type_input.GetSelection()
         
         # compute a list of points to scan to and update sky chart
-        points = scans.scan_list[scan_id](pt1, pt2, pt3, pt4, num_turns)
+        points = scans.scan_list[scan_id](center, size, num_turns)
         self.sky_chart.path = points[:] # show path on chart
         self.sky_chart.given_equ = (self.coordsys_selector.GetSelection() == 1)
         
         # center sky chart in the middle of the scan region
         if len(points) > 0:
-            
-            # trig functions in degrees
-            def cos (x):
-                return math.cos(math.radians(x))
-            def sin (x):
-                return math.sin(math.radians(x))
-            def atan2 (y, x):
-                return math.degrees(math.atan2(y, x))
-            
-            # convert the corner points to rectangular vectors and sum
-            x = cos(pt1[0])*cos(pt1[1]) + cos(pt2[0])*cos(pt2[1]) + \
-                cos(pt3[0])*cos(pt3[1]) + cos(pt4[0])*cos(pt4[1])
-            y = sin(pt1[0])*cos(pt1[1]) + sin(pt2[0])*cos(pt2[1]) + \
-                sin(pt3[0])*cos(pt3[1]) + sin(pt4[0])*cos(pt4[1])
-            z = sin(pt1[1]) + sin(pt2[1]) + sin(pt3[1]) + sin(pt4[1])
-            
-            # convert the resulting vector into spherical coordinates
-            crd_a = atan2(y, x)
-            crd_b = atan2(z, math.sqrt(x*x + y*y))
-            
-            self.sky_chart.scan_center = [crd_a, crd_b]
+            self.sky_chart.scan_center = center
             self.sky_chart.Refresh()
             
         return points
