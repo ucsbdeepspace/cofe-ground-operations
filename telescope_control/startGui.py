@@ -328,48 +328,66 @@ class MainWindow(gui.TelescopeControlFrame):
         event.Skip()
 
     # show selected scan on sky chart
-    def show_scan (self):
+    def show_scan (self, scan_func):
         
-        # load some settings
+        self.sky_chart.path, center = scan_func() # show path on chart
+        self.sky_chart.given_equ = False
+        
+        # center sky chart in the middle of the scan region
+        self.sky_chart.scan_center = center
+        self.sky_chart.Refresh()
+    
+    # fetch scan function
+    def get_scan (self):
+        
+        # user inputs
         center = [float(self.center_crda_input.GetValue()) % 360,
                   float(self.center_crdb_input.GetValue())]
         size = float(self.size_edge_input.GetValue())
         num_turns = int(self.num_turns_input.GetValue())
         scan_id = self.scan_type_input.GetSelection()
         
-        # compute a list of points to scan to and update sky chart
-        points = scans.scan_list[scan_id](center, size, num_turns)
-        self.sky_chart.path = points[:] # show path on chart
-        self.sky_chart.given_equ = (self.coordsys_selector.GetSelection() == 1)
+        # function to generate list of points
+        if self.coordsys_selector.GetSelection() == 0: # horizontal
+            def scan_func ():
+                return scans.scan_list[scan_id](center, size, num_turns), \
+                       center
         
-        # center sky chart in the middle of the scan region
-        if len(points) > 0:
-            self.sky_chart.scan_center = center
-            self.sky_chart.Refresh()
-            
-        return points
+        else: # equatorial
+            def scan_func ():
+                
+                # convert center to horizontal coordinates
+                az, el = self.converter.radec_to_azel(
+                    math.radians(center[0]),
+                    math.radians(center[1])
+                )
+                center_hor = [math.degrees(az), math.degrees(el)]
+                
+                # compute list
+                return scans.scan_list[scan_id](center_hor, size, num_turns), \
+                       center_hor
+         
+        return scan_func
     
     # show preview of scan
     def set_preview (self, event):
-        points = self.show_scan()
+        self.scan_func = self.get_scan()
+        self.show_scan(self.scan_func)
         self.cur_center_input.SetSelection(1) # center on scan
         self.change_cen(event)
-        
-        return points
     
     # scan button clicked
     def scan (self, event):
-        points = self.set_preview(event)
+        
+        self.set_preview(event)
         self.stop(event)
         
         # run scan in new thread
         self.scan_thread = threading.Thread(target=lambda:
-            self.controller.scan(points,
-                self.coordsys_selector.GetSelection() == 0 and
-                    self.controller.process_hor or self.controller.process_equ,
+            self.controller.scan(lambda: self.scan_func()[0],
                 self.scan_repeat_input.GetValue() or
                     float(self.scan_cycles_input.GetValue())))
-                    
+        
         self.scan_thread.start()
         event.Skip()
     
@@ -535,6 +553,8 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # update sky chart
         self.sky_chart.curpos_h = self.controller.current_pos()
+        if hasattr(self, "scan_func"):
+            self.sky_chart.path, self.sky_chart.scan_center = self.scan_func()
         self.sky_chart.Refresh()
         
         if not self.galil:  # Short circuit in test-mode

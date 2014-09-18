@@ -33,15 +33,12 @@ class Controller:
     
     
     # scan: generic scan function
-    #   (note: should be executed in a maximum of one thread at any time)
     #
-    #   crd_list -> list([crd_a, crd_b])
-    #     crd_a = coordinate that goes from 0 to 360 degrees
-    #     crd_b = coordinate that goes from -90 to 90 degrees
+    #   crd_func -> function -> list([az, el]): returns list of coordinates
     #   process_func: function to process list of points
     #     (optionally, use "process_hor" and "process_equ" below)
     #   repeat: number of times to repeat (use "True" for indefinite repetition)
-    def scan (self, crd_list, process_func, repeat = 1):
+    def scan (self, crd_func, repeat = 1):
         
         # unset any previously set stop events
         self.stop = threading.Event()
@@ -52,89 +49,49 @@ class Controller:
         else: # repeat for <repeat> times
             self.scan_queue = repeat
         
+        # function to return list of reversed coordinates
+        def crd_reverse ():
+            crd_list = crd_func()
+            crd_list.reverse()
+            return crd_list
+        
         # queue and process scan
         while self.scan_queue > 0 and not self.stop.is_set():
             
             # process forward scan and wait until scan is complete
-            process_func(crd_list)
+            self.process_hor(crd_func)
             
             # quit if we only need to process one direction
             if self.scan_queue <= 0.5 or self.stop.is_set():
                 break
             
             # reverse direction and repeat
-            crd_list.reverse()
-            process_func(crd_list)
+            self.process_hor(crd_reverse)
             
-            # reset direction again and prepare for next time
-            crd_list.reverse()
+            # check whether to continue
             if str(repeat) != str(True):
                 self.scan_queue -= 1
         
         self.logger.info("scan complete")
-        return 0
+    
         
     # process_hor: process a list of horizontal coordinates to slew to
-    #   crd_list -> list([azi, alt]): list of coordinates to slew to (degrees)
-    def process_hor (self, crd_list):
-        i = 0
+    #   crd_func -> function -> list([az, el]): returns list of coordinates
+    def process_hor (self, crd_func):
         
+        # initialize loop
+        i = 0
         prev_pt = self.current_pos()
+        crd_list = crd_func()
         
         # loop through all segments
         while len(crd_list) > i and not self.stop.is_set():
             self.galil.sendOnly("AM")
             time.sleep(self.slew(crd_list[i], begin=prev_pt))
             self.stall(crd_list[i])
+            
             prev_pt = crd_list[i]
-            i = i + 1
-    
-    
-    # process_equ: process a list of equatorial coordinates to slew to
-    #   crd_list -> list([ra, de]): list of coordinates to slew to (degrees)
-    def process_equ (self, crd_list):
-        i = 0
-        
-        # start with current motor position
-        prev_pt = self.current_pos()
-        
-        # loop through all segments
-        while len(crd_list) > i and not self.stop.is_set():
-            self.galil.sendOnly("AM")
-            
-            ##
-            # iteratively compute the altitude and azimuth of a set of
-            # equatorial coordinates at the time which we will reach that
-            # point with the telescope -- ie. the current altitude and
-            # azimuth of a particular set of a particular set of equatorial
-            # coordinates will no longer be current by the time we get
-            # there -- we need to find the new coordinates before moving
-            ##
-            dt0 = 0
-            
-            # continue looping until we've converged close enough to the
-            #  actual amount of time it takes to reach our target point
-            while True:
-                
-                # compute horizontal coordinates of equatorial coordinates after
-                #  time dt has passed (the point where we should slew to)
-                azi, alt = self.converter.radec_to_azel(
-                    math.radians(crd_list[i][0]), math.radians(crd_list[i][1]), dt0)
-                new_crd_h = [math.degrees(azi), math.degrees(alt)]
-                
-                # estimate of time needed to get to next point
-                dt = self.slew(new_crd_h, begin=prev_pt, simulate=True)
-                
-                if math.fabs(dt - dt0) < 0.01:
-                    break # accurate enough, stop loop
-                
-                # not accurate enough, continue looping
-                dt0 = dt
-            
-            # move to new position and reset for the next iteration
-            time.sleep(self.slew(new_crd_h, begin=prev_pt))
-            #self.stall(new_crd_h)
-            prev_pt = new_crd_h
+            crd_list = crd_func()
             i = i + 1
     
     
