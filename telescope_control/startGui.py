@@ -150,7 +150,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller.sync(hor_pos)
         event.Skip()
 
-    def stop(self, event):
+    def stop (self, event):
         """This function is called whenever one of the stop
         buttons is pressed."""
         if hasattr(self.controller, "stop"):
@@ -162,12 +162,8 @@ class MainWindow(gui.TelescopeControlFrame):
         stops = [(self.button_stop_all, None),
                 (self.button_stop_az, 0),
                 (self.button_stop_el, 1)]
-        for stop, axis in stops:
-            if event.GetId() == stop.GetId():
-                print("Stopping motor for axis {}".format("ALL" if axis is None else axis))
-                self.galil.endMotion(axis)
-                break
-        time.sleep(1.01) # provide enough time for any scan loops to exit
+        self.galil.sendOnly("ST")
+        time.sleep(0.51) # provide enough time for tracking to exit
         event.Skip()
 
     def toggle_motor_state(self, event):
