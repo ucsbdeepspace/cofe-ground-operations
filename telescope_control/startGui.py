@@ -40,6 +40,7 @@ class MainWindow(gui.TelescopeControlFrame):
         
         gui.TelescopeControlFrame.__init__(self, self.converter, self.config,
             *args, **kwargs)
+        self.change_scan_crd(None)
         
         self.poll_update = wx.Timer(self)
         self.scan_thread = None
@@ -107,6 +108,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
         self.Bind(wx.EVT_COMBOBOX, self.change_cen, self.cur_center_input)
+        self.Bind(wx.EVT_COMBOBOX, self.change_scan_crd, self.scan_coordsys)
         
         self.Bind(wx.EVT_TEXT, self.change_speed, self.scan_speed_input)
         self.Bind(wx.EVT_TEXT, self.change_accel, self.scan_accel_input)
@@ -284,7 +286,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # set as center of equatorial scan
         self.center_crda_input.SetValue("{0:.4f}".format(equ_pos[0]))
         self.center_crdb_input.SetValue("{0:.4f}".format(equ_pos[1]))
-        self.coordsys_selector.SetSelection(1) # set to equatorial
+        self.scan_coordsys.SetSelection(1) # set to equatorial
         
         # switch to scan tab
         self.controlNotebook.SetSelection(3)
@@ -353,7 +355,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # set as center of equatorial scan
         self.center_crda_input.SetValue("{0:.4f}".format(equ_pos[0]))
         self.center_crdb_input.SetValue("{0:.4f}".format(equ_pos[1]))
-        self.coordsys_selector.SetSelection(1) # set to equatorial
+        self.scan_coordsys.SetSelection(1) # set to equatorial
         
         # switch to scan tab
         self.controlNotebook.SetSelection(3)
@@ -380,7 +382,7 @@ class MainWindow(gui.TelescopeControlFrame):
         scan_id = self.scan_type_input.GetSelection()
         
         # function to generate list of points
-        if self.coordsys_selector.GetSelection() == 0: # horizontal
+        if self.scan_coordsys.GetSelection() == 0: # horizontal
             def scan_func ():
                 return scans.scan_list[scan_id](center, size, num_turns), \
                        center
@@ -525,6 +527,18 @@ class MainWindow(gui.TelescopeControlFrame):
         self.sky_chart.Refresh()
         
         event.Skip()
+    
+    # change the scan coordinate system
+    def change_scan_crd (self, event):
+        
+        # set coordinate labels to equatorial
+        if self.scan_coordsys.GetSelection() == 1:
+            self.center_crda_label.SetLabel("Right Asc: ")
+            self.center_crdb_label.SetLabel("Declination: ")
+        
+        else: # set to horizontal
+            self.center_crda_label.SetLabel("Azimuth: ")
+            self.center_crdb_label.SetLabel("Altitude: ")
     
     # write configuration file and update all copies of the configuration
     def write_config (self):

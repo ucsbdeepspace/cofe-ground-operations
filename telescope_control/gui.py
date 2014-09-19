@@ -39,7 +39,7 @@ class TelescopeControlFrame(wx.Frame):
         
     def __set_properties(self):
         self.SetTitle("Telescope Control")
-        self.coordsys_selector.SetSelection(0)
+        self.scan_coordsys.SetSelection(1)
         self.scan_type_input.SetSelection(0)
         
     def __create_readoutPanel(self):
@@ -481,9 +481,9 @@ class TelescopeControlFrame(wx.Frame):
     def __create_scanning_pane(self):
         scan_panel = wx.Panel(self.controlNotebook)
         
-        center_crda_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd A: ")
+        self.center_crda_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd A: ")
         self.center_crda_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
-        center_crdb_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd B: ")
+        self.center_crdb_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd B: ")
         self.center_crdb_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "40")
         
         size_edge_label = wx.StaticText(scan_panel, wx.ID_ANY, "Size (degrees): ")
@@ -497,7 +497,7 @@ class TelescopeControlFrame(wx.Frame):
         self.preview_scan = wx.Button(scan_panel, wx.ID_ANY, "Preview")
 
         coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=De)"]
-        self.coordsys_selector = wx.ComboBox(scan_panel, wx.ID_ANY,
+        self.scan_coordsys = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
         scanOptionsList = [func.__name__.capitalize() for func in scans.scan_list]
@@ -524,14 +524,14 @@ class TelescopeControlFrame(wx.Frame):
         scan_center_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Center")
         center_box_sizer = wx.StaticBoxSizer(scan_center_box)
         scan_center_sizer = wx.FlexGridSizer(2, 2)
-        scan_center_sizer.AddF(center_crda_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crda_label, self.sizerFlags)
         scan_center_sizer.AddF(self.center_crda_input, self.sizerFlags)
-        scan_center_sizer.AddF(center_crdb_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crdb_label, self.sizerFlags)
         scan_center_sizer.AddF(self.center_crdb_input, self.sizerFlags)
         center_box_sizer.AddF(scan_center_sizer, self.sizerFlags)
         
         scan_select_sizer = wx.BoxSizer(wx.VERTICAL)
-        scan_select_sizer.Add(self.coordsys_selector, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.scan_coordsys, 1, wx.EXPAND)
         scan_select_sizer.Add(self.scan_type_input, 1, wx.EXPAND)
         
         scan_button_sizer = wx.BoxSizer(wx.HORIZONTAL)
