@@ -450,11 +450,11 @@ class Chart (glcanvas.GLCanvas):
                     line.append(y)
                 
                 prev_x, prev_y = x, y
-                ang_dist = circle.distance(prev_pt, next_pt)
                 
                 # change in azimuth and altitude to next point
                 d_az = (next_hor[0] - prev_hor[0]) % 360.0
                 d_el = next_hor[1] - prev_hor[1]
+                d_tot = d_az + d_el
                 
                 # adjust for wrap-around
                 if d_az > 180.0:
@@ -462,7 +462,8 @@ class Chart (glcanvas.GLCanvas):
                 
                 # generate list of intermediate points to slew to
                 # (linear on each horizontal axis)
-                num_int = int(ang_dist) # one intermediate point per degree
+                num_int = int(d_tot) # one intermediate point per degree
+                                     # on each axis
                 
                 for i in range(1, num_int + 1):
                     int_pt_hor = [prev_hor[0] + d_az * i / num_int,
