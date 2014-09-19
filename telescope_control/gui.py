@@ -452,7 +452,7 @@ class TelescopeControlFrame(wx.Frame):
         self.high_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "80")
         hg_sizer.AddF(self.high_altitude_input, self.sizerFlags)
         
-        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Num of Turns: "),
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "# of S-Turns: "),
             self.sizerFlags)
         self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "5")
         hg_sizer.AddF(self.hg_turns_input, self.sizerFlags)
@@ -487,10 +487,16 @@ class TelescopeControlFrame(wx.Frame):
         self.center_crdb_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "40")
         
         size_edge_label = wx.StaticText(scan_panel, wx.ID_ANY, "Size (degrees): ")
+        size_edge_label.SetToolTipString("Size: length (in degrees) of each "
+            + "side of the scan box.")
         self.size_edge_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
-        num_turns_label = wx.StaticText(scan_panel, wx.ID_ANY, "Num of Turns: ")
+        num_turns_label = wx.StaticText(scan_panel, wx.ID_ANY, "# of S-Turns: ")
+        num_turns_label.SetToolTipString("S-Turn: two 180 degree "
+            + "U-turns, resembling the letter S.")
         self.num_turns_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "5")
         scan_cycles_label = wx.StaticText(scan_panel, wx.ID_ANY, "Cycles to Run: ")
+        scan_cycles_label.SetToolTipString("Cycle: move from one end of the "
+            + "scan to the other and back.")
         self.scan_cycles_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "1")
         self.scan_repeat_input = wx.CheckBox(scan_panel, wx.ID_ANY, "Repeat indefinitely")
         self.buttonScanStart = wx.Button(scan_panel, wx.ID_ANY, "Begin Scan")
