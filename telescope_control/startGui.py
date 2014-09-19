@@ -42,7 +42,6 @@ class MainWindow(gui.TelescopeControlFrame):
             *args, **kwargs)
         self.change_scan_crd(None)
         
-        self.poll_update = wx.Timer(self)
         self.scan_thread = None
         self.step_size = 0
         
@@ -56,12 +55,12 @@ class MainWindow(gui.TelescopeControlFrame):
         self.zs_scan = zspiral.Scan(self.logger,
             self.galil, self.converter, self.config)
 
-        #wx.EVT_TIMER(self, self.poll_update.GetId(), self.update_display)
+        self.poll_update = wx.Timer(self)
         print("Setting up event handlers...")
         self.bind_events()
         self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
         print("Starting display update poll...")
-        self.poll_update.Start(100)
+        self.poll_update.Start(20)
         print('')
 
         print("Make sure to turn on the motors you will use!")

@@ -1,3 +1,4 @@
+from datetime import datetime
 import ephem
 import math
 from time import gmtime, strftime, time
@@ -58,19 +59,17 @@ class Units:
         return o.sidereal_time()
 
     def lct(self):
-        return strftime("%H:%M:%S")
+        return datetime.now().strftime("%H:%M:%S.%f")[:-4]
 
     def utc(self):
-        return "{t.tm_hour:02d}:{t.tm_min:02d}:{t.tm_sec:02d}".format(t=gmtime())
+        return datetime.utcnow().strftime('%H:%M:%S.%f')[:-4]
     
     # get ephem.Observer object
     def get_obs (self, dt=0):
         obs = ephem.Observer()
         obs.lat = self.c.get("location", "lat")
         obs.lon = self.c.get("location", "lon")
-        d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
-        h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-        obs.date = (d+h).format(t = gmtime(time() + dt))
+        obs.date = str(datetime.utcnow())
         obs.pressure = 0
         
         return obs
