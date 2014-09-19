@@ -20,7 +20,8 @@ def pos_list (csv_file):
             
             if start: # read data if we're past headers
                 result.append([ # name
-                    (row[2] == "I" and "IC " or "NGC ") + str(int(row[3])),
+                    (row[2][0] == "I" and "IC " or "NGC ")
+                        + str(int(row[2][1:])),
                     # equatorial position
                     [float(row[0]), float(row[1])]])
             
