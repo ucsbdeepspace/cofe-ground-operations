@@ -74,9 +74,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_CLOSE, self.stop)
         
         self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_all)
-        self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_az)
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.buttton_az_motor)
-        self.Bind(wx.EVT_BUTTON, self.stop, self.button_stop_el)
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.button_el_motor)
         self.Bind(wx.EVT_TEXT, self.set_step_size, self.step_size_input)
         
@@ -163,9 +161,6 @@ class MainWindow(gui.TelescopeControlFrame):
             self.hg_scan.stop.set()
         if hasattr(self.zs_scan, "stop"):
             self.zs_scan.stop.set()
-        stops = [(self.button_stop_all, None),
-                (self.button_stop_az, 0),
-                (self.button_stop_el, 1)]
         self.galil.sendOnly("ST")
         time.sleep(0.51) # provide enough time for tracking to exit
         event.Skip()
@@ -610,14 +605,13 @@ class MainWindow(gui.TelescopeControlFrame):
         data = [raw_data[string.uppercase.index(self.galil.axis_az)],
                 raw_data[string.uppercase.index(self.galil.axis_el)]]
         
-        az = self.converter.encoder_to_az(data[0])
-        az_dms = ephem.degrees(az)
-        el = self.converter.encoder_to_el(data[1])
-
+        az = math.degrees(ephem.degrees(self.converter.encoder_to_az(data[0])))
+        el = math.degrees(ephem.degrees(self.converter.encoder_to_el(data[1])))
+        
         ra, dec = self.converter.azel_to_radec(az, el)
-
-        data = [(self.az_status, "", ephem.degrees(str(math.degrees(az_dms) % 360.0))),
-                (self.el_status, "", el),
+        
+        data = [(self.az_status, "", ephem.degrees(str(az % 360.0))),
+                (self.el_status, "", ephem.degrees(str(el))),
 
                 (self.az_raw_status, "", data[0]),
                 (self.el_raw_status, "", data[1]),
@@ -625,7 +619,6 @@ class MainWindow(gui.TelescopeControlFrame):
                 (self.ra_status, "", ra),
                 (self.dec_status, "", dec),
                 (self.local_status, "", self.converter.lct()),
-                (self.lst_status, "", self.converter.lst()),
                 (self.utc_status, "", self.converter.utc())]
 
         for widget, prefix, datum in data:

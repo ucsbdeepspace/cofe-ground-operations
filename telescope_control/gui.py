@@ -44,7 +44,7 @@ class TelescopeControlFrame(wx.Frame):
         
     def __create_readoutPanel(self):
 
-        self.statusReadoutPanel                   = wx.Panel(self)
+        self.statusReadoutPanel = wx.Panel(self)
         
         self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
@@ -52,10 +52,9 @@ class TelescopeControlFrame(wx.Frame):
         self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
         self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
         self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
-        self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra:")
-        self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec:")
-        self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc:")
-        self.label_lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst:")
+        self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RA:")
+        self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "De:")
+        self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "UTC:")
         self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
 
         self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
@@ -65,7 +64,6 @@ class TelescopeControlFrame(wx.Frame):
         self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
-        self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
         self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
 
         self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (no data received)")
@@ -77,16 +75,13 @@ class TelescopeControlFrame(wx.Frame):
                     self.label_ra_status,      self.ra_status,
                     self.label_dec_status,     self.dec_status,
                     self.label_utc_status,     self.utc_status,
-                    self.label_lst_status,     self.lst_status,
                     self.label_local_status,   self.local_status]
-
-
+         
         for item in textItems:
             if isinstance(item, wx.StaticText):
                 item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
-
         
-        itemSizer = wx.FlexGridSizer(rows=9, cols=2)
+        itemSizer = wx.FlexGridSizer(rows=8, cols=2)
         itemSizer.AddMany(textItems)
         itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
         itemSizer.AddGrowableCol(1, proportion=1)		# available space
@@ -106,8 +101,8 @@ class TelescopeControlFrame(wx.Frame):
 
         gridSizer = wx.FlexGridSizer(rows=2, cols=2)
 
-        self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "AZ Motor Power")
-        self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "EL Motor Power")
+        self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "Az Motor Power")
+        self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "El Motor Power")
 
         self.azMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
         self.elMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
@@ -126,19 +121,11 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_motion_control_StaticBox(self, parent):
 
-
         verticalSizer = wx.BoxSizer(wx.VERTICAL)
         horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop All")
-        self.button_stop_az  = wx.Button(parent, wx.ID_ANY, "Stop AZ")
-        self.button_stop_el  = wx.Button(parent, wx.ID_ANY, "Stop EL")
-
-
+        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop Motion")
         verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
-        
-        horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
-        horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
         verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
 
         controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")

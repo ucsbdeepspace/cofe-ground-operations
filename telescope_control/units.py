@@ -39,7 +39,7 @@ class Units:
         d = int(val)
         m = int(abs(val - d)*60.0)
         s = (abs(val - d) - m/60.0)*3600.0
-        return "{}:{}:{:2.1f}".format(d, m, s)
+        return "{}:{:02d}:{:02.1f}".format(d, m, s)
 
     def azel_to_radec(self, az, el, dt=0):
         return self.get_obs(dt).radec_of(az, el)
@@ -61,7 +61,7 @@ class Units:
         return strftime("%H:%M:%S")
 
     def utc(self):
-        return "{t.tm_hour}:{t.tm_min}:{t.tm_sec}".format(t=gmtime())
+        return "{t.tm_hour:02d}:{t.tm_min:02d}:{t.tm_sec:02d}".format(t=gmtime())
     
     # get ephem.Observer object
     def get_obs (self, dt=0):
