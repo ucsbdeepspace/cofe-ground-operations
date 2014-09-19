@@ -46,4 +46,5 @@ class Planets:
     # -> az, el: horizontal position of an object
     def hor_pos (self, obj):
         obj.compute(self.converter.get_obs())
-        return math.degrees(obj.az), math.degrees(obj.alt)
+        az, el = self.converter.radec_to_azel(obj.ra, obj.dec)
+        return math.degrees(az), math.degrees(el)
