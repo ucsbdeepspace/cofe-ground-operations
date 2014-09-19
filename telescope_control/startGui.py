@@ -91,8 +91,10 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.Bind(wx.EVT_BUTTON, self.sso_goto, self.sso_goto_input)
         self.Bind(wx.EVT_BUTTON, self.sso_sync, self.sso_sync_input)
+        self.Bind(wx.EVT_BUTTON, self.sso_scan, self.sso_scan_input)
         self.Bind(wx.EVT_BUTTON, self.ngcic_goto, self.ngcic_goto_input)
         self.Bind(wx.EVT_BUTTON, self.ngcic_sync, self.ngcic_sync_input)
+        self.Bind(wx.EVT_BUTTON, self.ngcic_scan, self.ngcic_scan_input)
         
         self.Bind(wx.EVT_BUTTON, self.scan, self.buttonScanStart)
         self.Bind(wx.EVT_BUTTON, self.set_preview, self.preview_scan)
@@ -272,6 +274,22 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller.sync(hor_pos)
         event.Skip()
     
+    # set scan position to position of solar system object
+    def sso_scan (self, event):
+        
+        # get coordinates
+        equ_pos = self.planets.equ_pos(
+            self.planets.get_obj(self.sso_input.GetValue()))
+        
+        # set as center of equatorial scan
+        self.center_crda_input.SetValue("{0:.4f}".format(equ_pos[0]))
+        self.center_crdb_input.SetValue("{0:.4f}".format(equ_pos[1]))
+        self.coordsys_selector.SetSelection(1) # set to equatorial
+        
+        # switch to scan tab
+        self.controlNotebook.SetSelection(3)
+        event.Skip()
+    
     # get horizontal corodinates of an NGC or IC object
     def get_ngcic_pos (self, name):
         equ_pos = False
@@ -321,6 +339,24 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # sync to object position
         self.controller.sync(hor_pos)
+        event.Skip()
+    
+    # set scan position to position of NGC/IC object
+    def ngcic_scan (self, event):
+        
+        # get coordinates
+        equ_pos = self.get_ngcic_pos(self.ngcic_catalog.GetValue()
+            + " " + str(self.ngcic_input.GetValue()))
+        if not equ_pos:
+            return # object not found
+        
+        # set as center of equatorial scan
+        self.center_crda_input.SetValue("{0:.4f}".format(equ_pos[0]))
+        self.center_crdb_input.SetValue("{0:.4f}".format(equ_pos[1]))
+        self.coordsys_selector.SetSelection(1) # set to equatorial
+        
+        # switch to scan tab
+        self.controlNotebook.SetSelection(3)
         event.Skip()
 
     # show selected scan on sky chart

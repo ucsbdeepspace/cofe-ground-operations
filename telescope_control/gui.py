@@ -340,10 +340,12 @@ class TelescopeControlFrame(wx.Frame):
         sso_box_sizer.Add(sso_sizer)
         
         sso_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto")
         sso_buttons_sizer.Add(self.sso_goto_input)
-        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync")
         sso_buttons_sizer.Add(self.sso_sync_input)
+        self.sso_scan_input = wx.Button(targets_panel, wx.ID_ANY, "Scan")
+        sso_buttons_sizer.Add(self.sso_scan_input)
         sso_box_sizer.Add(sso_buttons_sizer)
         
         targets_sizer.Add(sso_box_sizer, 1, wx.EXPAND)
@@ -368,10 +370,12 @@ class TelescopeControlFrame(wx.Frame):
         ngcic_box_sizer.Add(ngcic_sizer)
         
         ngcic_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto")
         ngcic_buttons_sizer.Add(self.ngcic_goto_input)
-        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync")
         ngcic_buttons_sizer.Add(self.ngcic_sync_input)
+        self.ngcic_scan_input = wx.Button(targets_panel, wx.ID_ANY, "Scan")
+        ngcic_buttons_sizer.Add(self.ngcic_scan_input)
         ngcic_box_sizer.Add(ngcic_buttons_sizer)
         
         targets_sizer.Add(ngcic_box_sizer, 1, wx.EXPAND)
@@ -492,7 +496,7 @@ class TelescopeControlFrame(wx.Frame):
         self.buttonScanStart = wx.Button(scan_panel, wx.ID_ANY, "Begin Scan")
         self.preview_scan = wx.Button(scan_panel, wx.ID_ANY, "Preview")
 
-        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=DE)"]
+        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=De)"]
         self.coordsys_selector = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
