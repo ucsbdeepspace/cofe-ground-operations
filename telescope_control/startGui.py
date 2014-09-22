@@ -164,12 +164,6 @@ class MainWindow(gui.TelescopeControlFrame):
         
         time.sleep(0.51) # provide enough time for tracking to exit
         event.Skip()
-    
-    # copy config & controller objects to all scans
-    def copy_config (self):
-        self.controller.config = self.config
-        self.hg_scan.controller = self.controller
-        self.cc_scan.controller = self.controller
 
     def toggle_motor_state(self, event):
         """This function is called whenever you toggle the
@@ -533,17 +527,20 @@ class MainWindow(gui.TelescopeControlFrame):
             self.center_crda_label.SetLabel("Azimuth: ")
             self.center_crdb_label.SetLabel("Altitude: ")
     
+    # copy config & controller objects to all scans
+    def copy_config (self):
+        self.converter.c = self.config
+        self.controller.config = self.config
+        
+        self.sky_chart.converter = self.converter
+        self.controller.converter = self.converter
+        
+        self.hg_scan.controller = self.controller
+        self.cc_scan.controller = self.controller
+    
     # write configuration file and update all copies of the configuration
     def write_config (self):
-        self.converter.c = self.config
-        self.sky_chart.converter = self.converter
-        
-        self.controller.config = self.config
-        self.controller.converter = self.converter
-        self.hg_scan.config = self.config
-        self.hg_scan.converter = self.converter
-        self.cc_scan.config = self.config
-        self.cc_scan.converter = self.converter
+        self.copy_config()
         
         with open("config.ini", "w") as configfile:
             self.config.write(configfile)
