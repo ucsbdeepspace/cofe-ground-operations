@@ -256,7 +256,7 @@ class Controller:
     def stall (self, dest_pos, pre_time=0.1):
         
         while not (hasattr(self, "stop") and self.stop.is_set()):
-        
+            
             # current position
             cur_pos = self.current_pos()
             alt_av = math.radians(0.5 * (cur_pos[1] + dest_pos[1]))
@@ -270,8 +270,8 @@ class Controller:
             speed_el = d_el / delta * speed
             
             # leave loop if close enough on both axes
-            if d_az / speed_az < pre_time and \
-               d_el / speed_el < pre_time:
+            if (d_az == 0.0 or d_az / speed_az < pre_time) and \
+               (d_el == 0.0 or d_el / speed_el < pre_time):
                 return
             
             # wait 10 milliseconds before testing again

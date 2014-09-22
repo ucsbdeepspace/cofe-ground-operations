@@ -377,42 +377,40 @@ class TelescopeControlFrame(wx.Frame):
         simple_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
         # box for zenith spiral scan
-        zenith_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Zenith Spiral Scan")
-        zenith_box_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
+        circular_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Circular Scan")
+        circular_box_sizer = wx.StaticBoxSizer(circular_box, wx.VERTICAL)
         
-        zs_sizer = wx.FlexGridSizer(4, 2)
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
+        cc_sizer = wx.FlexGridSizer(4, 2)
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
             self.sizerFlags)
-        self.zst_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
-        zs_sizer.AddF(self.zst_azimuth_input, self.sizerFlags)
+        self.cc_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        cc_sizer.AddF(self.cc_azimuth_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
             self.sizerFlags)
-        self.zst_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
-        zs_sizer.AddF(self.zst_altitude_input, self.sizerFlags)
+        self.cc_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        cc_sizer.AddF(self.cc_altitude_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Altitude Increment: "),
-            self.sizerFlags)
-        self.zs_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
-        zs_sizer.AddF(self.zs_inc_input, self.sizerFlags)
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY,
+            "Cycles (0 = infinite): "), self.sizerFlags)
+        self.cc_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        cc_sizer.AddF(self.cc_cycles_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
-            self.sizerFlags)
-        self.zs_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
-        zs_sizer.AddF(self.zs_cycles_input, self.sizerFlags)
+        circular_box_sizer.Add(cc_sizer)
+        self.cc_ccw_input = wx.CheckBox(simple_panel, wx.ID_ANY,
+            "Counterclockwise")
+        circular_box_sizer.Add(self.cc_ccw_input)
         
-        zenith_box_sizer.Add(zs_sizer)
+        cc_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        zs_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.cc_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        cc_buttons_sizer.Add(self.cc_preview_input)
+        self.cc_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        cc_buttons_sizer.Add(self.cc_begin_input)
         
-        self.zs_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
-        zs_buttons_sizer.Add(self.zs_preview_input)
-        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
-        zs_buttons_sizer.Add(self.zs_begin_input)
+        circular_box_sizer.Add(cc_buttons_sizer)
         
-        zenith_box_sizer.Add(zs_buttons_sizer)
-        
-        simple_sizer.Add(zenith_box_sizer, 1, wx.EXPAND)
+        simple_sizer.Add(circular_box_sizer, 1, wx.EXPAND)
         
         # box for horizontal graticule scans
         horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")

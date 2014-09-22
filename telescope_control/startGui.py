@@ -19,8 +19,8 @@ import scans
 import threading
 import units
 
+import circular
 import graticule
-import zspiral
 
 class MainWindow(gui.TelescopeControlFrame):
     def __init__(self, galilInterface, *args, **kwargs):
@@ -52,8 +52,7 @@ class MainWindow(gui.TelescopeControlFrame):
         # simple scans
         self.hg_scan = graticule.Scan(self.logger,
             self.galil, self.converter, self.config)
-        self.zs_scan = zspiral.Scan(self.logger,
-            self.galil, self.converter, self.config)
+        self.cc_scan = circular.Scan(self.controller)
 
         self.poll_update = wx.Timer(self)
         print("Setting up event handlers...")
@@ -99,8 +98,8 @@ class MainWindow(gui.TelescopeControlFrame):
         
         self.Bind(wx.EVT_BUTTON, self.horiz_scan, self.hg_begin_input)
         self.Bind(wx.EVT_BUTTON, self.hg_preview, self.hg_preview_input)
-        self.Bind(wx.EVT_BUTTON, self.zenith_scan, self.zs_begin_input)
-        self.Bind(wx.EVT_BUTTON, self.zs_preview, self.zs_preview_input)
+        self.Bind(wx.EVT_BUTTON, self.circular_scan, self.cc_begin_input)
+        self.Bind(wx.EVT_BUTTON, self.cc_preview, self.cc_preview_input)
         
         self.Bind(wx.EVT_COMBOBOX, self.change_cs, self.chart_crdsys)
         self.Bind(wx.EVT_SPINCTRL, self.change_fov, self.chart_fov)
@@ -158,11 +157,19 @@ class MainWindow(gui.TelescopeControlFrame):
             self.controller.stop.set()
         if hasattr(self.hg_scan, "stop"):
             self.hg_scan.stop.set()
-        if hasattr(self.zs_scan, "stop"):
-            self.zs_scan.stop.set()
+        if hasattr(self.cc_scan, "stop"):
+            self.cc_scan.stop.set()
         self.galil.sendOnly("ST")
+        self.copy_config()
+        
         time.sleep(0.51) # provide enough time for tracking to exit
         event.Skip()
+    
+    # copy config & controller objects to all scans
+    def copy_config (self):
+        self.controller.config = self.config
+        self.hg_scan.controller = self.controller
+        self.cc_scan.controller = self.controller
 
     def toggle_motor_state(self, event):
         """This function is called whenever you toggle the
@@ -463,40 +470,32 @@ class MainWindow(gui.TelescopeControlFrame):
         self.sky_chart.Refresh()
         
     # execute a zenith spiral scan
-    def zenith_scan (self, event):
-        self.zs_preview(event)
+    def circular_scan (self, event):
+        self.cc_preview(event)
         self.stop(event)
         
         self.scan_thread = threading.Thread(target=lambda:
-            self.zs_scan.scan(
-                [float(self.zst_azimuth_input.GetValue()),
-                 float(self.zst_altitude_input.GetValue())],
-                float(self.zs_inc_input.GetValue()),
-                float(self.zs_cycles_input.GetValue()) == 0.0 or
-                    float(self.zs_cycles_input.GetValue())))
+            self.cc_scan.scan(
+                [float(self.cc_azimuth_input.GetValue()),
+                 float(self.cc_altitude_input.GetValue())],
+                float(self.cc_ccw_input.GetValue()),
+                float(self.cc_cycles_input.GetValue()) == 0.0 or
+                    float(self.cc_cycles_input.GetValue())))
         self.scan_thread.start()
         event.Skip()
     
     # show preview of zenith spiral scan
-    def zs_preview (self, event):
-        self.sky_chart.path = self.zs_scan.points(
-            [float(self.zst_azimuth_input.GetValue()),
-             float(self.zst_altitude_input.GetValue())],
-            float(self.zs_inc_input.GetValue()))
+    def cc_preview (self, event):
+        self.sky_chart.path = self.cc_scan.points(
+            [float(self.cc_azimuth_input.GetValue()),
+             float(self.cc_altitude_input.GetValue())])
         
         self.sky_chart.given_equ = False
         
         # center circular scan at the starting point
-        if -1e-5 <= float(self.zs_inc_input.GetValue()) <= 1e-5:
-            self.sky_chart.scan_center = \
-                [float(self.zst_azimuth_input.GetValue()),
-                 float(self.zst_altitude_input.GetValue())]
-        
-        # center spiral scans halfway between starting point and zenith
-        else:
-            self.sky_chart.scan_center = \
-                [float(self.zst_azimuth_input.GetValue()),
-                0.5 * (float(self.zst_altitude_input.GetValue()) + 90)]
+        self.sky_chart.scan_center = \
+            [float(self.cc_azimuth_input.GetValue()),
+             float(self.cc_altitude_input.GetValue())]
         
         self.cur_center_input.SetSelection(1) # center on scan
         self.change_cen(event)
@@ -543,8 +542,8 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller.converter = self.converter
         self.hg_scan.config = self.config
         self.hg_scan.converter = self.converter
-        self.zs_scan.config = self.config
-        self.zs_scan.converter = self.converter
+        self.cc_scan.config = self.config
+        self.cc_scan.converter = self.converter
         
         with open("config.ini", "w") as configfile:
             self.config.write(configfile)
