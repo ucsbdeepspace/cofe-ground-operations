@@ -79,7 +79,24 @@ def rectangular (center, size, num_turns):
     
     return crd_list
 
+# linear: slew in azimuth across an object
+#
+#   center -> [az, el]: object at center of scan
+#   size: total length of scan line (degrees)
+#   num_turns: (ignored)
+#
+# -> list([az, el]): list of coordinates in proper order for the scan
+def linear (center, size, num_turns = None):
+    
+    # find true length accounting for altitude
+    true_length = size / max(0.01, math.cos(math.radians(center[1])))
+    
+    # start on left and move to the right
+    return [
+        [center[0] - 0.5 * true_length, center[1]],
+        [center[0] + 0.5 * true_length, center[1]]
+    ]
 
 # list: scans implemented
 # => list(functions)
-scan_list = [rectangular]
+scan_list = [rectangular, linear]
