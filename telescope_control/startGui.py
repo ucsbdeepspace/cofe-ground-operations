@@ -50,8 +50,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.controller = controller.Controller(self.logger,
             self.galil, self.converter, self.config)
         # simple scans
-        self.hg_scan = graticule.Scan(self.logger,
-            self.galil, self.converter, self.config)
+        self.hg_scan = graticule.Scan(self.controller)
         self.cc_scan = circular.Scan(self.controller)
 
         self.poll_update = wx.Timer(self)
