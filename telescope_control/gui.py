@@ -123,17 +123,11 @@ class TelescopeControlFrame(wx.Frame):
         return sizer
 
     def __create_motion_control_StaticBox(self, parent):
-
-        verticalSizer = wx.BoxSizer(wx.VERTICAL)
-        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop Motion")
-        verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
-        verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
-
         controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
         sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-        sizer.Add(verticalSizer)
+        
+        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop Motion")
+        sizer.Add(self.button_stop_all, flag=wx.EXPAND)
 
         return sizer
     

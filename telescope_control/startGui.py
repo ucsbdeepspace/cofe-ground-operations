@@ -205,47 +205,46 @@ class MainWindow(gui.TelescopeControlFrame):
         
         # get current position
         cur_pos = self.controller.current_pos()
-        
-        # set speed of axes
-        speed = float(self.config.get("slew", "speed"))
-        speed_az = self.converter.az_to_encoder( # adjust for altitude
-            speed / max(0.01, math.cos(math.radians(cur_pos[1]))))
-        speed_el = self.converter.el_to_encoder(speed)
-        self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
-        self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))
-        
-        # set acceleration of axes
-        accel = float(self.config.get("slew", "accel"))
-        accel_az = self.converter.az_to_encoder( # adjust for altitude
-            accel / (math.cos(math.radians(cur_pos[1])) + 0.01))
-        accel_el = self.converter.el_to_encoder(accel)
-        self.galil.sendOnly("AC" + self.galil.axis_az + "=" + str(accel_az))
-        self.galil.sendOnly("AC" + self.galil.axis_el + "=" + str(accel_el))
-        self.galil.sendOnly("DC" + self.galil.axis_az + "=" + str(accel_az))
-        self.galil.sendOnly("DC" + self.galil.axis_el + "=" + str(accel_el))
 
         # list((button, sign of slew, axis))
-        b_s_a = [(self.button_up,    1, self.galil.axis_el),
-                 (self.button_down, -1, self.galil.axis_el),
-                 (self.button_right, 1, self.galil.axis_az),
-                 (self.button_left, -1, self.galil.axis_az)]
+        buttons = {self.button_up.GetId()    : [ 1, self.galil.axis_el],
+                   self.button_down.GetId()  : [-1, self.galil.axis_el],
+                   self.button_right.GetId() : [ 1, self.galil.axis_az],
+                   self.button_left.GetId()  : [-1, self.galil.axis_az]}
 
-        for button, sign, axis in b_s_a:
-            if event.GetId() == button.GetId():
-                try:
-                    self.logger.info("moving {} degrees on axis {}.".format(
-                        sign * self.step_deg, axis))
-                    self.galil.sendOnly("PR" + axis + "=" +
-                        str(sign * self.step_size[axis]))
-                except AttributeError:
-                    print("Can't move! No step size entered!")
-                    print("To enter a step size, type a number of degrees in")
-                    print("the box near the arrows, and press enter.")
-                    traceback.print_exc()
-                else:
-                    self.galil.sendOnly("BG " + axis)
-                break
-        return
+        sign = buttons[event.GetId()][0]
+        axis = buttons[event.GetId()][1]
+        try:
+            self.logger.info("moving {} degrees on axis {}.".format(
+                sign * self.step_deg, axis))
+            
+            # set speed of axes
+            speed = float(self.config.get("slew", "speed"))
+            speed_az = self.converter.az_to_encoder( # adjust for altitude
+                speed / max(0.01, math.cos(math.radians(cur_pos[1]))))
+            speed_el = self.converter.el_to_encoder(speed)
+            self.galil.sendOnly("SP" + self.galil.axis_az + "=" + str(speed_az))
+            self.galil.sendOnly("SP" + self.galil.axis_el + "=" + str(speed_el))
+            
+            # set acceleration of axes
+            accel = float(self.config.get("slew", "accel"))
+            accel_az = self.converter.az_to_encoder( # adjust for altitude
+                accel / (math.cos(math.radians(cur_pos[1])) + 0.01))
+            accel_el = self.converter.el_to_encoder(accel)
+            self.galil.sendOnly("AC" + self.galil.axis_az + "=" + str(accel_az))
+            self.galil.sendOnly("AC" + self.galil.axis_el + "=" + str(accel_el))
+            self.galil.sendOnly("DC" + self.galil.axis_az + "=" + str(accel_az))
+            self.galil.sendOnly("DC" + self.galil.axis_el + "=" + str(accel_el))
+            
+            # do move
+            self.galil.sendOnly("PR" + axis + "=" +
+                str(sign * self.step_size[axis]))
+            self.galil.sendOnly("BG " + axis)
+        except AttributeError:
+            print("Can't move! No step size entered!")
+            print("To enter a step size, type a number of degrees in")
+            print("the box near the arrows, and press enter.")
+            traceback.print_exc()
     
     # slew to a solar system object
     def sso_goto (self, event):
