@@ -48,14 +48,15 @@ class TelescopeControlFrame(wx.Frame):
         
         self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
-        self.label_az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
-        self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
-        self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
-        self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
-        self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RA:")
-        self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "De:")
-        self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "UTC:")
-        self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+        az_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
+        el_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
+        az_raw_status_label = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
+        el_raw_status_label = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
+        ra_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RA:")
+        dec_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "De:")
+        utc_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "UTC:")
+        local_status_label  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+        gps_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "GPS:")
 
         self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
@@ -65,17 +66,19 @@ class TelescopeControlFrame(wx.Frame):
         self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
         self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+        self.gps_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "No")
 
         self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (no data received)")
 
-        textItems = [self.label_az_status,     self.az_status,
-                    self.label_el_status,      self.el_status,
-                    self.label_az_raw_status,  self.az_raw_status,
-                    self.label_el_raw_status,  self.el_raw_status,
-                    self.label_ra_status,      self.ra_status,
-                    self.label_dec_status,     self.dec_status,
-                    self.label_utc_status,     self.utc_status,
-                    self.label_local_status,   self.local_status]
+        textItems = [az_status_label,     self.az_status,
+                     el_status_label,     self.el_status,
+                     az_raw_status_label, self.az_raw_status,
+                     el_raw_status_label, self.el_raw_status,
+                     ra_status_label,     self.ra_status,
+                     dec_status_label,    self.dec_status,
+                     utc_status_label,    self.utc_status,
+                     local_status_label,  self.local_status,
+                     gps_status_label,    self.gps_status]
          
         for item in textItems:
             if isinstance(item, wx.StaticText):
@@ -84,7 +87,7 @@ class TelescopeControlFrame(wx.Frame):
         itemSizer = wx.FlexGridSizer(rows=8, cols=2)
         itemSizer.AddMany(textItems)
         itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
-        itemSizer.AddGrowableCol(1, proportion=1)		# available space
+        itemSizer.AddGrowableCol(1, proportion=2)		# available space
 
         self.statusSizerStaticbox = wx.StaticBox(self.statusReadoutPanel, wx.ID_ANY, "Status")
         sizer = wx.StaticBoxSizer(self.statusSizerStaticbox, wx.VERTICAL)
@@ -474,7 +477,7 @@ class TelescopeControlFrame(wx.Frame):
         size_edge_label = wx.StaticText(scan_panel, wx.ID_ANY, "Size (degrees): ")
         size_edge_label.SetToolTipString("Size: length (in degrees) of each "
             + "side of the scan box.")
-        self.size_edge_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
+        self.size_edge_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "5")
         num_turns_label = wx.StaticText(scan_panel, wx.ID_ANY, "# of S-Turns: ")
         num_turns_label.SetToolTipString("S-Turn: two 180 degree "
             + "U-turns, resembling the letter S.")
