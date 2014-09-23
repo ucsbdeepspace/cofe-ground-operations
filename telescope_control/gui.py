@@ -84,7 +84,7 @@ class TelescopeControlFrame(wx.Frame):
             if isinstance(item, wx.StaticText):
                 item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
         
-        itemSizer = wx.FlexGridSizer(rows=8, cols=2)
+        itemSizer = wx.FlexGridSizer(cols=2)
         itemSizer.AddMany(textItems)
         itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
         itemSizer.AddGrowableCol(1, proportion=2)		# available space
@@ -102,7 +102,7 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_motor_power_ctrl_StaticBox(self, parent):
 
-        gridSizer = wx.FlexGridSizer(rows=2, cols=2)
+        gridSizer = wx.FlexGridSizer(cols=2)
 
         self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "Az Motor Power")
         self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "El Motor Power")
@@ -170,7 +170,7 @@ class TelescopeControlFrame(wx.Frame):
         self.goto_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
         self.goto_equ_input = wx.Button(parentNotebook, wx.ID_ANY, "Start Tracking")
 
-        gridSizer = wx.FlexGridSizer(3, 2)
+        gridSizer = wx.FlexGridSizer(cols=2)
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
         gridSizer.AddF(self.goto_ra_input, self.sizerFlags)
 
@@ -193,7 +193,7 @@ class TelescopeControlFrame(wx.Frame):
         self.sync_ra_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
         self.sync_de_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
 
-        gridSizer = wx.FlexGridSizer(3, 2)
+        gridSizer = wx.FlexGridSizer(cols=2)
 
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
         gridSizer.AddF(self.sync_ra_input, self.sizerFlags)
@@ -250,7 +250,7 @@ class TelescopeControlFrame(wx.Frame):
 
         self.sync_hor_input = wx.Button(parent, wx.ID_ANY, "Calibrate")
         
-        gridSizer = wx.FlexGridSizer(3,2)
+        gridSizer = wx.FlexGridSizer(cols=2)
         gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth:"), self.sizerFlags)
         gridSizer.AddF(self.sync_az_input, self.sizerFlags)
         gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude:"), self.sizerFlags)
@@ -270,7 +270,7 @@ class TelescopeControlFrame(wx.Frame):
         self.goto_el_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
         self.goto_hor_input = wx.Button(parent, wx.ID_ANY, "Start Move")
 
-        gridSizer = wx.FlexGridSizer(3,2)
+        gridSizer = wx.FlexGridSizer(cols=2)
         gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth: "), self.sizerFlags)
         gridSizer.AddF(self.goto_az_input, self.sizerFlags)
         gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude: "), self.sizerFlags)
@@ -338,7 +338,7 @@ class TelescopeControlFrame(wx.Frame):
         ngcic_box = wx.StaticBox(targets_panel, wx.ID_ANY, "NGC/IC Objects")
         ngcic_box_sizer = wx.StaticBoxSizer(ngcic_box, wx.VERTICAL)
         
-        ngcic_sizer = wx.FlexGridSizer(2, 2)
+        ngcic_sizer = wx.FlexGridSizer(cols=2)
         ngcic_sizer.AddF(wx.StaticText(targets_panel, wx.ID_ANY, "Catalog: "),
             self.sizerFlags)
         self.ngcic_catalog = wx.ComboBox(targets_panel, wx.ID_ANY,
@@ -377,7 +377,7 @@ class TelescopeControlFrame(wx.Frame):
         circular_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Circular Scan")
         circular_box_sizer = wx.StaticBoxSizer(circular_box, wx.VERTICAL)
         
-        cc_sizer = wx.FlexGridSizer(4, 2)
+        cc_sizer = wx.FlexGridSizer(cols=2)
         cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
             self.sizerFlags)
         self.cc_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
@@ -413,7 +413,7 @@ class TelescopeControlFrame(wx.Frame):
         horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")
         horiz_box_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
         
-        hg_sizer = wx.FlexGridSizer(4, 2)
+        hg_sizer = wx.FlexGridSizer(cols=2)
         hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "),
             self.sizerFlags)
         self.left_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
@@ -494,7 +494,7 @@ class TelescopeControlFrame(wx.Frame):
         
         scan_param_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Parameters")
         param_box_sizer = wx.StaticBoxSizer(scan_param_box)
-        scan_param_sizer = wx.FlexGridSizer(3, 2)
+        scan_param_sizer = wx.FlexGridSizer(cols=2)
         scan_param_sizer.AddF(size_edge_label, self.sizerFlags)
         scan_param_sizer.AddF(self.size_edge_input, self.sizerFlags)
         scan_param_sizer.AddF(num_turns_label, self.sizerFlags)
@@ -511,7 +511,7 @@ class TelescopeControlFrame(wx.Frame):
         
         scan_center_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Center")
         center_box_sizer = wx.StaticBoxSizer(scan_center_box)
-        scan_center_sizer = wx.FlexGridSizer(2, 2)
+        scan_center_sizer = wx.FlexGridSizer(cols=2)
         scan_center_sizer.AddF(self.center_crda_label, self.sizerFlags)
         scan_center_sizer.AddF(self.center_crda_input, self.sizerFlags)
         scan_center_sizer.AddF(self.center_crdb_label, self.sizerFlags)
@@ -562,7 +562,7 @@ class TelescopeControlFrame(wx.Frame):
         self.scan_accel_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
             self.config.get("slew", "accel"))
 
-        slew_grid = wx.FlexGridSizer(4,2)
+        slew_grid = wx.FlexGridSizer(cols=2)
         slew_grid.AddF(scan_speed_label, self.sizerFlags)
         slew_grid.AddF(self.scan_speed_input, self.sizerFlags)
 
@@ -587,7 +587,7 @@ class TelescopeControlFrame(wx.Frame):
         self.obs_lat_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
             self.config.get("location", "lat"))
 
-        obs_grid = wx.FlexGridSizer(4,2)
+        obs_grid = wx.FlexGridSizer(cols=2)
         obs_grid.AddF(obs_lon_label, self.sizerFlags)
         obs_grid.AddF(self.obs_lon_input, self.sizerFlags)
 
