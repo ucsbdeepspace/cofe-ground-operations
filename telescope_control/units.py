@@ -7,16 +7,16 @@ class Units:
     def __init__(self, config):
         """latitude and longitude need to be strings like 'd:m:s'"""
         self.c = config
-        
+
     def az_to_encoder(self, counts):
         return self.__to_encoder("az", counts)
-        
+
     def el_to_encoder(self, counts):
         return self.__to_encoder("el", counts)
 
     def __to_encoder(self, flag, counts):
-        enc = float(self.c.get("encoders", flag))/360.0 * counts
-        
+        enc = float(self.c.get("encoders", flag)) * counts/360.0
+
         # rounding
         if enc - int(enc) >= 0.5:
             enc = int(enc) + 1 # round up for positive numbers
@@ -24,9 +24,9 @@ class Units:
             enc = int(enc) - 1 # round down for negative numbers
         else: # no rounding
             enc = int(enc)
-        
+
         return enc
-    
+
     def encoder_to_az(self, counts):
         return self.__from_encoder("az", counts)
 
@@ -63,7 +63,7 @@ class Units:
 
     def utc(self):
         return datetime.utcnow().strftime('%H:%M:%S.%f')[:-4]
-    
+
     # get ephem.Observer object
     def get_obs (self, dt=0):
         obs = ephem.Observer()
@@ -71,5 +71,5 @@ class Units:
         obs.lon = self.c.get("location", "lon")
         obs.date = str(datetime.utcnow())
         obs.pressure = 0
-        
+
         return obs
