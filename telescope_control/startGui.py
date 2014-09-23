@@ -437,18 +437,6 @@ class MainWindow(gui.TelescopeControlFrame):
 
     # show preview of horizontal graticule scan
     def hg_preview (self, event):
-        def scan_func ():
-            return self.hg_scan.points(
-                float(self.left_azimuth_input.GetValue()),
-                float(self.right_azimuth_input.GetValue()),
-                float(self.low_altitude_input.GetValue()),
-                float(self.high_altitude_input.GetValue()),
-                int(self.hg_turns_input.GetValue()))
-
-        self.scan_func = scan_func
-        self.sky_chart.path = scan_func()
-
-        self.sky_chart.given_equ = False
 
         # determine the point in the center of the scan
         left_az = float(self.left_azimuth_input.GetValue()) % 360
@@ -460,6 +448,20 @@ class MainWindow(gui.TelescopeControlFrame):
                         float(self.high_altitude_input.GetValue()))
 
         self.sky_chart.scan_center = [cen_az, cen_el]
+
+        def scan_func ():
+            return self.hg_scan.points(
+                float(self.left_azimuth_input.GetValue()),
+                float(self.right_azimuth_input.GetValue()),
+                float(self.low_altitude_input.GetValue()),
+                float(self.high_altitude_input.GetValue()),
+                int(self.hg_turns_input.GetValue())), \
+                self.sky_chart.scan_center
+
+        self.scan_func = scan_func
+        self.sky_chart.path = scan_func()
+
+        self.sky_chart.given_equ = False
 
         self.cur_center_input.SetSelection(1) # center on scan
         self.change_cen(event)
@@ -482,19 +484,21 @@ class MainWindow(gui.TelescopeControlFrame):
 
     # show preview of zenith spiral scan
     def cc_preview (self, event):
-        def scan_func ():
-            return self.cc_scan.points(
-                [float(self.cc_azimuth_input.GetValue()),
-                 float(self.cc_altitude_input.GetValue())])
-
-        self.scan_func = scan_func
-        self.sky_chart.path = scan_func()
-        self.sky_chart.given_equ = False
 
         # center circular scan at the starting point
         self.sky_chart.scan_center = \
             [float(self.cc_azimuth_input.GetValue()),
              float(self.cc_altitude_input.GetValue())]
+
+        def scan_func ():
+            return self.cc_scan.points(
+                [float(self.cc_azimuth_input.GetValue()),
+                 float(self.cc_altitude_input.GetValue())]), \
+                self.sky_chart.scan_center
+
+        self.scan_func = scan_func
+        self.sky_chart.path = scan_func()
+        self.sky_chart.given_equ = False
 
         self.cur_center_input.SetSelection(1) # center on scan
         self.change_cen(event)
