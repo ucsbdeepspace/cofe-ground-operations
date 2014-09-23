@@ -22,7 +22,7 @@ class MyFrame(wx.Frame):
         self.__do_layout()
 
         self.ipOK = False
-        
+
         self.config = configparser.ConfigParser()
         self.config.read("config.ini")
         self.ipTextCtrl.SetValue(self.config.get("connection", "ip"))
@@ -45,7 +45,7 @@ class MyFrame(wx.Frame):
 
         self.ipTextCtrl = wx.TextCtrl(self, -1, "", style = wx.TE_PROCESS_ENTER)
         self.ipTextCtrl.Bind(wx.EVT_TEXT_ENTER, self.evtIpEnter)
-        
+
         textCtrlFont = wx.Font(10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, u'Consolas')
         self.ipTextCtrl.SetFont(textCtrlFont)
         ipEntrySizer.Add(self.ipTextCtrl, 1, wx.ALL | wx.EXPAND, 3)
@@ -71,7 +71,7 @@ class MyFrame(wx.Frame):
         statusSizer.Add(self.fakeGalilCheckbox, 0, wx.ALL, 5)
 
         return statusSizer
-    
+
     def __do_layout(self):
         mainSizer = wx.BoxSizer(wx.VERTICAL)
         mainSizer.Add(self.__mainPanel(), 0, wx.EXPAND, 0)
@@ -90,7 +90,7 @@ class MyFrame(wx.Frame):
         self.noticeText.SetLabel("Checking IP")
         wx.GetApp().Yield()
         ipAddress = self.ipTextCtrl.GetValue()
-        
+
         port = int(self.config.get("connection", "port"))
         globalConf.galilPort = port
 
@@ -115,7 +115,7 @@ class MyFrame(wx.Frame):
                 traceback.print_exc()
                 self.noticeText.SetLabel("Failed to open connection. Are you sure the IP is correct?")
             globalConf.galilIP = ipAddress
-            
+
         else:
             self.noticeText.SetLabel("Error: Invalid IP")
 
