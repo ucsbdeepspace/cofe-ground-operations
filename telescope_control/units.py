@@ -37,6 +37,7 @@ class Units:
         return self.__str_degrees(360.0/float(self.c.get("encoders", flag)) * counts)
 
     def __str_degrees(self, val):
+        val = val % 360
         d = int(val)
         m = int(abs(val - d)*60.0)
         s = (abs(val - d) - m/60.0)*3600.0
