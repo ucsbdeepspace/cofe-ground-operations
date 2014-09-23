@@ -26,7 +26,6 @@ class Chart (glcanvas.GLCanvas):
     def __init__ (self, parent, fov_ctrl, converter, planets):
         glcanvas.GLCanvas.__init__(self, parent, -1)
         self.context = glcanvas.GLContext(self)
-        self.SetCurrent(self.context)
         self.converter = converter
         self.planets = planets
         

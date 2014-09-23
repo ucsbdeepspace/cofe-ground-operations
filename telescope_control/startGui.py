@@ -58,7 +58,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.bind_events()
         self.Bind(wx.EVT_TIMER, self.update_display, self.poll_update)
         print("Starting display update poll...")
-        self.poll_update.Start(20)
+        self.poll_update.Start(30)
         print('')
 
         print("Make sure to turn on the motors you will use!")
@@ -470,8 +470,8 @@ class MainWindow(gui.TelescopeControlFrame):
             self.cc_scan.scan(
                 [float(self.cc_azimuth_input.GetValue()),
                  float(self.cc_altitude_input.GetValue())],
-                float(self.cc_ccw_input.GetValue()),
-                float(self.cc_cycles_input.GetValue()) == 0.0 or
+                 float(self.cc_ccw_input.GetValue()),
+                 float(self.cc_cycles_input.GetValue()) == 0.0 or
                     float(self.cc_cycles_input.GetValue())))
         self.scan_thread.start()
         event.Skip()
