@@ -6,7 +6,6 @@
 import OpenGL
 OpenGL.ERROR_CHECKING = False
 
-import ephem
 import FTGL
 import math
 import numpy as np
@@ -260,16 +259,19 @@ class Chart (glcanvas.GLCanvas):
         # draw NGC/IC objects
         ##
         
-        if self.h_fov <= 20.0: # only show when zoomed in
+        if self.h_fov <= 10.0: # only show when zoomed in
             glLineWidth(2)
-            level = min((20.0 - self.h_fov) * 0.1, 1.0)
-            glColor(level, level, level)
+            level = min((10.0 - self.h_fov) * 0.2, 1.0)
+            glColor(0.8 * level, 0.9 * level, level)
             
             max_dist = math.radians(math.sqrt(
                 self.h_fov**2 * (1.0 + (self.height/self.width)**2)))
             equ_center_rad = [math.radians(self.equ_center[0]),
                               math.radians(self.equ_center[1])]
             
+            # create list of NGC/IC objects to draw
+            ngcic_list = []
+            ngcic_num = 0 # number of objects being drawn
             for obj in self.ngcic_rad:
                 # ignore objects nowhere near the field of view
                 if circle.distance_rad(equ_center_rad, obj[1]) > max_dist:
@@ -289,21 +291,24 @@ class Chart (glcanvas.GLCanvas):
                 if 0 < point[0] <= self.width and \
                    0 < point[1] <= self.height:
                     
-                    # draw square diamond shape
-                    diamond = np.array([
-                        point[0], point[1] - 5,
-                        point[0] - 5, point[1],
-                        point[0], point[1] + 5,
-                        point[0] + 5, point[1]
-                    ], dtype=np.float32)
-                    diamond_vbo = VBO(diamond)
-                    diamond_vbo.bind()
-                    glVertexPointer(2, GL_FLOAT, 0, diamond_vbo)
-                    glDrawArrays(GL_LINE_LOOP, 0, 4)
+                    # add square diamond shape
+                    ngcic_list.extend(
+                        (point[0], point[1] - 5,
+                         point[0] - 5, point[1],
+                         point[0], point[1] + 5,
+                         point[0] + 5, point[1])
+                    )
+                    ngcic_num += 1
                     
                     # draw label
                     glRasterPos(point[0] + 10, point[1] + 4)
                     self.font.Render(obj[0]) # obj[0] -> object name
+                
+                ngcic_vbo = VBO(np.array(ngcic_list, dtype=np.float32))
+                ngcic_vbo.bind()
+                glVertexPointer(2, GL_FLOAT, 0, ngcic_vbo)
+                for i in range(0, ngcic_num):
+                    glDrawArrays(GL_LINE_LOOP, 4 * i, 4)
         
         ##
         # draw solar system objects
@@ -420,8 +425,18 @@ class Chart (glcanvas.GLCanvas):
         prev_x, prev_y = 0, 0 # previous point including intermediate points
         for next_pt in self.path:
             
+            # find horizontal coordinates of next point
+            if self.given_equ:
+                az, el = self.converter.radec_to_azel(
+                    math.radians(next_pt[0]), math.radians(next_pt[1]))
+                next_hor = [math.degrees(az), math.degrees(el)]
+            
+            else: # already in horizontal coordinates
+                next_hor = next_pt
+            
             # intermediate points
             if prev_pt:
+                
                 x, y = self.project_point(prev_pt)
                 
                 # check whether we need to break the list for wrap-around
@@ -435,16 +450,35 @@ class Chart (glcanvas.GLCanvas):
                     line.append(y)
                 
                 prev_x, prev_y = x, y
-                ang_dist = circle.distance(prev_pt, next_pt)
-                bearing = circle.bearing(prev_pt, next_pt)
+                
+                # change in azimuth and altitude to next point
+                d_az = (next_hor[0] - prev_hor[0]) % 360.0
+                d_el = next_hor[1] - prev_hor[1]
+                d_tot = d_az + d_el
+                
+                # adjust for wrap-around
+                if d_az > 180.0:
+                    d_az -= 360.0
                 
                 # generate list of intermediate points to slew to
-                num_int = int(ang_dist) # one intermediate point per degree
+                # (linear on each horizontal axis)
+                num_int = int(d_tot) # one intermediate point per degree
+                                     # on each axis
                 
                 for i in range(1, num_int + 1):
-                    a, b = circle.waypoint(prev_pt, bearing,
-                        i * ang_dist / num_int)
-                    x, y = self.project_point([a, b])
+                    int_pt_hor = [prev_hor[0] + d_az * i / num_int,
+                                  prev_hor[1] + d_el * i / num_int]
+                    
+                    if self.given_equ: # convert to equatorial
+                        ra, de = self.converter.azel_to_radec(
+                            math.radians(int_pt_hor[0]),
+                            math.radians(int_pt_hor[1]))
+                        int_pt = [math.degrees(ra), math.degrees(de)]
+                    
+                    else: # keep horizontal
+                        int_pt = int_pt_hor
+                    
+                    x, y = self.project_point(int_pt)
                     
                     # check whether we need to break the list for wrap-around
                     if x < 0 and prev_x > self.width or \
@@ -457,8 +491,9 @@ class Chart (glcanvas.GLCanvas):
                         line.append(y)
                     
                     prev_x, prev_y = x, y
-                
+            
             prev_pt = next_pt
+            prev_hor = next_hor
         
         # add in last point
         if prev_pt:
@@ -471,10 +506,10 @@ class Chart (glcanvas.GLCanvas):
                 line.append(y)
         break_line()
         
-        
         ##
         # show a cross-hair at the current position
         ##
+        
         glColor(1, 1, 1)
         glLineWidth(4)
         
@@ -482,7 +517,7 @@ class Chart (glcanvas.GLCanvas):
         if self.given_equ:
             cur_ra, cur_de = \
                 self.converter.azel_to_radec(
-                    math.radians(self.scan_center[0]), math.radians(self.scan_center[1]))
+                    math.radians(self.curpos_h[0]), math.radians(self.curpos_h[1]))
             curpos = [math.degrees(cur_ra), math.degrees(cur_de)]
         else: # already in horizontal coordinates
             curpos = self.curpos_h[:]

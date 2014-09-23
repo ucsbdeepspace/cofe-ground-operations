@@ -19,17 +19,17 @@ def distance (pt1, pt2):
     # cos(theta) = <pt1, pt2> / (||pt1|| ||pt2||)
     #            = <pt1, pt2>             <-- letting pt1, pt2 be unit vectors
     #            = sin(pt1[1])*sin(pt2[1])+cos(pt1[1])*cos(pt2[1])*cos(pt2[0]-pt1[0])
-    return math.degrees(math.acos(
+    return math.degrees(math.acos(max(-1.0, min(1.0,
         math.sin(pt1_b) * math.sin(pt2_b) +
         math.cos(pt1_b) * math.cos(pt2_b)
-            * math.cos(math.radians(pt2[0] - pt1[0]))))
+            * math.cos(math.radians(pt2[0] - pt1[0]))))))
 
 # distance_rad: same as above but with units in radians
 def distance_rad (pt1, pt2):
-    return math.acos(
+    return math.acos(max(-1.0, min(1.0,
         math.sin(pt1[1]) * math.sin(pt2[1]) +
         math.cos(pt1[1]) * math.cos(pt2[1])
-            * math.cos(pt2[0] - pt1[0]))
+            * math.cos(pt2[0] - pt1[0]))))
 
 # bearing: direction to go from one point to another
 #

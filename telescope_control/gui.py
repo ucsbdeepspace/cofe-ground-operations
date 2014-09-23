@@ -39,24 +39,24 @@ class TelescopeControlFrame(wx.Frame):
         
     def __set_properties(self):
         self.SetTitle("Telescope Control")
-        self.coordsys_selector.SetSelection(0)
-        self.comboBoxScanOptions.SetSelection(0)
+        self.scan_coordsys.SetSelection(1)
+        self.scan_type_input.SetSelection(0)
         
     def __create_readoutPanel(self):
 
-        self.statusReadoutPanel                   = wx.Panel(self)
+        self.statusReadoutPanel = wx.Panel(self)
         
         self.statusReadoutPanel.SetDoubleBuffered(True)   # Fix text flickering by forcing the container to be double-buffered.
 
-        self.label_az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
-        self.label_el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
-        self.label_az_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
-        self.label_el_raw_status = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
-        self.label_ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Ra:")
-        self.label_dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Dec:")
-        self.label_utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Utc:")
-        self.label_lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Lst:")
-        self.label_local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+        az_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az:")
+        el_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El:")
+        az_raw_status_label = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Az Raw:")
+        el_raw_status_label = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "El Raw:")
+        ra_status_label     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RA:")
+        dec_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "De:")
+        utc_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "UTC:")
+        local_status_label  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Local:")
+        gps_status_label    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "GPS:")
 
         self.az_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.el_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
@@ -65,31 +65,29 @@ class TelescopeControlFrame(wx.Frame):
         self.ra_status     = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
-        self.lst_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
         self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
+        self.gps_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "No")
 
-        self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (if you can see this,\nsomething is broken)")
+        self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (no data received)")
 
-        textItems = [self.label_az_status,     self.az_status,
-                    self.label_el_status,      self.el_status,
-                    self.label_az_raw_status,  self.az_raw_status,
-                    self.label_el_raw_status,  self.el_raw_status,
-                    self.label_ra_status,      self.ra_status,
-                    self.label_dec_status,     self.dec_status,
-                    self.label_utc_status,     self.utc_status,
-                    self.label_lst_status,     self.lst_status,
-                    self.label_local_status,   self.local_status]
-
-
+        textItems = [az_status_label,     self.az_status,
+                     el_status_label,     self.el_status,
+                     az_raw_status_label, self.az_raw_status,
+                     el_raw_status_label, self.el_raw_status,
+                     ra_status_label,     self.ra_status,
+                     dec_status_label,    self.dec_status,
+                     utc_status_label,    self.utc_status,
+                     local_status_label,  self.local_status,
+                     gps_status_label,    self.gps_status]
+         
         for item in textItems:
             if isinstance(item, wx.StaticText):
                 item.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
-
         
-        itemSizer = wx.FlexGridSizer(rows=9, cols=2)
+        itemSizer = wx.FlexGridSizer(rows=8, cols=2)
         itemSizer.AddMany(textItems)
         itemSizer.AddGrowableCol(0, proportion=1)		# Setting both colums to be growable forces them to expand into the 
-        itemSizer.AddGrowableCol(1, proportion=1)		# available space
+        itemSizer.AddGrowableCol(1, proportion=2)		# available space
 
         self.statusSizerStaticbox = wx.StaticBox(self.statusReadoutPanel, wx.ID_ANY, "Status")
         sizer = wx.StaticBoxSizer(self.statusSizerStaticbox, wx.VERTICAL)
@@ -106,8 +104,8 @@ class TelescopeControlFrame(wx.Frame):
 
         gridSizer = wx.FlexGridSizer(rows=2, cols=2)
 
-        self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "AZ Motor Power")
-        self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "EL Motor Power")
+        self.buttton_az_motor       = wx.Button(parent, wx.ID_ANY, "Az Motor Power")
+        self.button_el_motor        = wx.Button(parent, wx.ID_ANY, "El Motor Power")
 
         self.azMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
         self.elMotorPowerStateLabel = wx.StaticText(parent, wx.ID_ANY, label="Powered Off")
@@ -125,25 +123,11 @@ class TelescopeControlFrame(wx.Frame):
         return sizer
 
     def __create_motion_control_StaticBox(self, parent):
-
-
-        verticalSizer = wx.BoxSizer(wx.VERTICAL)
-        horizontalSizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop All")
-        self.button_stop_az  = wx.Button(parent, wx.ID_ANY, "Stop AZ")
-        self.button_stop_el  = wx.Button(parent, wx.ID_ANY, "Stop EL")
-
-
-        verticalSizer.AddF(self.button_stop_all, self.sizerFlags)
-        
-        horizontalSizer.AddF(self.button_stop_az, self.sizerFlags)
-        horizontalSizer.AddF(self.button_stop_el, self.sizerFlags)
-        verticalSizer.Add(horizontalSizer, flag=wx.EXPAND)
-
         controlButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Motion Control")
         sizer = wx.StaticBoxSizer(controlButtonsStaticBox, wx.VERTICAL)
-        sizer.Add(verticalSizer)
+        
+        self.button_stop_all = wx.Button(parent, wx.ID_ANY, "Stop Motion")
+        sizer.Add(self.button_stop_all, flag=wx.EXPAND)
 
         return sizer
     
@@ -177,103 +161,53 @@ class TelescopeControlFrame(wx.Frame):
         return controlButtonPanel
 
 
-    def __create_goto_ra_dec_staticbox(self, parentNotebook):
-        staticBoxGotoRaDec               = wx.StaticBox(parentNotebook, wx.ID_ANY, "Goto Ra/Dec")
-        staticTextRaLabel                = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-        staticTextDecLabel               = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
+    def __create_equ_goto (self, parentNotebook):
+        staticBoxGotoRaDec = wx.StaticBox(parentNotebook, wx.ID_ANY, "Track Position")
+        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
+        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
 
-        self.textCtrlGotoRightAscension  = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlGotoDeclination     = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.buttonGotoPosition          = wx.Button(parentNotebook, wx.ID_ANY, "Goto Position")
+        self.goto_ra_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.goto_de_input = wx.TextCtrl(parentNotebook, wx.ID_ANY, "0")
+        self.goto_equ_input = wx.Button(parentNotebook, wx.ID_ANY, "Start Tracking")
 
         gridSizer = wx.FlexGridSizer(3, 2)
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlGotoRightAscension, self.sizerFlags)
+        gridSizer.AddF(self.goto_ra_input, self.sizerFlags)
 
         gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlGotoDeclination, self.sizerFlags)
+        gridSizer.AddF(self.goto_de_input, self.sizerFlags)
         
         gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonGotoPosition, flag=wx.EXPAND)
+        gridSizer.Add(self.goto_equ_input, flag=wx.EXPAND)
 
         baseSizer = wx.StaticBoxSizer(staticBoxGotoRaDec, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
 
         return baseSizer
 
+    def __create_equ_sync (self, parent):
+        staticBoxRaDecCal = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
+        staticTextDecLabel = wx.StaticText(parent, wx.ID_ANY, "Dec:")
+        staticTextRaLabel = wx.StaticText(parent, wx.ID_ANY, "Ra: ")
 
-    def __create_ra_dec_tracking_staticbox(self, parentNotebook):
-        staticBoxRaDecTracking              = wx.StaticBox(parentNotebook, wx.ID_ANY, "Ra/Dec Tracking")
-        staticTextDecLabel                  = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-        staticTextRaLabel                   = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-
-        self.textCtrlTrackingRightAscension = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlTrackingDeclination    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-
-        gridSizer = wx.FlexGridSizer(3, 4)
-        gridSizer.AddGrowableCol(2, proportion=1)
-
-        gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlTrackingRightAscension, self.sizerFlags)
-        gridSizer.Add([1,1])
-        gridSizer.Add([1,1])
-
-        gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlTrackingDeclination, self.sizerFlags)
-        gridSizer.Add([1,1])
-        gridSizer.Add([1,1])
-
-        # This is a bit hacky
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonTrackPosition, flag=wx.EXPAND)
-        gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonTrackingToggle)
-
-
-        baseSizer = wx.StaticBoxSizer(staticBoxRaDecTracking, wx.VERTICAL)
-        baseSizer.Add(gridSizer, 1, wx.EXPAND)
-        return baseSizer
-
-    def __create_ra_dec_calibrate_staticbox(self, parentNotebook):
-        staticBoxRaDecCal = wx.StaticBox(parentNotebook, wx.ID_ANY, "Sync to Position")
-        staticTextDecLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Dec:")
-        staticTextRaLabel = wx.StaticText(parentNotebook, wx.ID_ANY, "Ra: ")
-
-        self.textCtrlRightAscensionCalInput = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
-        self.textCtrlDeclinationCalInput    = wx.TextCtrl(parentNotebook, wx.ID_ANY, "")
+        self.sync_ra_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.sync_de_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
 
         gridSizer = wx.FlexGridSizer(3, 2)
 
         gridSizer.AddF(staticTextRaLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlRightAscensionCalInput, self.sizerFlags)
+        gridSizer.AddF(self.sync_ra_input, self.sizerFlags)
 
         gridSizer.AddF(staticTextDecLabel, self.sizerFlags)
-        gridSizer.AddF(self.textCtrlDeclinationCalInput, self.sizerFlags)
+        gridSizer.AddF(self.sync_de_input, self.sizerFlags)
         
         gridSizer.Add([1,1])
-        gridSizer.Add(self.buttonDoRaDecCalibrate, flag=wx.EXPAND)
+        self.sync_equ_input = wx.Button(parent, wx.ID_ANY, "Calibrate")
+        gridSizer.Add(self.sync_equ_input, flag=wx.EXPAND)
         
         baseSizer = wx.StaticBoxSizer(staticBoxRaDecCal, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
         return baseSizer
-
-    def __create_ra_dec_pane(self):
-        notebookRaDecPane           = wx.Panel(self.controlNotebook)
-        self.buttonDoRaDecCalibrate = wx.Button(notebookRaDecPane, wx.ID_ANY, "Calibrate")
-        self.buttonTrackPosition    = wx.Button(notebookRaDecPane, wx.ID_ANY, "Track Position")
-        self.buttonTrackingToggle   = wx.ToggleButton(notebookRaDecPane, wx.ID_ANY, "Tracking On")
-        
-        sizerRaDecPanelUpper = wx.BoxSizer(wx.HORIZONTAL)
-        sizerRaDecPanelUpper.Add(self.__create_goto_ra_dec_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-        sizerRaDecPanelUpper.Add(self.__create_ra_dec_calibrate_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
-        sizerRaDecPane = wx.BoxSizer(wx.VERTICAL)
-        sizerRaDecPane.Add(sizerRaDecPanelUpper, 1, wx.EXPAND)
-        sizerRaDecPane.Add(self.__create_ra_dec_tracking_staticbox(notebookRaDecPane), 1, wx.EXPAND)
-
-
-        notebookRaDecPane.SetSizer(sizerRaDecPane)
-        return notebookRaDecPane
 
     def __create_joystick_panel(self, parent):
         staticBoxRelativeMoveCtrl = wx.StaticBox(parent, wx.ID_ANY, "Relative Move")
@@ -311,20 +245,18 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_az_el_calibrate_panel(self, parent):
         calibrateStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Sync to Position")
-        azLabel                 = wx.StaticText(parent, wx.ID_ANY, "Azimuth:")
-        elLabel                 = wx.StaticText(parent, wx.ID_ANY, "Altitude:")
-        self.calibrate_az_input = wx.TextCtrl(parent, wx.ID_ANY, "")
-        self.calibrate_el_input = wx.TextCtrl(parent, wx.ID_ANY, "")
+        self.sync_az_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.sync_el_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
 
-        self.button_calibrate           = wx.Button(parent, wx.ID_ANY, "Calibrate")
+        self.sync_hor_input = wx.Button(parent, wx.ID_ANY, "Calibrate")
         
         gridSizer = wx.FlexGridSizer(3,2)
-        gridSizer.AddF(azLabel, self.sizerFlags)
-        gridSizer.AddF(self.calibrate_az_input, self.sizerFlags)
-        gridSizer.AddF(elLabel, self.sizerFlags)
-        gridSizer.AddF(self.calibrate_el_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth:"), self.sizerFlags)
+        gridSizer.AddF(self.sync_az_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude:"), self.sizerFlags)
+        gridSizer.AddF(self.sync_el_input, self.sizerFlags)
         gridSizer.Add([1,1])
-        gridSizer.AddF(self.button_calibrate, self.sizerFlags)
+        gridSizer.AddF(self.sync_hor_input, self.sizerFlags)
 
         baseSizer = wx.StaticBoxSizer(calibrateStaticBox, wx.VERTICAL)
         baseSizer.Add(gridSizer, 1, wx.EXPAND)
@@ -333,20 +265,18 @@ class TelescopeControlFrame(wx.Frame):
 
     def __create_absolute_move_pane(self, parent):
 
-        absoluteMoveStaticBox      = wx.StaticBox(parent, wx.ID_ANY, "Absolute Move")
-        azLabel                    = wx.StaticText(parent, wx.ID_ANY, "Az:")
-        elLabel                    = wx.StaticText(parent, wx.ID_ANY, "El:")
-        self.absolute_move_ctrl_az = wx.TextCtrl(parent, wx.ID_ANY, "0")
-        self.absolute_move_ctrl_el = wx.TextCtrl(parent, wx.ID_ANY, "0")
-        self.button_start_move     = wx.Button(parent, wx.ID_ANY, "Start Move")
+        absoluteMoveStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Move to Position")
+        self.goto_az_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.goto_el_input = wx.TextCtrl(parent, wx.ID_ANY, "0")
+        self.goto_hor_input = wx.Button(parent, wx.ID_ANY, "Start Move")
 
         gridSizer = wx.FlexGridSizer(3,2)
-        gridSizer.AddF(azLabel, self.sizerFlags)
-        gridSizer.AddF(self.absolute_move_ctrl_az, self.sizerFlags)
-        gridSizer.AddF(elLabel, self.sizerFlags)
-        gridSizer.AddF(self.absolute_move_ctrl_el, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Azimuth: "), self.sizerFlags)
+        gridSizer.AddF(self.goto_az_input, self.sizerFlags)
+        gridSizer.AddF(wx.StaticText(parent, wx.ID_ANY, "Altitude: "), self.sizerFlags)
+        gridSizer.AddF(self.goto_el_input, self.sizerFlags)
         gridSizer.Add([1,1])
-        gridSizer.AddF(self.button_start_move, self.sizerFlags)
+        gridSizer.AddF(self.goto_hor_input, self.sizerFlags)
 
 
         baseSizer = wx.StaticBoxSizer(absoluteMoveStaticBox, wx.VERTICAL)
@@ -354,44 +284,31 @@ class TelescopeControlFrame(wx.Frame):
 
         return baseSizer
 
-    def __create_index_button_pane(self, parent):
-        axesIndexButtonsStaticBox = wx.StaticBox(parent, wx.ID_ANY, "Index")
-        self.button_index_az      = wx.Button(parent, wx.ID_ANY, "Azimuth Axis")
-        self.button_index_el      = wx.Button(parent, wx.ID_ANY, "Elevation Axis")
-
-        baseSizer = wx.StaticBoxSizer(axesIndexButtonsStaticBox, wx.VERTICAL)
-        baseSizer.Add(self.button_index_az, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-        baseSizer.Add(self.button_index_el, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND)
-
-        return baseSizer
-
-
     def __create_joystick_pane(self):
         notebookJoystickPane = wx.Panel(self.controlNotebook)
-
-        # The FlexGridSizer seems to have better rezise behavour when compressed then the 
-        # plain GridSizer. Not sure why. 
-        # Anyways, As such, I'm using a FlexGridSizer with all cells set to growable
-        gridSizer = wx.FlexGridSizer(2,2)
-        gridSizer.AddGrowableCol(0)
-        gridSizer.AddGrowableCol(1)
-        gridSizer.AddGrowableRow(0)
-        gridSizer.AddGrowableRow(1)
-
-        gridSizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
-        gridSizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
         
-        gridSizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
-        gridSizer.Add(self.__create_index_button_pane(notebookJoystickPane), 1, wx.EXPAND)
+        h_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        h_sizer.Add(self.__create_joystick_panel(notebookJoystickPane), 1, wx.EXPAND)
         
-        notebookJoystickPane.SetSizer(gridSizer)
-
+        v_sizer = wx.BoxSizer(wx.VERTICAL)
+        v_sizer.Add(self.__create_absolute_move_pane(notebookJoystickPane), 1, wx.EXPAND)
+        v_sizer.Add(self.__create_az_el_calibrate_panel(notebookJoystickPane), 1, wx.EXPAND)
+        h_sizer.Add(v_sizer, 1, wx.EXPAND)
+        
+        notebookJoystickPane.SetSizer(h_sizer)
         return notebookJoystickPane
 
     # list of targets to slew and sync to
     def __create_targets_pane (self):
         targets_panel = wx.Panel(self.controlNotebook)
-        targets_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        overall_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        
+        equ_sizer = wx.BoxSizer(wx.VERTICAL)
+        equ_sizer.Add(self.__create_equ_goto(targets_panel), 1, wx.EXPAND)
+        equ_sizer.Add(self.__create_equ_sync(targets_panel), 1, wx.EXPAND)
+        overall_sizer.Add(equ_sizer, 1, wx.EXPAND)
+        
+        targets_sizer = wx.BoxSizer(wx.VERTICAL)
         
         # box for solar system objects
         sso_box = wx.StaticBox(targets_panel, wx.ID_ANY, "Solar System Objects")
@@ -407,10 +324,12 @@ class TelescopeControlFrame(wx.Frame):
         sso_box_sizer.Add(sso_sizer)
         
         sso_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        self.sso_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto")
         sso_buttons_sizer.Add(self.sso_goto_input)
-        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        self.sso_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync")
         sso_buttons_sizer.Add(self.sso_sync_input)
+        self.sso_scan_input = wx.Button(targets_panel, wx.ID_ANY, "Scan")
+        sso_buttons_sizer.Add(self.sso_scan_input)
         sso_box_sizer.Add(sso_buttons_sizer)
         
         targets_sizer.Add(sso_box_sizer, 1, wx.EXPAND)
@@ -435,15 +354,18 @@ class TelescopeControlFrame(wx.Frame):
         ngcic_box_sizer.Add(ngcic_sizer)
         
         ngcic_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto Object")
+        self.ngcic_goto_input = wx.Button(targets_panel, wx.ID_ANY, "Goto")
         ngcic_buttons_sizer.Add(self.ngcic_goto_input)
-        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync to Object")
+        self.ngcic_sync_input = wx.Button(targets_panel, wx.ID_ANY, "Sync")
         ngcic_buttons_sizer.Add(self.ngcic_sync_input)
+        self.ngcic_scan_input = wx.Button(targets_panel, wx.ID_ANY, "Scan")
+        ngcic_buttons_sizer.Add(self.ngcic_scan_input)
         ngcic_box_sizer.Add(ngcic_buttons_sizer)
         
         targets_sizer.Add(ngcic_box_sizer, 1, wx.EXPAND)
+        overall_sizer.Add(targets_sizer, 1, wx.EXPAND)
         
-        targets_panel.SetSizer(targets_sizer)
+        targets_panel.SetSizer(overall_sizer)
         return targets_panel
     
     # simple scans: use the least motor movements between points
@@ -452,42 +374,40 @@ class TelescopeControlFrame(wx.Frame):
         simple_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
         # box for zenith spiral scan
-        zenith_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Zenith Spiral Scan")
-        zenith_box_sizer = wx.StaticBoxSizer(zenith_box, wx.VERTICAL)
+        circular_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Circular Scan")
+        circular_box_sizer = wx.StaticBoxSizer(circular_box, wx.VERTICAL)
         
-        zs_sizer = wx.FlexGridSizer(4, 2)
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
+        cc_sizer = wx.FlexGridSizer(4, 2)
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
             self.sizerFlags)
-        self.zst_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
-        zs_sizer.AddF(self.zst_azimuth_input, self.sizerFlags)
+        self.cc_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
+        cc_sizer.AddF(self.cc_azimuth_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Altitude: "),
             self.sizerFlags)
-        self.zst_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
-        zs_sizer.AddF(self.zst_altitude_input, self.sizerFlags)
+        self.cc_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
+        cc_sizer.AddF(self.cc_altitude_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Altitude Increment: "),
-            self.sizerFlags)
-        self.zs_inc_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "10")
-        zs_sizer.AddF(self.zs_inc_input, self.sizerFlags)
+        cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY,
+            "Cycles (0 = infinite): "), self.sizerFlags)
+        self.cc_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
+        cc_sizer.AddF(self.cc_cycles_input, self.sizerFlags)
         
-        zs_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Cycles (0 = infinite): "),
-            self.sizerFlags)
-        self.zs_cycles_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "1")
-        zs_sizer.AddF(self.zs_cycles_input, self.sizerFlags)
+        circular_box_sizer.Add(cc_sizer)
+        self.cc_ccw_input = wx.CheckBox(simple_panel, wx.ID_ANY,
+            "Counterclockwise")
+        circular_box_sizer.Add(self.cc_ccw_input)
         
-        zenith_box_sizer.Add(zs_sizer)
+        cc_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
         
-        zs_buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.cc_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
+        cc_buttons_sizer.Add(self.cc_preview_input)
+        self.cc_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
+        cc_buttons_sizer.Add(self.cc_begin_input)
         
-        self.zs_preview_input = wx.Button(simple_panel, wx.ID_ANY, "Preview")
-        zs_buttons_sizer.Add(self.zs_preview_input)
-        self.zs_begin_input = wx.Button(simple_panel, wx.ID_ANY, "Begin Scan")
-        zs_buttons_sizer.Add(self.zs_begin_input)
+        circular_box_sizer.Add(cc_buttons_sizer)
         
-        zenith_box_sizer.Add(zs_buttons_sizer)
-        
-        simple_sizer.Add(zenith_box_sizer, 1, wx.EXPAND)
+        simple_sizer.Add(circular_box_sizer, 1, wx.EXPAND)
         
         # box for horizontal graticule scans
         horiz_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Horizontal Graticule Scan")
@@ -514,7 +434,7 @@ class TelescopeControlFrame(wx.Frame):
         self.high_altitude_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "80")
         hg_sizer.AddF(self.high_altitude_input, self.sizerFlags)
         
-        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Num of Turns: "),
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "# of S-Turns: "),
             self.sizerFlags)
         self.hg_turns_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "5")
         hg_sizer.AddF(self.hg_turns_input, self.sizerFlags)
@@ -540,140 +460,88 @@ class TelescopeControlFrame(wx.Frame):
         return simple_panel
 
     # short scans: take the shortest angular distance between points
-    def __create_scanning_pane(self):	
-        # TODO: CLEANUP, name sizers sanely
-        notebookScanningPane    = wx.Panel(self.controlNotebook)
+    def __create_scanning_pane(self):
+        scan_panel = wx.Panel(self.controlNotebook)
         
-        self.corner1_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 1")
-        self.corner1_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner1_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.corner1_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner1_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
+        self.center_crda_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd A: ")
+        self.center_crda_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "10")
+        self.center_crdb_label = wx.StaticText(scan_panel, wx.ID_ANY, "Crd B: ")
+        self.center_crdb_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "40")
         
-        self.corner2_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 2")
-        self.corner2_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner2_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
-        self.corner2_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner2_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "40")
-        
-        self.corner3_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 3")
-        self.corner3_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner3_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "50")
-        self.corner3_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner3_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        
-        self.corner4_box        = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Corner 4")
-        self.corner4_crda_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "A:")
-        self.corner4_crda_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        self.corner4_crdb_label = wx.StaticText(notebookScanningPane, wx.ID_ANY, "B:")
-        self.corner4_crdb_box   = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "10")
-        
-        self.num_turns_label    = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Num of Turns: ")
-        self.num_turns_input    = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "5")
-        self.scan_cycles_label  = wx.StaticText(notebookScanningPane, wx.ID_ANY, "Cycles to Run: ")
-        self.scan_cycles_input  = wx.TextCtrl(notebookScanningPane, wx.ID_ANY, "1")
-        self.scan_repeat_input  = wx.CheckBox(notebookScanningPane, wx.ID_ANY, "Repeat indefinitely")
-        self.buttonScanStart    = wx.Button(notebookScanningPane, wx.ID_ANY, "Begin Scan")
-        self.preview_scan       = wx.Button(notebookScanningPane, wx.ID_ANY, "Preview")
+        size_edge_label = wx.StaticText(scan_panel, wx.ID_ANY, "Size (degrees): ")
+        size_edge_label.SetToolTipString("Size: length (in degrees) of each "
+            + "side of the scan box.")
+        self.size_edge_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "5")
+        num_turns_label = wx.StaticText(scan_panel, wx.ID_ANY, "# of S-Turns: ")
+        num_turns_label.SetToolTipString("S-Turn: two 180 degree "
+            + "U-turns, resembling the letter S.")
+        self.num_turns_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "5")
+        scan_cycles_label = wx.StaticText(scan_panel, wx.ID_ANY, "Cycles to Run: ")
+        scan_cycles_label.SetToolTipString("Cycle: move from one end of the "
+            + "scan to the other and back.")
+        self.scan_cycles_input = wx.TextCtrl(scan_panel, wx.ID_ANY, "1")
+        self.scan_repeat_input = wx.CheckBox(scan_panel, wx.ID_ANY, "Repeat indefinitely")
+        self.buttonScanStart = wx.Button(scan_panel, wx.ID_ANY, "Begin Scan")
+        self.preview_scan = wx.Button(scan_panel, wx.ID_ANY, "Preview")
 
-        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=DE)"]
-        self.coordsys_selector = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+        coord_sys = ["Horizontal (A=Az, B=El)", "Equatorial (A=RA, B=De)"]
+        self.scan_coordsys = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=coord_sys, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
         scanOptionsList = [func.__name__.capitalize() for func in scans.scan_list]
-        self.comboBoxScanOptions = wx.ComboBox(notebookScanningPane, wx.ID_ANY,
+        self.scan_type_input = wx.ComboBox(scan_panel, wx.ID_ANY,
             choices=scanOptionsList, style=wx.CB_DROPDOWN | wx.CB_READONLY)
         
-        self.sizer_49_staticbox = wx.StaticBox(notebookScanningPane, wx.ID_ANY, "Scan Options")
-
-
-        corner1_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner1_crda_sizer.Add(self.corner1_crda_label)
-        corner1_crda_sizer.Add(self.corner1_crda_box)
-
-        corner1_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner1_crdb_sizer.Add(self.corner1_crdb_label)
-        corner1_crdb_sizer.Add(self.corner1_crdb_box)
+        scan_param_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Parameters")
+        param_box_sizer = wx.StaticBoxSizer(scan_param_box)
+        scan_param_sizer = wx.FlexGridSizer(3, 2)
+        scan_param_sizer.AddF(size_edge_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.size_edge_input, self.sizerFlags)
+        scan_param_sizer.AddF(num_turns_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.num_turns_input, self.sizerFlags)
+        scan_param_sizer.AddF(scan_cycles_label, self.sizerFlags)
+        scan_param_sizer.AddF(self.scan_cycles_input, self.sizerFlags)
+        scan_param_sizer.AddF(self.scan_repeat_input, self.sizerFlags)
+        param_box_sizer.AddF(scan_param_sizer, self.sizerFlags)
         
-        corner1_sizer = wx.StaticBoxSizer(self.corner1_box, wx.VERTICAL)
-        corner1_sizer.Add(corner1_crda_sizer, 1, wx.EXPAND)
-        corner1_sizer.Add(corner1_crdb_sizer, 1, wx.EXPAND)
+        scan_left_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_left_sizer.Add(param_box_sizer, 1, wx.EXPAND)
         
-        corner2_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner2_crda_sizer.Add(self.corner2_crda_label)
-        corner2_crda_sizer.Add(self.corner2_crda_box)
-                
-        corner2_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner2_crdb_sizer.Add(self.corner2_crdb_label)
-        corner2_crdb_sizer.Add(self.corner2_crdb_box)
+        # --
         
-        corner2_sizer = wx.StaticBoxSizer(self.corner2_box, wx.VERTICAL)
-        corner2_sizer.Add(corner2_crda_sizer, 1, wx.EXPAND)
-        corner2_sizer.Add(corner2_crdb_sizer, 1, wx.EXPAND)
-        
-        corner3_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner3_crda_sizer.Add(self.corner3_crda_label)
-        corner3_crda_sizer.Add(self.corner3_crda_box)
-                
-        corner3_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner3_crdb_sizer.Add(self.corner3_crdb_label)
-        corner3_crdb_sizer.Add(self.corner3_crdb_box)
-        
-        corner3_sizer = wx.StaticBoxSizer(self.corner3_box, wx.VERTICAL)
-        corner3_sizer.Add(corner3_crda_sizer, 1, wx.EXPAND)
-        corner3_sizer.Add(corner3_crdb_sizer, 1, wx.EXPAND)
-        
-        corner4_crda_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner4_crda_sizer.Add(self.corner4_crda_label)
-        corner4_crda_sizer.Add(self.corner4_crda_box)
-                
-        corner4_crdb_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corner4_crdb_sizer.Add(self.corner4_crdb_label)
-        corner4_crdb_sizer.Add(self.corner4_crdb_box)
-        
-        corner4_sizer = wx.StaticBoxSizer(self.corner4_box, wx.VERTICAL)
-        corner4_sizer.Add(corner4_crda_sizer, 1, wx.EXPAND)
-        corner4_sizer.Add(corner4_crdb_sizer, 1, wx.EXPAND)
-        
-        corners_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        corners_sizer.Add(corner1_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner2_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner3_sizer, 1, wx.EXPAND)
-        corners_sizer.Add(corner4_sizer, 1, wx.EXPAND)
-        
-        turns_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        turns_sizer.Add(self.num_turns_label)
-        turns_sizer.Add(self.num_turns_input)
-        
-        cycles_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        cycles_sizer.Add(self.scan_cycles_label)
-        cycles_sizer.Add(self.scan_cycles_input)
-        
-        sizer_7_copy_4 = wx.BoxSizer(wx.VERTICAL)
-        sizer_7_copy_4.Add(turns_sizer, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(cycles_sizer, 1, wx.EXPAND)
-        sizer_7_copy_4.Add(self.scan_repeat_input)
+        scan_center_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Center")
+        center_box_sizer = wx.StaticBoxSizer(scan_center_box)
+        scan_center_sizer = wx.FlexGridSizer(2, 2)
+        scan_center_sizer.AddF(self.center_crda_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crda_input, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crdb_label, self.sizerFlags)
+        scan_center_sizer.AddF(self.center_crdb_input, self.sizerFlags)
+        center_box_sizer.AddF(scan_center_sizer, self.sizerFlags)
         
         scan_select_sizer = wx.BoxSizer(wx.VERTICAL)
-        scan_select_sizer.Add(self.coordsys_selector, 1, wx.EXPAND)
-        scan_select_sizer.Add(self.comboBoxScanOptions, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.scan_coordsys, 1, wx.EXPAND)
+        scan_select_sizer.Add(self.scan_type_input, 1, wx.EXPAND)
         
         scan_button_sizer = wx.BoxSizer(wx.HORIZONTAL)
         scan_button_sizer.Add(self.preview_scan, 1, wx.EXPAND)
         scan_button_sizer.Add(self.buttonScanStart, 1, wx.EXPAND)
         scan_select_sizer.Add(scan_button_sizer, 1, wx.EXPAND)
-                
-        sizer_49 = wx.StaticBoxSizer(self.sizer_49_staticbox, wx.HORIZONTAL)
-        sizer_49.Add(sizer_7_copy_4, 1, wx.EXPAND)
-        sizer_49.Add(scan_select_sizer, 1, wx.EXPAND)
-
-        sizer_42 = wx.BoxSizer(wx.VERTICAL)
-        sizer_42.Add(corners_sizer, 1, wx.EXPAND)
-        sizer_42.Add(sizer_49, 1, wx.EXPAND)
         
-        notebookScanningPane.SetSizer(sizer_42)
+        scan_type_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Type")
+        type_box_sizer = wx.StaticBoxSizer(scan_type_box, wx.VERTICAL)
+        type_box_sizer.Add(scan_select_sizer, 1, wx.EXPAND)
+        
+        scan_right_sizer = wx.BoxSizer(wx.VERTICAL)
+        scan_right_sizer.Add(center_box_sizer, 1, wx.EXPAND)
+        scan_right_sizer.Add(type_box_sizer, 1, wx.EXPAND)
 
-        return notebookScanningPane
+        scan_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        scan_sizer.Add(scan_left_sizer, 1, wx.EXPAND)
+        scan_sizer.Add(scan_right_sizer, 1, wx.EXPAND)
+        
+        scan_panel.SetSizer(scan_sizer)
+
+        return scan_panel
 
     def __create_options_pane(self):
         notebookOptionsPane = wx.Panel(self.controlNotebook)
@@ -789,8 +657,6 @@ class TelescopeControlFrame(wx.Frame):
         self.controlNotebook = wx.Notebook(self, wx.ID_ANY, style=0)
         print("Building joy stick...")
         self.controlNotebook.AddPage(self.__create_joystick_pane(), "Joy Stick")
-        print("Building RA/DE controls...")
-        self.controlNotebook.AddPage(self.__create_ra_dec_pane(), "RA/DEC")
         print("Building targets panel...")
         self.controlNotebook.AddPage(self.__create_targets_pane(), "Targets")
         print("Building simple scans panel...")
