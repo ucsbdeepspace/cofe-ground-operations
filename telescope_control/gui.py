@@ -4,6 +4,7 @@ import wx
 import chart        # WHRYYYYYYYYYYYYYYYYYYYYYYYYY
 import planets
 import scans
+import sys
 
 class TelescopeControlFrame(wx.Frame):
     def __init__(self, converter, config, *args, **kwds):
@@ -376,7 +377,7 @@ class TelescopeControlFrame(wx.Frame):
         # box for zenith spiral scan
         circular_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Circular Scan")
         circular_box_sizer = wx.StaticBoxSizer(circular_box, wx.VERTICAL)
-        
+
         cc_sizer = wx.FlexGridSizer(cols=2)
         cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
             self.sizerFlags)
@@ -416,7 +417,7 @@ class TelescopeControlFrame(wx.Frame):
         hg_sizer = wx.FlexGridSizer(cols=2)
         hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "),
             self.sizerFlags)
-        
+
         self.left_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
         hg_sizer.AddF(self.left_azimuth_input, self.sizerFlags)
 
