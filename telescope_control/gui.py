@@ -1,7 +1,7 @@
 import logging
 import wx
 
-from chart import *        # WHRYYYYYYYYYYYYYYYYYYYYYYYYY
+import chart        # WHRYYYYYYYYYYYYYYYYYYYYYYYYY
 import planets
 import scans
 
@@ -376,7 +376,7 @@ class TelescopeControlFrame(wx.Frame):
         # box for zenith spiral scan
         circular_box = wx.StaticBox(simple_panel, wx.ID_ANY, "Circular Scan")
         circular_box_sizer = wx.StaticBoxSizer(circular_box, wx.VERTICAL)
-
+        
         cc_sizer = wx.FlexGridSizer(cols=2)
         cc_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Starting Azimuth: "),
             self.sizerFlags)
@@ -414,7 +414,9 @@ class TelescopeControlFrame(wx.Frame):
         horiz_box_sizer = wx.StaticBoxSizer(horiz_box, wx.VERTICAL)
 
         hg_sizer = wx.FlexGridSizer(cols=2)
-        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "), self.sizerFlags)
+        hg_sizer.AddF(wx.StaticText(simple_panel, wx.ID_ANY, "Left Azimuth: "),
+            self.sizerFlags)
+        
         self.left_azimuth_input = wx.TextCtrl(simple_panel, wx.ID_ANY, "0")
         hg_sizer.AddF(self.left_azimuth_input, self.sizerFlags)
 
@@ -488,7 +490,7 @@ class TelescopeControlFrame(wx.Frame):
         scan_param_box = wx.StaticBox(scan_panel, wx.ID_ANY, "Parameters")
         param_box_sizer = wx.StaticBoxSizer(scan_param_box)
 
-        scan_param_sizer = wx.FlexGridSizer(rows=2)
+        scan_param_sizer = wx.FlexGridSizer(cols=2)
         scan_param_sizer.AddF(size_edge_label, self.sizerFlags)
         scan_param_sizer.AddF(self.size_edge_input, self.sizerFlags)
         scan_param_sizer.AddF(num_turns_label, self.sizerFlags)
@@ -625,7 +627,7 @@ class TelescopeControlFrame(wx.Frame):
         ctrl_sizer.Add(self.chart_fov)
 
         # create OpenGL canvas
-        self.sky_chart = Chart(self.sky_panel, self.chart_fov,
+        self.sky_chart = chart.Chart(self.sky_panel, self.chart_fov,
             self.converter, self.planets)
         sky_sizer.Add(self.sky_chart, 1, wx.EXPAND)
         sky_sizer.Add(ctrl_sizer, 0, wx.EXPAND)
@@ -674,7 +676,7 @@ class TelescopeControlFrame(wx.Frame):
         self.Layout()
 
 
-def main():		# Shut up pylinter
+def main(): # Shut up pylinter
     app = wx.App()
     mainFrame = TelescopeControlFrame(None, -1, "")
     app.SetTopWindow(mainFrame)
