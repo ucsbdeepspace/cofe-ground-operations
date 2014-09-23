@@ -34,14 +34,17 @@ class Units:
         return self.__from_encoder("el", counts)
 
     def __from_encoder(self, flag, counts):
-        return self.__str_degrees(360.0/float(self.c.get("encoders", flag)) * counts)
+        dec_deg = 360.0/float(self.c.get("encoders", flag)) * counts
+        if flag == "az":
+            dec_deg = dec_deg % 360
+        return self.__str_degrees(dec_deg)
 
     def __str_degrees(self, val):
-        val = val % 360
-        d = int(val)
-        m = int(abs(val - d)*60.0)
-        s = (abs(val - d) - m/60.0)*3600.0
-        return "{}:{:02d}:{:02.1f}".format(d, m, s)
+        val_abs = abs(val)
+        d = int(val_abs)
+        m = int((val_abs - d)*60)
+        s = ((val_abs - d) - m/60.0)*3600.0
+        return (val < 0 and "-" or "") + "{}:{:02d}:{:02.1f}".format(d, m, s)
 
     def azel_to_radec(self, az, el, dt=0):
         return self.get_obs(dt).radec_of(az, el)

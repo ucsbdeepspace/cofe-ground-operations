@@ -166,11 +166,13 @@ class Controller:
                 self.galil.sendOnly("DC" + self.galil.axis_el + "=" + str(accel_el))
 
             # move to position
-            self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
-                str(self.converter.az_to_encoder(begin[0] + d_az)))
-            self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
-                str(self.converter.el_to_encoder(begin[1] + d_el)))
-            self.galil.sendOnly("BG")
+            if speed_az:
+                self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(begin[0] + d_az)))
+            if speed_el:
+                self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
+                    str(self.converter.el_to_encoder(begin[1] + d_el)))
+            self.logger.info(self.galil.sendAndReceive("BG"))
 
         return tm_tot
 
