@@ -624,7 +624,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 (self.dec_status, "", dec),
                 (self.local_status, "", self.converter.lct()),
                 (self.utc_status, "", self.converter.utc()),
-                (self.gps_status, "", "Locked" if self.galil.haveLock else "Not Locked")]
+                (self.gps_status, "", self.galil.haveLock and "Locked" or "Not Locked")]
 
         for widget, prefix, datum in data:
             widget.SetLabel(prefix + str(datum))

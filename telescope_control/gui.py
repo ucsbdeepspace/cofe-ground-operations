@@ -67,7 +67,7 @@ class TelescopeControlFrame(wx.Frame):
         self.dec_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00 Degrees")
         self.utc_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
         self.local_status  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "0.00")
-        self.gps_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "No")
+        self.gps_status    = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "Not Locked")
 
         self.packet_num  = wx.StaticText(self.statusReadoutPanel, wx.ID_ANY, "RX Pkts: 0 (no data received)")
 
