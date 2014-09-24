@@ -28,6 +28,7 @@ class Scan:
             / max(0.01, math.cos(math.radians(start_pt[1])))
         if not is_ccw:
             speed = -speed
+
         v_az = str(self.controller.converter.az_to_encoder(speed))
         self.controller.galil.sendOnly("AM")
         print(self.controller.galil.sendAndReceive("JG"
@@ -66,7 +67,7 @@ class Scan:
 
         # stop scan and update position
         self.controller.galil.sendOnly("ST")
-        self.controller.galil.sendOnly("AM")
+        time.sleep(abs(speed / accel)) # wait for motor to stop
         az, el = self.controller.current_pos()
         self.controller.sync([az % 360.0, el])
 
