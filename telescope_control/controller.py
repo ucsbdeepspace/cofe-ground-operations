@@ -107,9 +107,7 @@ class Controller:
 
         # find speed of each axis
         alt_av = math.radians(0.5 * (hor_pos[1] + begin[1]))
-        d_az = (hor_pos[0] - begin[0]) % 360
-        if abs(d_az - 360) < abs(d_az):
-            d_az -= 360
+        d_az = hor_pos[0] - begin[0]
         d_el = hor_pos[1] - begin[1]
         delta = math.sqrt((d_az * math.cos(alt_av))**2 + d_el**2) or 0.01
 
