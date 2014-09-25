@@ -1,4 +1,4 @@
 [submodule "telescope_control/PyGalil"]
 	path = telescope_control/PyGalil
-	url = https://github.com/fake-name/PyGalil
+	url = https://github.com/Caglow/PyGalil.git
 	branch = master
