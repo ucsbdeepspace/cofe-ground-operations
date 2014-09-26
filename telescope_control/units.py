@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import ephem
 import math
 from time import gmtime, strftime, time
@@ -56,17 +56,21 @@ class Units:
         obj.compute(self.get_obs(dt))
         return obj.az, obj.alt
 
-    def lst(self):
+    def lst (self):
         o = ephem.Observer()
         o.lat = math.radians(float(self.c.get("location", "lat")))
         o.lon = math.radians(float(self.c.get("location", "lon")))
         return o.sidereal_time()
 
-    def lct(self):
-        return datetime.now().strftime("%H:%M:%S.%f")[:-4]
+    def lct (self, dt=0.0):
+        tm_now = datetime.now()
+        tm_del = timedelta(seconds=dt)
+        return (tm_now + tm_del).strftime("%H:%M:%S.%f")[:-4]
 
-    def utc(self):
-        return datetime.utcnow().strftime('%H:%M:%S.%f')[:-4]
+    def utc (self, dt=0.0):
+        tm_now = datetime.utcnow()
+        tm_del = timedelta(seconds=dt)
+        return (tm_now + tm_del).strftime('%H:%M:%S.%f')[:-4]
 
     # get ephem.Observer object
     def get_obs (self, dt=0):

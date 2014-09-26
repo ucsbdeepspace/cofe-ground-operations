@@ -11,6 +11,8 @@ import time
 import traceback
 import wx
 
+import PyGalil.drParse
+
 import controller
 import gui
 import globalConf
@@ -614,6 +616,14 @@ class MainWindow(gui.TelescopeControlFrame):
 
         ra, dec = self.converter.azel_to_radec(az, el)
 
+        if self.galil.haveLock:
+            sys_time = PyGalil.drParse.getMsTOWwMasking()
+            dt = (self.galil.gpsTime - sys_time) * 0.001 \
+                - int(self.config.get("time", "leapsec"))
+
+        else: # no GPS lock, use system time
+            dt = 0.0
+
         data = [(self.az_status, "", ephem.degrees(str(az % 360.0))),
                 (self.el_status, "", ephem.degrees(str(el))),
 
@@ -622,8 +632,8 @@ class MainWindow(gui.TelescopeControlFrame):
 
                 (self.ra_status, "", ra),
                 (self.dec_status, "", dec),
-                (self.local_status, "", self.converter.lct()),
-                (self.utc_status, "", self.converter.utc()),
+                (self.local_status, "", self.converter.lct(dt)),
+                (self.utc_status, "", self.converter.utc(dt)),
                 (self.gps_status, "", self.galil.haveLock and "Locked" or "Not Locked")]
 
         for widget, prefix, datum in data:
