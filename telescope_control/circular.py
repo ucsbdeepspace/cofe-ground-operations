@@ -17,6 +17,13 @@ class Scan:
     #   repeat: number of rotations
     def scan (self, start_pt, is_ccw = True, repeat = True):
 
+        # find nearest starting point to current position
+        cur_pos = self.controller.current_pos()
+        d_az = (start_pt[0] - cur_pos[0]) % 360
+        if d_az > 180:
+            d_az -= 180 # convert to range (-180, 180]
+        start_pt[0] = cur_pos[0] + d_az
+
         # move to starting point
         self.controller.stop = threading.Event()
         self.controller.slew(start_pt)
@@ -31,8 +38,8 @@ class Scan:
 
         v_az = str(self.controller.converter.az_to_encoder(speed))
         self.controller.galil.sendOnly("AM")
-        print(self.controller.galil.sendAndReceive("JG"
-            + self.controller.galil.axis_az + "=" + str(v_az)))
+        self.controller.galil.sendAndReceive("JG"
+            + self.controller.galil.axis_az + "=" + str(v_az))
 
         accel = float(self.controller.config.get("slew", "accel")) \
             / max(0.01, math.cos(math.radians(start_pt[1])))
