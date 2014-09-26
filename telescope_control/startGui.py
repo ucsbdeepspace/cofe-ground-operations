@@ -616,7 +616,7 @@ class MainWindow(gui.TelescopeControlFrame):
 
         if self.galil.haveLock:
             dt = (self.galil.gpsDelTime) * 0.001 \
-                - int(self.config.get("time", "leapsec"))
+                - int(self.config.get("time", "leap_sec"))
 
         else: # no GPS lock, use system time
             dt = 0.0

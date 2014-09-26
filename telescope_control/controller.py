@@ -82,7 +82,7 @@ class Controller:
 
         # initialize loop
         i = 0
-        prev_pt = self.current_pos()
+        prev_pt = self.current_pos(raw=True)
         crd_list = crd_func()
 
         # loop through all segments
@@ -116,6 +116,12 @@ class Controller:
         speed_az = self.converter.az_to_encoder(abs(d_az) / delta * speed
             / max(0.01, math.cos(alt_av)))
         speed_el = self.converter.el_to_encoder(abs(d_el) / delta * speed)
+
+        # have minimum speeds
+        if 0 < speed_az < 10:
+            speed_az = 10
+        if 0 < speed_el < 10:
+            speed_el = 10
 
         # find acceleration of each axis
         accel = float(self.config.get("slew", "accel"))
@@ -177,9 +183,7 @@ class Controller:
 
 
     # track: follow an equatorial position indefinitely
-    #
     #   equ_pos -> [ra, de]: position to track
-    #
     # -> (returns once tracking ends)
     def track (self, equ_pos):
 
@@ -272,3 +276,8 @@ class Controller:
 
             # wait 10 milliseconds before testing again
             time.sleep(0.01)
+
+
+    # constrain: prevent motors from going out of range
+    def constrain (self):
+        None
