@@ -11,8 +11,6 @@ import time
 import traceback
 import wx
 
-import PyGalil.drParse
-
 import controller
 import gui
 import globalConf
@@ -617,8 +615,7 @@ class MainWindow(gui.TelescopeControlFrame):
         ra, dec = self.converter.azel_to_radec(az, el)
 
         if self.galil.haveLock:
-            sys_time = PyGalil.drParse.getMsTOWwMasking()
-            dt = (self.galil.gpsTime - sys_time) * 0.001 \
+            dt = (self.galil.gpsDelTime) * 0.001 \
                 - int(self.config.get("time", "leapsec"))
 
         else: # no GPS lock, use system time
