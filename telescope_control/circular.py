@@ -68,6 +68,8 @@ class Scan:
         # stop scan and update position
         self.controller.galil.sendOnly("ST")
         time.sleep(abs(speed / accel)) # wait for motor to stop
+        self.controller.wait()
+
         az, el = self.controller.current_pos()
         self.controller.sync([az % 360.0, el])
 

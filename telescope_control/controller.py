@@ -238,11 +238,12 @@ class Controller:
     # sync: set current position of motors
     #   hor_pos -> [az, el]: position to set motor position to
     def sync (self, hor_pos):
+        self.wait()
 
         # define current position as the given position
-        self.galil.sendOnly("DP" + self.galil.axis_az + "=" +
+        self.galil.sendAndReceive("DP" + self.galil.axis_az + "=" +
             str(self.converter.az_to_encoder(hor_pos[0])))
-        self.galil.sendOnly("DP" + self.galil.axis_el + "=" +
+        self.galil.sendAndReceive("DP" + self.galil.axis_el + "=" +
             str(self.converter.el_to_encoder(hor_pos[1])))
 
 
@@ -277,6 +278,14 @@ class Controller:
             # wait 10 milliseconds before testing again
             time.sleep(0.01)
 
+
+    # wait: stall until motion is stopped on both axes
+    # -> (returns once motion has stopped)
+    def wait (self):
+        while not (hasattr(self, "stop") and self.stop.is_set()) and \
+            (int(self.galil.sendAndReceive("TV" + self.galil.axis_az)) or \
+             int(self.galil.sendAndReceive("TV" + self.galil.axis_el))):
+            time.sleep(0.1) # wait 100 milliseconds before trying again
 
     # constrain: prevent motors from going out of range
     def constrain (self):
