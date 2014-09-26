@@ -27,15 +27,15 @@ class Units:
 
         return enc
 
-    def encoder_to_az(self, counts):
-        return self.__from_encoder("az", counts)
+    def encoder_to_az(self, counts, raw=False):
+        return self.__from_encoder("az", counts, raw)
 
     def encoder_to_el(self, counts):
         return self.__from_encoder("el", counts)
 
-    def __from_encoder(self, flag, counts):
+    def __from_encoder(self, flag, counts, raw=False):
         dec_deg = 360.0/float(self.c.get("encoders", flag)) * counts
-        if flag == "az":
+        if flag == "az" and not raw:
             dec_deg = dec_deg % 360
         return self.__str_degrees(dec_deg)
 

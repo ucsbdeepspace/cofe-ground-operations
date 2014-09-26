@@ -20,12 +20,13 @@ class Controller:
 
 
     # current_pos: retrieve current motor positions
+    #   raw: whether to return the unconstrained coordinates
     # -> azimuth, altitude
-    def current_pos (self):
+    def current_pos (self, raw=False):
         pos_enc = list(self.galil.pos)
 
         azimuth = ephem.degrees(self.converter.encoder_to_az(
-            pos_enc[string.uppercase.index(self.galil.axis_az)]))
+            pos_enc[string.uppercase.index(self.galil.axis_az)], raw))
         altitude = ephem.degrees(self.converter.encoder_to_el(
             pos_enc[string.uppercase.index(self.galil.axis_el)]))
 
@@ -103,7 +104,7 @@ class Controller:
     # -> time needed for slew (seconds)
     def slew (self, hor_pos, begin=None, simulate=False):
 
-        begin = begin or self.current_pos()
+        begin = begin or self.current_pos(raw=True)
 
         # find speed of each axis
         alt_av = math.radians(0.5 * (hor_pos[1] + begin[1]))
