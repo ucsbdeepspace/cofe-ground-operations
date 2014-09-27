@@ -154,10 +154,15 @@ class MainWindow(gui.TelescopeControlFrame):
         buttons is pressed."""
         if hasattr(self.controller, "stop"):
             self.controller.stop.set()
+
         if hasattr(self.hg_scan, "stop"):
             self.hg_scan.stop.set()
-        if hasattr(self.cc_scan, "stop"):
-            self.cc_scan.stop.set()
+        if hasattr(self.hg_scan.controller, "stop"):
+            self.hg_scan.controller.stop.set()
+
+        if hasattr(self.cc_scan.controller, "stop"):
+            self.cc_scan.controller.stop.set()
+
         self.galil.sendOnly("ST")
         self.copy_config()
 

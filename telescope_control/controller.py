@@ -271,8 +271,8 @@ class Controller:
             speed_el = d_el / delta * speed
 
             # leave loop if close enough on both axes
-            if (d_az == 0.0 or d_az / speed_az < pre_time) and \
-               (d_el == 0.0 or d_el / speed_el < pre_time):
+            if (speed_az <= 0 or d_az / speed_az < pre_time) and \
+               (speed_el <= 0 or d_el / speed_el < pre_time):
                 return
 
             # wait 10 milliseconds before testing again
@@ -282,10 +282,17 @@ class Controller:
     # wait: stall until motion is stopped on both axes
     # -> (returns once motion has stopped)
     def wait (self):
-        while not (hasattr(self, "stop") and self.stop.is_set()) and \
-            (int(self.galil.sendAndReceive("TV" + self.galil.axis_az)) or \
-             int(self.galil.sendAndReceive("TV" + self.galil.axis_el))):
-            time.sleep(0.1) # wait 100 milliseconds before trying again
+        repeat = True
+        while repeat:
+            try:
+                repeat = not (hasattr(self, "stop") and self.stop.is_set()) and \
+                    (int(self.galil.sendAndReceive("TV" + self.galil.axis_az)) or \
+                     int(self.galil.sendAndReceive("TV" + self.galil.axis_el)))
+            except Exception:
+                repeat = True
+            if repeat:
+                time.sleep(0.1) # wait 100 milliseconds before trying again
+
 
     # constrain: prevent motors from going out of range
     def constrain (self):

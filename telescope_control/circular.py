@@ -56,7 +56,7 @@ class Scan:
         if str(repeat) == str(True):
 
             # wait told to stop
-            while not self.stop.is_set():
+            while not self.controller.stop.is_set():
                 time.sleep(0.1)
 
         else: # repeat for <repeat> times
