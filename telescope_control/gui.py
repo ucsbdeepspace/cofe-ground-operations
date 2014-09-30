@@ -132,6 +132,17 @@ class TelescopeControlFrame(wx.Frame):
 
         return sizer
 
+    def __create_reload_box (self, parent):
+        reset_box = wx.StaticBox(parent, wx.ID_ANY, "Reset Galil")
+        reset_sizer = wx.StaticBoxSizer(reset_box, wx.HORIZONTAL)
+
+        self.reset_input = wx.Button(parent, wx.ID_ANY, "Reset")
+        reset_sizer.Add(self.reset_input, flag=wx.EXPAND)
+        self.rezero_input = wx.Button(parent, wx.ID_ANY, "Rezero")
+        reset_sizer.Add(self.rezero_input, flag=wx.EXPAND)
+
+        return reset_sizer
+
     def __create_chart_options(self, parent):
         chart_options_box = wx.StaticBox(parent, wx.ID_ANY, "Chart Options")
         options_box_sizer = wx.StaticBoxSizer(chart_options_box, wx.VERTICAL)
@@ -155,6 +166,7 @@ class TelescopeControlFrame(wx.Frame):
 
         sizer.Add(self.__create_motor_power_ctrl_StaticBox(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_motion_control_StaticBox(controlButtonPanel), flag=wx.EXPAND)
+        sizer.Add(self.__create_reload_box(controlButtonPanel), flag=wx.EXPAND)
         sizer.Add(self.__create_chart_options(controlButtonPanel), flag=wx.EXPAND)
 
 

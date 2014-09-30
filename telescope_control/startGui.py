@@ -75,6 +75,9 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_BUTTON, self.toggle_motor_state, self.button_el_motor)
         self.Bind(wx.EVT_TEXT, self.set_step_size, self.step_size_input)
 
+        self.Bind(wx.EVT_BUTTON, self.reset_galil, self.reset_input)
+        self.Bind(wx.EVT_BUTTON, self.rezero_galil, self.rezero_input)
+
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_up)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_left)
         self.Bind(wx.EVT_BUTTON, self.move_rel, self.button_right)
@@ -201,6 +204,15 @@ class MainWindow(gui.TelescopeControlFrame):
             {self.galil.axis_az : self.converter.az_to_encoder(self.step_deg),
              self.galil.axis_el : self.converter.el_to_encoder(self.step_deg)}
 
+    # reload programs into the Galil
+    def reset_galil (self, event):
+        self.galil.resetGalil()
+        event.Skip()
+
+    # go to physical zero position
+    def rezero_galil (self, event):
+        self.galil.executeFunction("HOMEA")
+        event.Skip()
 
     # arrow button clicked
     def move_rel(self, event):
