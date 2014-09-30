@@ -584,6 +584,9 @@ class TelescopeControlFrame(wx.Frame):
         self.obs_lat_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
             self.config.get("location", "lat"))
 
+        self.gps_time_input = wx.CheckBox(notebookOptionsPane, wx.ID_ANY, "Use GPS Time")
+        self.gps_time_input.SetValue(self.config.get("time", "use_gps") == "True")
+
         obs_grid = wx.FlexGridSizer(cols=2)
         obs_grid.AddF(obs_lon_label, self.sizerFlags)
         obs_grid.AddF(self.obs_lon_input, self.sizerFlags)
@@ -592,6 +595,7 @@ class TelescopeControlFrame(wx.Frame):
         obs_grid.AddF(self.obs_lat_input, self.sizerFlags)
 
         obs_box_sizer.Add(obs_grid)
+        obs_box_sizer.Add(self.gps_time_input)
         options_sizer.Add(obs_box_sizer, 1, wx.EXPAND)
 
         notebookOptionsPane.SetSizer(options_sizer)

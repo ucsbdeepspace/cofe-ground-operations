@@ -109,6 +109,7 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_TEXT, self.change_accel, self.scan_accel_input)
         self.Bind(wx.EVT_TEXT, self.change_lon, self.obs_lon_input)
         self.Bind(wx.EVT_TEXT, self.change_lat, self.obs_lat_input)
+        self.Bind(wx.EVT_CHECKBOX, self.change_gps_usage, self.gps_time_input)
 
 
     def goto_hor (self, event):
@@ -596,6 +597,12 @@ class MainWindow(gui.TelescopeControlFrame):
         except ValueError:
             lat = 0.0
         self.config.set("location", "lat", str(lat))
+        self.write_config()
+        event.Skip()
+
+    # change usage of GPS time
+    def change_gps_usage (self, event):
+        self.config.set("time", "use_gps", str(self.gps_time_input.GetValue()))
         self.write_config()
         event.Skip()
 
