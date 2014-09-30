@@ -626,11 +626,11 @@ class MainWindow(gui.TelescopeControlFrame):
 
         ra, dec = self.converter.azel_to_radec(az, el)
 
-        if self.galil.haveLock:
+        if self.config.get("time", "use_gps") == "True":
             dt = (self.galil.gpsDelTime) * 0.001 \
                 - int(self.config.get("time", "leap_sec"))
 
-        else: # no GPS lock, use system time
+        else: # no GPS device, use system time
             dt = 0.0
 
         data = [(self.az_status, "", ephem.degrees(str(az % 360.0))),
@@ -643,7 +643,10 @@ class MainWindow(gui.TelescopeControlFrame):
                 (self.dec_status, "", dec),
                 (self.local_status, "", self.converter.lct(dt)),
                 (self.utc_status, "", self.converter.utc(dt)),
-                (self.gps_status, "", self.galil.haveLock and "Locked" or "Not Locked")]
+                (self.gps_status, "",
+                 self.config.get("time", "use_gps") == "True" and \
+                    (self.galil.haveLock and "Locked" or "Not Locked")
+                    or "Off")]
 
         for widget, prefix, datum in data:
             widget.SetLabel(prefix + str(datum))
