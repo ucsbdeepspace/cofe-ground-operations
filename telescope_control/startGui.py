@@ -515,7 +515,7 @@ class MainWindow(gui.TelescopeControlFrame):
                 self.sky_chart.scan_center
 
         self.scan_func = scan_func
-        self.sky_chart.path = scan_func()
+        self.sky_chart.path, self.sky_chart.scan_center = scan_func()
         self.sky_chart.given_equ = False
 
         self.cur_center_input.SetSelection(1) # center on scan
