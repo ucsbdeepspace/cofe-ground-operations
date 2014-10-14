@@ -1,85 +1,83 @@
+from datetime import datetime, timedelta
 import ephem
-from time import gmtime, strftime
+import math
+from time import gmtime, strftime, time
 
 class Units:
-	def __init__(self, config):
-		"""latitude and longitude need to be strings like 'd:m:s'"""
-		self.c = config
-		self.lon = self.c["LON"]
-		self.lat = self.c["LAT"]
-		
-	def az_to_encoder(self, counts, ab=True):
-		return self.__to_encoder("AzEncPerRev", counts, ab)
-		
-	def el_to_encoder(self, counts, ab=True):
-		return self.__to_encoder("ElEncPerRev", counts, ab)
+    def __init__(self, config):
+        """latitude and longitude need to be strings like 'd:m:s'"""
+        self.c = config
 
-	def __to_encoder(self, flag, counts, ab):
-		if "Az" in flag :
-			offset = self.c["AzOffset"] 
-		else: 
-			offset = self.c["ElOffset"]
-		return int(self.c[flag]/360.0*(counts + (offset if ab else 0)))
-	
-	def encoder_to_az(self, counts, ab=True):
-		return self.__from_encoder("AzEncPerRev", counts, ab)
+    def az_to_encoder(self, counts):
+        return self.__to_encoder("az", counts)
 
-	def encoder_to_el(self, counts,ab=True):
-		return self.__from_encoder("ElEncPerRev", counts, ab)
+    def el_to_encoder(self, counts):
+        return self.__to_encoder("el", counts)
 
-	def __from_encoder(self, flag, counts, ab):
-		offset = self.az_to_encoder(self.c["AzOffset"], False) if "Az" in flag else None
-		offset = self.el_to_encoder(self.c["ElOffset"], False) if offset is None else offset
-		return self.__str_degrees(360.0/self.c[flag]*(counts - (offset if ab else 0)))
+    def __to_encoder(self, flag, counts):
+        enc = float(self.c.get("encoders", flag)) * counts/360.0
 
-	def __str_degrees(self, val):
-		d = int(val)
-		m = int((val - d)/60.)
-		s = ((val - d)/60. - m)/60.
-		return "{}:{}:{:2.2f}".format(d, m, abs(s))
+        # rounding
+        if enc - int(enc) >= 0.5:
+            enc = int(enc) + 1 # round up for positive numbers
+        elif enc - int(enc) <= -0.5:
+            enc = int(enc) - 1 # round down for negative numbers
+        else: # no rounding
+            enc = int(enc)
 
-	def azel_to_radec(self, az, el):
-		"""az and el must be human readable string like 'h:m:s' or  floats
-		in radians"""
-		o = ephem.Observer()
-		o.lat = self.lat
-		o.lon = self.lon
-		o.pressure = 0
-		return  o.radec_of(az, el)
+        return enc
 
-	def radec_to_azel(self, ra, dec):
-		telescope = ephem.Observer()
-		telescope.lat = self.lat
-		telescope.lon = self.lon
-		d = "{t.tm_year}/{t.tm_mon}/{t.tm_mday} "
-		h = "{t.tm_hour}:{t.tm_min}:{t.tm_sec}"
-		telescope.date = (d+h).format(t=gmtime())
+    def encoder_to_az(self, counts, raw=False):
+        return self.__from_encoder("az", counts, raw)
 
-		star = ephem.FixedBody()
-		star._ra = ephem.hours(ra)
-		star._dec = ephem.degrees(dec)
-		star.compute(telescope)
-		return star.az, star.alt
-		
-	def set_offset(self, wanted_Az, wanted_El, current_Az, current_El):
-		self.c["AzOffset"] = current_Az - wanted_Az
-		self.c["ElOffset"] = current_El - wanted_El
+    def encoder_to_el(self, counts):
+        return self.__from_encoder("el", counts)
 
-	def lst(self):
-		o = ephem.Observer()
-		o.lat = self.lat
-		o.lon = self.lon
-		return o.sidereal_time()
+    def __from_encoder(self, flag, counts, raw=False):
+        dec_deg = 360.0/float(self.c.get("encoders", flag)) * counts
+        if flag == "az" and not raw:
+            dec_deg = dec_deg % 360
+        return self.__str_degrees(dec_deg)
 
-	def lct(self):
-		return strftime("%H:%M:%S")
+    def __str_degrees(self, val):
+        val_abs = abs(val)
+        d = int(val_abs)
+        m = int((val_abs - d)*60)
+        s = ((val_abs - d) - m/60.0)*3600.0
+        return (val < 0 and "-" or "") + "{}:{:02d}:{:02.1f}".format(d, m, s)
 
-	def utc(self):
-		return "{t.tm_hour}:{t.tm_min}:{t.tm_sec}".format(t=gmtime())
+    def azel_to_radec(self, az, el, dt=0):
+        return self.get_obs(dt).radec_of(az, el)
 
-if __name__=="__main__":
-	from config import Config
-	config = Config("config.txt")
-	un = Units(config)
-	print "360 deg in encoder:", un.az_to_encoder(360)
-	
+    def radec_to_azel(self, ra, dec, dt=0):
+        obj = ephem.FixedBody()
+        obj._ra = ephem.hours(ra)
+        obj._dec = ephem.degrees(dec)
+        obj.compute(self.get_obs(dt))
+        return obj.az, obj.alt
+
+    def lst (self):
+        o = ephem.Observer()
+        o.lat = math.radians(float(self.c.get("location", "lat")))
+        o.lon = math.radians(float(self.c.get("location", "lon")))
+        return o.sidereal_time()
+
+    def lct (self, dt=0.0):
+        tm_now = datetime.now()
+        tm_del = timedelta(seconds=dt)
+        return (tm_now + tm_del).strftime("%H:%M:%S.%f")[:-4]
+
+    def utc (self, dt=0.0):
+        tm_now = datetime.utcnow()
+        tm_del = timedelta(seconds=dt)
+        return (tm_now + tm_del).strftime('%H:%M:%S.%f')[:-4]
+
+    # get ephem.Observer object
+    def get_obs (self, dt=0):
+        obs = ephem.Observer()
+        obs.lat = self.c.get("location", "lat")
+        obs.lon = self.c.get("location", "lon")
+        obs.date = str(datetime.utcnow())
+        obs.pressure = 0
+
+        return obs

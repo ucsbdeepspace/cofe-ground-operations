@@ -7,10 +7,12 @@ The main program is in main.py, and it can be run by entering 'python main.py' i
 
 Requires:
 
- - python 2.7
- - pyephem
- - wxpython version > 2.8
- - BitString Library (https://code.google.com/p/python-bitstring/)
-
+ - Python 2.7
+ - PyEphem
+ - wxPython >= 2.8
+ - BitString (https://code.google.com/p/python-bitstring/)
+ - PyOpenGL (python-opengl)
+ - pyftgl
+ - numpy
 
 Galil comms are handled by the PyGalil submodule, main repository at: https://github.com/fake-name/PyGalil
