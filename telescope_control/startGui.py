@@ -629,6 +629,9 @@ class MainWindow(gui.TelescopeControlFrame):
         if not self.galil:  # Short circuit in test-mode
             return
 
+        # constrain to range
+        self.controller.constrain()
+
         raw_data = list(self.galil.pos)
         data = [raw_data[string.uppercase.index(self.galil.axis_az)],
                 raw_data[string.uppercase.index(self.galil.axis_el)]]

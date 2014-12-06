@@ -1,5 +1,5 @@
 [connection]
-ip = 10.1.2.250
+ip = 192.168.1.201
 port = 23
 
 [axes]
@@ -15,17 +15,16 @@ speed = 30.0
 accel = 40.0
 
 [encoders]
-az = 4096
-el = 4096
+az = 1024000
+el = 1024000
 
 [time]
 leap_sec = 16
 use_gps = False
 
 [limits]
-az_bound = true
-az_min = -30
-az_max = 30
-el_bound = true
-el_min = 20
-el_max = 70
+az_low = 0
+az_high = 0
+el_low = 0
+el_high = 80
+
