@@ -1,5 +1,4 @@
-[connection]
-ip = 192.168.1.201
+
 port = 23
 
 [axes]
@@ -23,8 +22,9 @@ leap_sec = 16
 use_gps = False
 
 [limits]
-az_low = 0
-az_high = 0
-el_low = 0
-el_high = 80
-
+az_check = False
+az_min = -30
+az_max = 30
+el_check = False
+el_min = 20
+el_max = 70

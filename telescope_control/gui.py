@@ -556,6 +556,9 @@ class TelescopeControlFrame(wx.Frame):
         notebookOptionsPane = wx.Panel(self.controlNotebook)
         options_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
+        options_left = wx.BoxSizer(wx.VERTICAL)
+        options_sizer.Add(options_left, 1, wx.EXPAND)
+
         ##
         # slew box
         ##
@@ -579,7 +582,7 @@ class TelescopeControlFrame(wx.Frame):
         slew_grid.AddF(self.scan_accel_input, self.sizerFlags)
 
         slew_box_sizer.Add(slew_grid)
-        options_sizer.Add(slew_box_sizer, 1, wx.EXPAND)
+        options_left.Add(slew_box_sizer, 1, wx.EXPAND)
 
         ##
         # observer box
@@ -608,7 +611,62 @@ class TelescopeControlFrame(wx.Frame):
 
         obs_box_sizer.Add(obs_grid)
         obs_box_sizer.Add(self.gps_time_input)
-        options_sizer.Add(obs_box_sizer, 1, wx.EXPAND)
+        options_left.Add(obs_box_sizer, 1, wx.EXPAND)
+
+        ##
+        # slewing boundaries
+        ##
+
+        options_right = wx.BoxSizer(wx.VERTICAL)
+        options_sizer.Add(options_right, 1, wx.EXPAND)
+
+        lim_box = wx.StaticBox(notebookOptionsPane, wx.ID_ANY, "Slewing Boundaries")
+        lim_box_sizer = wx.StaticBoxSizer(lim_box, wx.VERTICAL)
+
+        # azimuth
+
+        self.az_limit_input = wx.CheckBox(notebookOptionsPane, wx.ID_ANY, "Constrain Azimuth")
+        self.az_limit_input.SetValue(self.config.get("limits", "az_check") == "True")
+
+        az_min_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Min Azimuth (deg): ")
+        self.az_min_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("limits", "az_min"))
+
+        az_max_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Max Azimuth (deg): ")
+        self.az_max_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("limits", "az_max"))
+
+        # altitude
+
+        self.el_limit_input = wx.CheckBox(notebookOptionsPane, wx.ID_ANY, "Constrain Altitude")
+        self.el_limit_input.SetValue(self.config.get("limits", "el_check") == "True")
+
+        el_min_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Min Altitude (deg): ")
+        self.el_min_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("limits", "el_min"))
+
+        el_max_label = wx.StaticText(notebookOptionsPane, wx.ID_ANY, "Max Altitude (deg): ")
+        self.el_max_input = wx.TextCtrl(notebookOptionsPane, wx.ID_ANY,
+            self.config.get("limits", "el_max"))
+
+        lim_grid = wx.FlexGridSizer(cols=2)
+
+        lim_grid.Add([1,1])
+        lim_grid.AddF(self.az_limit_input, self.sizerFlags)
+        lim_grid.AddF(az_min_label, self.sizerFlags)
+        lim_grid.AddF(self.az_min_input, self.sizerFlags)
+        lim_grid.AddF(az_max_label, self.sizerFlags)
+        lim_grid.AddF(self.az_max_input, self.sizerFlags)
+
+        lim_grid.Add([1,1])
+        lim_grid.AddF(self.el_limit_input, self.sizerFlags)
+        lim_grid.AddF(el_min_label, self.sizerFlags)
+        lim_grid.AddF(self.el_min_input, self.sizerFlags)
+        lim_grid.AddF(el_max_label, self.sizerFlags)
+        lim_grid.AddF(self.el_max_input, self.sizerFlags)
+
+        lim_box_sizer.Add(lim_grid)
+        options_right.Add(lim_box_sizer, 1, wx.EXPAND)
 
         notebookOptionsPane.SetSizer(options_sizer)
 

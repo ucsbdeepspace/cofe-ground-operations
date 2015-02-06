@@ -311,6 +311,7 @@ class Controller:
         el_max = float(self.config.get("limits", "el_max"))
 
         if self.config.get("limits", "az_check"):
+            self.inrange_az = False
             # check if azimuth in range
             if az_min < az < az_max:
                 self.inrange_az = True
@@ -328,9 +329,11 @@ class Controller:
                     str(self.converter.az_to_encoder(az_max)))
 
         if self.config.get("limits", "el_check"):
+            self.inrange_el = False
+
             # check if altitude in range
             if el_min < el < el_max:
-                self.inrange_ael = True
+                self.inrange_el = True
 
             # was in range but not anymore (move back in range)
             elif self.inrange_el and el < el_min:
