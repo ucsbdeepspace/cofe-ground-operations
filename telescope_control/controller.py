@@ -295,5 +295,55 @@ class Controller:
 
 
     # constrain: prevent motors from going out of range
+    #            (call to check we're in range)
     def constrain (self):
-        None
+
+        raw_data = list(self.galil.pos)
+        data = [raw_data[string.uppercase.index(self.galil.axis_az)],
+                raw_data[string.uppercase.index(self.galil.axis_el)]]
+
+        az = math.degrees(ephem.degrees(self.converter.encoder_to_az(data[0], raw=True)))
+        el = math.degrees(ephem.degrees(self.converter.encoder_to_el(data[1])))
+
+        az_min = float(self.config.get("limits", "az_min"))
+        az_max = float(self.config.get("limits", "az_max"))
+        el_min = float(self.config.get("limits", "el_min"))
+        el_max = float(self.config.get("limits", "el_max"))
+
+        if self.config.get("limits", "az_check"):
+            self.inrange_az = False
+            # check if azimuth in range
+            if az_min < az < az_max:
+                self.inrange_az = True
+
+            # was in range but not anymore (move back in range)
+            elif self.inrange_az and az < az_min:
+                self.inrange_az = False
+                self.galil.sendOnly("ST")
+                self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(az_min)))
+            elif self.inrange_az and az > az_max:
+                self.inrange_az = False
+                self.galil.sendOnly("ST")
+                self.galil.sendOnly("PA" + self.galil.axis_az + "=" +
+                    str(self.converter.az_to_encoder(az_max)))
+
+        if self.config.get("limits", "el_check"):
+            self.inrange_el = False
+
+            # check if altitude in range
+            if el_min < el < el_max:
+                self.inrange_el = True
+
+            # was in range but not anymore (move back in range)
+            elif self.inrange_el and el < el_min:
+                self.inrange_el = False
+                self.galil.sendOnly("ST")
+                self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
+                    str(self.converter.el_to_encoder(el_min)))
+            elif self.inrange_el and el > el_max:
+                self.inrange_el = False
+                self.galil.sendOnly("ST")
+                self.galil.sendOnly("PA" + self.galil.axis_el + "=" +
+                    str(self.converter.el_to_encoder(el_max)))
+

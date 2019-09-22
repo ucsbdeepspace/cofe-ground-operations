@@ -114,6 +114,13 @@ class MainWindow(gui.TelescopeControlFrame):
         self.Bind(wx.EVT_TEXT, self.change_lat, self.obs_lat_input)
         self.Bind(wx.EVT_CHECKBOX, self.change_gps_usage, self.gps_time_input)
 
+        self.Bind(wx.EVT_TEXT, self.change_lim, self.az_min_input)
+        self.Bind(wx.EVT_TEXT, self.change_lim, self.az_max_input)
+        self.Bind(wx.EVT_TEXT, self.change_lim, self.el_min_input)
+        self.Bind(wx.EVT_TEXT, self.change_lim, self.el_max_input)
+        self.Bind(wx.EVT_CHECKBOX, self.change_lim, self.az_limit_input)
+        self.Bind(wx.EVT_CHECKBOX, self.change_lim, self.el_limit_input)
+
 
     def goto_hor (self, event):
 
@@ -618,6 +625,26 @@ class MainWindow(gui.TelescopeControlFrame):
         self.write_config()
         event.Skip()
 
+    # any of the limit settings changed
+    def change_lim (self, event):
+        try:
+            az_lim = bool(self.az_limit_input.GetValue())
+            az_min = float(self.az_min_input.GetValue())
+            az_max = float(self.az_max_input.GetValue())
+            el_lim = bool(self.el_limit_input.GetValue())
+            el_min = float(self.el_min_input.GetValue())
+            el_max = float(self.el_max_input.GetValue())
+        except:
+            return # TODO: show that limits are not valid
+
+        self.config.set("limits", "az_check", str(az_lim))
+        self.config.set("limits", "az_min", str(az_min))
+        self.config.set("limits", "az_max", str(az_max))
+        self.config.set("limits", "el_check", str(el_lim))
+        self.config.set("limits", "el_min", str(el_min))
+        self.config.set("limits", "el_max", str(el_max))
+        self.write_config()
+
     def update_display (self, event):
 
         # update sky chart
@@ -628,6 +655,9 @@ class MainWindow(gui.TelescopeControlFrame):
 
         if not self.galil:  # Short circuit in test-mode
             return
+
+        # constrain to range
+        self.controller.constrain()
 
         raw_data = list(self.galil.pos)
         data = [raw_data[string.uppercase.index(self.galil.axis_az)],
